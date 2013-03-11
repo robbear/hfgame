@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+
+    <title>{{PageTitle}}</title>
+
+    <link media="screen, print" href="/styles/styles.css}" rel="Stylesheet" type="text/css" />
+    <script type="text/javascript" src="/lib/jquery/jquery-1.8.3.min.js"></script>
+    <script type="text/javascript" src="/scripts/global.js"></script>
+
+    {{> HeaderContent}}
+
+</head>
+<body>
+    <div>
+        {{> BodyContent}}
+    </div>
+
+    <script type="text/javascript">
+        /** Call global page initializer defined in global.js **/
+        $(seed.initPage);
+    </script>
+</body>
+</html>
