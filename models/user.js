@@ -156,52 +156,11 @@ UserSchema.statics.getAuthenticated = function(username, password, cb) {
                         return cb(err);
                     }
 
-                    return cb(null, null, reason.PASSWORD_INCORRECT);
+                    return cb(null, null, reasons.PASSWORD_INCORRECT);
                 });
             }
         });
     });
 };
-
-
-//
-// Unit test support
-//
-
-UserSchema.statics.connectForTest = function(connectionString, cb) {
-    mongoose.connect(connectionString);
-    var db = mongoose.connection;
-
-    db.on('open', function() {
-        console.log('open');
-        if (cb) {
-            return cb(db);
-        }
-    });
-
-    db.on('error', function(err) {
-        console.log('error');
-        if (cb) {
-            return cb(null, err);
-        }
-    });
-};
-
-UserSchema.statics.disconnectForTest = function(db, cb) {
-    db.db.dropDatabase(function(err) {
-        if (cb) {
-            if (err) {
-                return cb(err);
-            }
-            else {
-                return cb();
-            }
-        }
-    });
-};
-
-//
-// End unit test support
-//
 
 module.exports = mongoose.model('User', UserSchema);
