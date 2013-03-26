@@ -6,7 +6,7 @@ var Schema = mongoose.Schema,
     // Allow MAX_LOGIN_ATTEMPTS before locking the account
     MAX_LOGIN_ATTEMPTS = 10,
     // Lock the account for LOCK_TIME seconds to prevent automated brute-force attempts
-    LOCK_TIME = 60 * 1000;
+    LOCK_TIME = 5 * 1000;
 
 var UserSchema = new Schema({
     username: { type: String, required: true, index: { unique: true } },
@@ -20,6 +20,9 @@ UserSchema.virtual('isLocked').get(function() {
     // Note: !! forces truthy to boolean
     return !!(this.lockUntil && this.lockUntil > Date.now());
 });
+
+UserSchema.statics.maxLoginAttempts = MAX_LOGIN_ATTEMPTS;
+UserSchema.statics.accountLockoutMilliseconds = LOCK_TIME;
 
 UserSchema.pre('save', function(next) {
     var user = this;
@@ -71,7 +74,7 @@ UserSchema.methods.incLoginAttempts = function(cb) {
     var updates = { $inc: { loginAttempts: 1 } };
 
     // Lock the account if we've reached max attempts and it's not locked already
-    if (!this.isLocked && (this.loginAttempts + 1 >= MAX_LOGIN_ATTEMPTS)) {
+    if (!this.isLocked && (this.loginAttempts + 1 > MAX_LOGIN_ATTEMPTS)) {
         updates.$set = { lockUntil: Date.now() + LOCK_TIME };
     }
 

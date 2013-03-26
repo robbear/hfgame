@@ -112,4 +112,90 @@ describe('User', function() {
             });
         });
     });
+
+    describe('Authentication: non-existent user', function() {
+        var userName = 'foobar@foobar.com';
+        var userPassword = 'foobarfoobar';
+
+        it('should reject a non-existent user login attempt', function(done) {
+            User.getAuthenticated(userName, userPassword, function(err, user, reason) {
+                should.not.exist(err);
+                should.exist(reason);
+                should.not.exist(user);
+                reason.should.equal(User.failedLogin.NOT_FOUND);
+                done();
+            });
+        });
+    });
+
+    describe('Verify account lockout with bad password retries', function() {
+        var RETRY_ATTEMPTS = User.maxLoginAttempts;
+        var funcs = [];
+        var userName = 'user1@test.com';
+        var password = 'boguspassword';
+
+        before(function(done) {
+            function createFunc(i) {
+                return function(userName, password) {
+                    User.getAuthenticated(userName, password, function(err, user, reason) {
+                        should.not.exist(err);
+                        should.exist(reason);
+                        should.not.exist(user);
+                        reason.should.equal(User.failedLogin.PASSWORD_INCORRECT);
+                        i++;
+                        if (i < RETRY_ATTEMPTS) {
+                            funcs[i](userName, password);
+                        }
+                        else {
+                            done();
+                        }
+                    });
+                }
+            }
+
+            for (var i = 0; i < RETRY_ATTEMPTS; i++) {
+                funcs[i] = createFunc(i);
+            }
+
+            funcs[0](userName, password);
+        });
+
+        it('should fail authentication based on account lock', function(done) {
+            User.getAuthenticated(userName, 'user1password', function(err, user, reason) {
+                should.not.exist(err);
+                should.exist(reason);
+                should.not.exist(user);
+                reason.should.equal(User.failedLogin.MAX_ATTEMPTS);
+                if (err) {
+                    done(err);
+                }
+                else {
+                    done();
+                }
+            });
+        });
+    });
+
+    describe('Verify account lockout times out and allows login (note delay of ' + (User.accountLockoutMilliseconds / 1000) + ' seconds)', function() {
+        before(function(done) {
+            this.timeout(User.accountLockoutMilliseconds + 5000);
+            setTimeout(done, User.accountLockoutMilliseconds);
+        });
+
+        it('should unlock the account and allow authentication', function(done) {
+            User.getAuthenticated('user1@test.com', 'user1password', function(err, user, reason) {
+                should.not.exist(err);
+                should.not.exist(reason);
+                should.exist(user);
+                user.should.have.property('username', 'user1@test.com');
+                if (err) {
+                    done(err);
+                }
+                else {
+                    done();
+                }
+            });
+        });
+    });
+
 });
