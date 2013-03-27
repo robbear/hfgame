@@ -2,6 +2,7 @@ var mongoose = require('mongoose'),
     bcrypt = require('bcrypt');
 
 var Schema = mongoose.Schema,
+    COLLECTION_NAME = 'users',
     SALT_WORK_FACTOR = 10,
     // Allow MAX_LOGIN_ATTEMPTS before locking the account
     MAX_LOGIN_ATTEMPTS = 10,
@@ -13,6 +14,8 @@ var UserSchema = new Schema({
     password: { type: String, required: true },
     loginAttempts: { type: Number, required: true, default: 0 },
     lockUntil: { type: Number }
+    }, {
+    collection: COLLECTION_NAME
 });
 
 UserSchema.virtual('isLocked').get(function() {
@@ -23,6 +26,7 @@ UserSchema.virtual('isLocked').get(function() {
 
 UserSchema.statics.maxLoginAttempts = MAX_LOGIN_ATTEMPTS;
 UserSchema.statics.accountLockoutMilliseconds = LOCK_TIME;
+UserSchema.statics.collectionName = COLLECTION_NAME;
 
 UserSchema.pre('save', function(next) {
     var user = this;

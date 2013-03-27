@@ -1,8 +1,14 @@
 var should = require('should'),
+    TestUtils = require('../../models/testutils'),
     User = require('../../models/user');
 
 describe('User', function() {
     var MAX_USERS = 10;
+
+    before(function(done) {
+        // Ensure the User collection is empty before we run our tests
+        TestUtils.dropCollection(User.collectionName, done);
+    });
 
     describe('#createUser()', function() {
         var funcs = [];
