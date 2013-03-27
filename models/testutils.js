@@ -16,7 +16,7 @@ var testUtils = {
         });
     },
 
-    disconnectFromMongoDB: function(cb) {
+    deleteMongoDB: function(cb) {
         // Example of native driver call
         mongoose.connection.db.executeDbCommand({dropDatabase:1}, function(err, result) {
             if (cb) {
