@@ -86,6 +86,17 @@ describe('User', function() {
         });
     });
 
+    describe('#createUser() - try existing username', function() {
+        it('should return an error indicating that the username already exists', function(done) {
+            User.createUser('user1@test.com', 'user1password', function(user, err) {
+                should.exist(err);
+                err.code.should.equal(11000);
+                should.not.exist(user);
+                done();
+            });
+        });
+    });
+
     describe('#getAuthenticated()', function() {
         var userName = 'user1@test.com';
         var userPassword = 'user1password';
