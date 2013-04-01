@@ -16,6 +16,8 @@ var UserSchema = new Schema({
     lockUntil: { type: Number }
     }, {
     collection: COLLECTION_NAME
+}, {
+//    autoIndex: false
 });
 
 UserSchema.virtual('isLocked').get(function() {
@@ -94,7 +96,7 @@ var reasons = UserSchema.statics.failedLogin = {
 UserSchema.statics.createUser = function(username, password, cb) {
     var User = mongoose.model('User', UserSchema);
     var user = new User({username: username, password: password});
-    user.save(function(err) {
+    user.save(function(err, user) {
         if (cb) {
             if (err) {
                 return cb(null, err);
