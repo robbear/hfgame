@@ -6,6 +6,8 @@ var should = require('should'),
 describe('UserLocation', function() {
     var seattleLoc = {lon: 122.3331, lat: 47.6097};
     var sanfranciscoLoc = {lon: 122.4183, lat: 37.7750};
+    var newyorkLoc = {lon: 74.0064, lat: 40.7142};
+    var bostonLoc = {lon: 71.0603, lat: 42.3583};
     var userId;
 
     before(function(done) {
@@ -16,7 +18,7 @@ describe('UserLocation', function() {
             }
             else {
                 TestUtils.dropCollection(UserLocation.collectionName, function(err) {
-                    User.createUser('testuser@test.com', 'password', function(user, err) {
+                    User.createUser('testuser@test.com', 'password', function(err, user) {
                         if (err) {
                             return done(err);
                         }
@@ -32,7 +34,7 @@ describe('UserLocation', function() {
 
     describe('#createUserLocation() - Seattle', function() {
         it('should create a location item for Seattle', function(done) {
-            UserLocation.createUserLocation(userId, seattleLoc, function(userLocation, err) {
+            UserLocation.createUserLocation(userId, seattleLoc, function(err, userLocation) {
                 should.not.exist(err);
                 should.exist(userLocation);
                 should.exist(userLocation.location);
@@ -53,7 +55,7 @@ describe('UserLocation', function() {
 
     describe('#createUserLocation() - San Francisco', function() {
         it('should create a location item for San Francisco', function(done) {
-            UserLocation.createUserLocation(userId, sanfranciscoLoc, function(userLocation, err) {
+            UserLocation.createUserLocation(userId, sanfranciscoLoc, function(err, userLocation) {
                 should.not.exist(err);
                 should.exist(userLocation);
                 should.exist(userLocation.location);
@@ -68,6 +70,22 @@ describe('UserLocation', function() {
                     userLocation.userId.toString().should.equal(userId);
                     done();
                 }
+            });
+        });
+    });
+
+    describe('#insertUserLocations()', function() {
+        var locsWithDate = [{location: newyorkLoc, creationDate: Date.now()}, {location: bostonLoc, creationDate: Date.now()}];
+
+        it('should create location items for Boston and New York', function(done) {
+            UserLocation.insertUserLocations(userId, locsWithDate, function(err, docs) {
+                should.not.exist(err);
+                should.exist(docs);
+                if (err) {
+                    return done(err);
+                }
+                docs.should.have.lengthOf(locsWithDate.length);
+                done();
             });
         });
     });

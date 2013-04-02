@@ -59,11 +59,7 @@ UserSchema.pre('save', function(next) {
 
 UserSchema.methods.comparePassword = function(candidatePassword, cb) {
     bcrypt.compare(candidatePassword, this.password, function(err, isMatch) {
-        if (err) {
-            return cb(err);
-        }
-
-        cb(null, isMatch);
+        return cb(err, isMatch);
     });
 };
 
@@ -98,12 +94,7 @@ UserSchema.statics.createUser = function(username, password, cb) {
     var user = new User({username: username, password: password});
     user.save(function(err, user) {
         if (cb) {
-            if (err) {
-                return cb(null, err);
-            }
-            else {
-                return cb(user);
-            }
+            return cb(err, user);
         }
     });
 };
@@ -111,7 +102,7 @@ UserSchema.statics.createUser = function(username, password, cb) {
 UserSchema.statics.getAuthenticated = function(username, password, cb) {
     this.findOne({ username: username }, function(err, user) {
         if (err) {
-            return cb(err);
+            return cb(err, null, null);
         }
 
         // Make sure the user exists
@@ -124,7 +115,7 @@ UserSchema.statics.getAuthenticated = function(username, password, cb) {
             // Increment the login attempts if the account is already locked
             return user.incLoginAttempts(function(err) {
                 if (err) {
-                    return cb(err);
+                    return cb(err, null, null);
                 }
 
                 return cb(null, null, reasons.MAX_ATTEMPTS);
@@ -151,11 +142,7 @@ UserSchema.statics.getAuthenticated = function(username, password, cb) {
                 };
 
                 return user.update(updates, function(err) {
-                    if (err) {
-                        return cb(err);
-                    }
-
-                    return cb(null, user);
+                    return cb(err, user);
                 });
             }
             else {

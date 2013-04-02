@@ -15,7 +15,7 @@ describe('User', function() {
 
         function createFunc(i, done) {
             return function(userName, password) {
-                User.createUser('user'+(i+1)+'@test.com', 'user'+(i+1)+'password', function(user, err) {
+                User.createUser('user'+(i+1)+'@test.com', 'user'+(i+1)+'password', function(err, user) {
                     should.not.exist(err);
                     user.should.have.property('username', 'user'+(i+1)+'@test.com');
                     if (err) {
@@ -88,7 +88,7 @@ describe('User', function() {
 
     describe('#createUser() - try existing username', function() {
         it('should return an error indicating that the username already exists', function(done) {
-            User.createUser('user1@test.com', 'user1password', function(user, err) {
+            User.createUser('user1@test.com', 'user1password', function(err, user) {
                 should.exist(err);
                 err.code.should.equal(11000);
                 should.not.exist(user);
