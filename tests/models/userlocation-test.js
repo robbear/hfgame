@@ -89,4 +89,46 @@ describe('UserLocation', function() {
             });
         });
     });
+
+    var MAX_RANDOM_LOCATIONS = 1000;
+    describe('#insertUserLocations - ' + MAX_RANDOM_LOCATIONS + ' random locations', function() {
+        it('should create ' + MAX_RANDOM_LOCATIONS + ' random location items', function(done) {
+            var lonMin = 1223300,
+                lonMax = 1223999,
+                latMin = 476000,
+                latMax = 476999,
+                locsWithDate = new Array(MAX_RANDOM_LOCATIONS);
+
+            for (var i = 0; i < MAX_RANDOM_LOCATIONS; i++) {
+                var lon = getRandomInt(lonMin, lonMax) / 10000.0;
+                var lat = getRandomInt(latMin, latMax) / 10000.0;
+                var date = getRandomDate(new Date("January 1, 2013"),  new Date("April 30, 2013"));
+
+                locsWithDate[i] = { location: {lon: lon, lat: lat}, creationDate: date };
+            }
+
+            UserLocation.insertUserLocations(userId, locsWithDate, function(err, docs) {
+                should.not.exist(err);
+                should.exist(docs);
+                if (err) {
+                    return done(err);
+                }
+                docs.should.have.lengthOf(MAX_RANDOM_LOCATIONS);
+                done();
+            });
+        })
+    })
 });
+
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// ex: random time between 5/6/1994 12:00 and now
+// getRandomDate(new Date(1994, 5, 6, 12), new Date())
+function getRandomDate(start, end) {
+    var startTime = start.getTime();
+    var endTime = end.getTime();
+
+    return new Date(startTime + (Math.random() * (endTime - startTime)));
+}
