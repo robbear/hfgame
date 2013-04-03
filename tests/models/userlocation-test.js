@@ -8,6 +8,9 @@ describe('UserLocation', function() {
     var sanfranciscoLoc = {lon: 122.4183, lat: 37.7750};
     var newyorkLoc = {lon: 74.0064, lat: 40.7142};
     var bostonLoc = {lon: 71.0603, lat: 42.3583};
+    var bostonDate = new Date("2011-12-06T22:30:00Z");
+    var newyorkDate = new Date("2011-05-06T19:00:00Z");
+    var MAX_RANDOM_LOCATIONS = 1000;
     var userId;
 
     before(function(done) {
@@ -75,7 +78,7 @@ describe('UserLocation', function() {
     });
 
     describe('#insertUserLocations()', function() {
-        var locsWithDate = [{location: newyorkLoc, creationDate: Date.now()}, {location: bostonLoc, creationDate: Date.now()}];
+        var locsWithDate = [{location: newyorkLoc, creationDate: newyorkDate}, {location: bostonLoc, creationDate: bostonDate}];
 
         it('should create location items for Boston and New York', function(done) {
             UserLocation.insertUserLocations(userId, locsWithDate, function(err, docs) {
@@ -90,7 +93,6 @@ describe('UserLocation', function() {
         });
     });
 
-    var MAX_RANDOM_LOCATIONS = 1000;
     describe('#insertUserLocations - ' + MAX_RANDOM_LOCATIONS + ' random locations', function() {
         it('should create ' + MAX_RANDOM_LOCATIONS + ' random location items', function(done) {
             var lonMin = 1223300,
@@ -102,7 +104,7 @@ describe('UserLocation', function() {
             for (var i = 0; i < MAX_RANDOM_LOCATIONS; i++) {
                 var lon = getRandomInt(lonMin, lonMax) / 10000.0;
                 var lat = getRandomInt(latMin, latMax) / 10000.0;
-                var date = getRandomDate(new Date("January 1, 2013"),  new Date("April 30, 2013"));
+                var date = getRandomDate(new Date("2013-01-01T12:00:00Z"),  new Date("2013-04-30T12:00:00Z"));
 
                 locsWithDate[i] = { location: {lon: lon, lat: lat}, creationDate: date };
             }
@@ -116,8 +118,8 @@ describe('UserLocation', function() {
                 docs.should.have.lengthOf(MAX_RANDOM_LOCATIONS);
                 done();
             });
-        })
-    })
+        });
+    });
 });
 
 function getRandomInt(min, max) {
