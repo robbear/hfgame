@@ -49,6 +49,24 @@ UserLocationSchema.statics.insertUserLocations = function(userId, locationsWithD
             return cb(err, docs);
         }
     });
-}
+};
+
+UserLocationSchema.statics.getUserLocationsByDateRange = function(userId, start, end, limit, cb) {
+    var UserLocation = mongoose.model('UserLocation', UserLocationSchema);
+
+    var query = UserLocation.find({});
+    query.where('userId', userId);
+    query.where('creationDate').gte(start);
+    query.where('creationDate').lt(end);
+    if (limit) {
+        query.limit(limit);
+    }
+
+    query.exec(function(err, docs) {
+        if (cb) {
+            return cb(err, docs);
+        }
+    });
+};
 
 module.exports = mongoose.model('UserLocation', UserLocationSchema);

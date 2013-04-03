@@ -11,6 +11,8 @@ describe('UserLocation', function() {
     var bostonDate = new Date("2011-12-06T22:30:00Z");
     var newyorkDate = new Date("2011-05-06T19:00:00Z");
     var MAX_RANDOM_LOCATIONS = 1000;
+    var START_DATE_STRING = "2013-01-01T12:00:00Z";
+    var END_DATE_STRING = "2013-04-30T12:00:00Z";
     var userId;
 
     before(function(done) {
@@ -104,12 +106,26 @@ describe('UserLocation', function() {
             for (var i = 0; i < MAX_RANDOM_LOCATIONS; i++) {
                 var lon = getRandomInt(lonMin, lonMax) / 10000.0;
                 var lat = getRandomInt(latMin, latMax) / 10000.0;
-                var date = getRandomDate(new Date("2013-01-01T12:00:00Z"),  new Date("2013-04-30T12:00:00Z"));
+                var date = getRandomDate(new Date(START_DATE_STRING),  new Date(END_DATE_STRING));
 
                 locsWithDate[i] = { location: {lon: lon, lat: lat}, creationDate: date };
             }
 
             UserLocation.insertUserLocations(userId, locsWithDate, function(err, docs) {
+                should.not.exist(err);
+                should.exist(docs);
+                if (err) {
+                    return done(err);
+                }
+                docs.should.have.lengthOf(MAX_RANDOM_LOCATIONS);
+                done();
+            });
+        });
+    });
+
+    describe('#getUserLocationsByDateRange()', function() {
+        it('should return ' + MAX_RANDOM_LOCATIONS + ' location items based on date range of ' + new Date(START_DATE_STRING).toDateString() + ' to ' + new Date(END_DATE_STRING).toDateString(), function(done) {
+            UserLocation.getUserLocationsByDateRange(userId, START_DATE_STRING, END_DATE_STRING, MAX_RANDOM_LOCATIONS, function(err, docs) {
                 should.not.exist(err);
                 should.exist(docs);
                 if (err) {
