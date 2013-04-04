@@ -1,22 +1,21 @@
 var mongoose = require('mongoose');
 
-//mongoose.set('debug', true);
-
 var Schema = mongoose.Schema,
     COLLECTION_NAME = 'userlocation';
 
+var safe = true;
+
 var UserLocationSchema = new Schema({
-    userId: { type: Schema.Types.ObjectId, required: true },
+    userId: { type: Schema.Types.ObjectId, required: true, index: 1 },
     location: { type: { type: String }, coordinates: [] },
     creationDate: { type: Date, default: Date.now() }
-}, {
+    }, {
+    //autoIndex: false,
+    safe: safe,
     collection: COLLECTION_NAME
-}, {
-//    autoIndex: false
 });
 // Turn off versioning since this collection is intended to be read-only
 UserLocationSchema.set('versionKey', false);
-UserLocationSchema.index({ userId: 1 });
 UserLocationSchema.index({ location: '2dsphere' });
 
 UserLocationSchema.statics.collectionName = COLLECTION_NAME;

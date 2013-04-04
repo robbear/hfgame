@@ -9,15 +9,17 @@ var Schema = mongoose.Schema,
     // Lock the account for LOCK_TIME seconds to prevent automated brute-force attempts
     LOCK_TIME = 5 * 1000;
 
+var safe = true;
+
 var UserSchema = new Schema({
     username: { type: String, required: true, index: { unique: true } },
     password: { type: String, required: true },
     loginAttempts: { type: Number, required: true, default: 0 },
     lockUntil: { type: Number }
     }, {
+    //autoIndex: false,
+    safe: safe,
     collection: COLLECTION_NAME
-}, {
-//    autoIndex: false
 });
 
 UserSchema.virtual('isLocked').get(function() {

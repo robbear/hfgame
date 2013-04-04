@@ -1,4 +1,9 @@
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'),
+    debug = false;
+
+if (debug) {
+    mongoose.set('debug', true);
+}
 
 var testUtils = {
     database: {},
