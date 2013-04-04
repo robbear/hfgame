@@ -1,27 +1,33 @@
 var mongoose = require('mongoose');
 
+//mongoose.set('debug', true);
+
 var Schema = mongoose.Schema,
     COLLECTION_NAME = 'userlocation';
 
 var UserLocationSchema = new Schema({
     userId: { type: Schema.Types.ObjectId, required: true },
-    location: { lon: Number, lat: Number },
-    creationDate: { type: Date, default: Date.now }
+    location: { type: { type: String }, coordinates: [] },
+    creationDate: { type: Date, default: Date.now() }
 }, {
     collection: COLLECTION_NAME
 }, {
 //    autoIndex: false
 });
-UserLocationSchema.index({ loc: '2d' });
-UserLocationSchema.index({ userId: 1 });
 // Turn off versioning since this collection is intended to be read-only
 UserLocationSchema.set('versionKey', false);
+UserLocationSchema.index({ userId: 1 });
+UserLocationSchema.index({ location: '2dsphere' });
 
 UserLocationSchema.statics.collectionName = COLLECTION_NAME;
 
-UserLocationSchema.statics.createUserLocation = function(userId, location, cb) {
+UserLocationSchema.statics.createUserLocation = function(userId, location, creationDate, cb) {
     var UserLocation = mongoose.model('UserLocation', UserLocationSchema);
-    var userLoc = new UserLocation({userId: userId, location: location});
+    var userLoc = new UserLocation({
+        userId: userId,
+        location: { type: 'Point', coordinates: location },
+        creationDate: creationDate ? creationDate : Date.now()
+    });
     userLoc.save(function(err, userLoc) {
         if (cb) {
             return cb(err, userLoc);
@@ -37,10 +43,19 @@ UserLocationSchema.statics.insertUserLocations = function(userId, locationsWithD
         return;
     }
 
+    //
+    // locationsWithDate:
+    // { location: [], creationDate: Date }
+    //
+
     var UserLocation = mongoose.model('UserLocation', UserLocationSchema);
     var modelLocs = new Array(locationsWithDate.length);
     for (var i = 0; i < locationsWithDate.length; i++) {
-        var modelItem = new UserLocation({userId: userId, location: locationsWithDate[i].location, creationDate: locationsWithDate[i].creationDate});
+        var modelItem = new UserLocation({
+            userId: userId,
+            location: { type: 'Point', coordinates: locationsWithDate[i].location },
+            creationDate: locationsWithDate[i].creationDate
+        });
         modelLocs[i] = modelItem.toObject();
     }
 
@@ -58,6 +73,32 @@ UserLocationSchema.statics.getUserLocationsByDateRange = function(userId, start,
     query.where('userId', userId);
     query.where('creationDate').gte(start);
     query.where('creationDate').lt(end);
+    if (limit) {
+        query.limit(limit);
+    }
+
+    query.exec(function(err, docs) {
+        if (cb) {
+            return cb(err, docs);
+        }
+    });
+};
+
+//
+// This static method may not be generally useful, but we've implemented it (early in this work)
+// for testing purposes and for code demonstration purposes. Note the query.where('location')
+// clause and how we indicate to MongoDB how to find locations within a maxMeters radius.
+// This is based on GeoJSON and spherical indexing.
+//
+UserLocationSchema.statics.getUserLocationsNear = function(location, maxMeters, limit, cb) {
+    if (!Array.isArray(location) || location.length != 2) {
+        throw "Invalid location array";
+    }
+
+    var UserLocation = mongoose.model('UserLocation', UserLocationSchema);
+
+    var query = UserLocation.find({});
+    query.where('location').near({ type: 'Point', coordinates: location }).maxDistance(maxMeters);
     if (limit) {
         query.limit(limit);
     }

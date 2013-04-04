@@ -4,10 +4,10 @@ var should = require('should'),
     UserLocation = require('../../models/userlocation');
 
 describe('UserLocation', function() {
-    var seattleLoc = {lon: 122.3331, lat: 47.6097};
-    var sanfranciscoLoc = {lon: 122.4183, lat: 37.7750};
-    var newyorkLoc = {lon: 74.0064, lat: 40.7142};
-    var bostonLoc = {lon: 71.0603, lat: 42.3583};
+    var seattleLoc = [122.3331, 47.6097];
+    var sanfranciscoLoc = [122.4183, 37.7750];
+    var newyorkLoc = [74.0064, 40.7142];
+    var bostonLoc = [71.0603, 42.3583];
     var bostonDate = new Date("2011-12-06T22:30:00Z");
     var newyorkDate = new Date("2011-05-06T19:00:00Z");
     var MAX_RANDOM_LOCATIONS = 1000;
@@ -16,40 +16,32 @@ describe('UserLocation', function() {
     var userId;
 
     before(function(done) {
-        // Ensure the User and UserLocation collections are empty before we run our tests
-        TestUtils.dropCollection(User.collectionName, function(err) {
+        User.createUser('userlocationtestuser@test.com', 'password', function(err, user) {
             if (err) {
                 return done(err);
             }
             else {
-                TestUtils.dropCollection(UserLocation.collectionName, function(err) {
-                    User.createUser('testuser@test.com', 'password', function(err, user) {
-                        if (err) {
-                            return done(err);
-                        }
-                        else {
-                            userId = user.id;
-                            done();
-                        }
-                    });
-                });
+                userId = user.id;
+                done();
             }
         });
     });
 
     describe('#createUserLocation() - Seattle', function() {
         it('should create a location item for Seattle', function(done) {
-            UserLocation.createUserLocation(userId, seattleLoc, function(err, userLocation) {
+            UserLocation.createUserLocation(userId, seattleLoc, null, function(err, userLocation) {
                 should.not.exist(err);
                 should.exist(userLocation);
                 should.exist(userLocation.location);
+                should.exist(userLocation.location.coordinates);
                 should.exist(userLocation.userId);
                 if (err) {
                     return done(err);
                 }
                 else {
-                    userLocation.location.should.have.property('lon', seattleLoc.lon);
-                    userLocation.location.should.have.property('lat', seattleLoc.lat);
+                    userLocation.location.coordinates.should.have.lengthOf(2);
+                    userLocation.location.coordinates[0].should.equal(seattleLoc[0]);
+                    userLocation.location.coordinates[1].should.equal(seattleLoc[1]);
                     userLocation.userId.should.be.a('object');
                     userLocation.userId.toString().should.equal(userId);
                     done();
@@ -60,17 +52,18 @@ describe('UserLocation', function() {
 
     describe('#createUserLocation() - San Francisco', function() {
         it('should create a location item for San Francisco', function(done) {
-            UserLocation.createUserLocation(userId, sanfranciscoLoc, function(err, userLocation) {
+            UserLocation.createUserLocation(userId, sanfranciscoLoc, null, function(err, userLocation) {
                 should.not.exist(err);
                 should.exist(userLocation);
                 should.exist(userLocation.location);
+                should.exist(userLocation.location.coordinates);
                 should.exist(userLocation.userId);
                 if (err) {
                     return done(err);
                 }
                 else {
-                    userLocation.location.should.have.property('lon', sanfranciscoLoc.lon);
-                    userLocation.location.should.have.property('lat', sanfranciscoLoc.lat);
+                    userLocation.location.coordinates[0].should.equal(sanfranciscoLoc[0]);
+                    userLocation.location.coordinates[1].should.equal(sanfranciscoLoc[1]);
                     userLocation.userId.should.be.a('object');
                     userLocation.userId.toString().should.equal(userId);
                     done();
@@ -108,7 +101,7 @@ describe('UserLocation', function() {
                 var lat = getRandomInt(latMin, latMax) / 10000.0;
                 var date = getRandomDate(new Date(START_DATE_STRING),  new Date(END_DATE_STRING));
 
-                locsWithDate[i] = { location: {lon: lon, lat: lat}, creationDate: date };
+                locsWithDate[i] = { location: [lon, lat], creationDate: date };
             }
 
             UserLocation.insertUserLocations(userId, locsWithDate, function(err, docs) {
@@ -132,6 +125,24 @@ describe('UserLocation', function() {
                     return done(err);
                 }
                 docs.should.have.lengthOf(MAX_RANDOM_LOCATIONS);
+                docs[0].location.coordinates.should.have.lengthOf(2);
+                docs[MAX_RANDOM_LOCATIONS - 1].location.coordinates.should.have.lengthOf(2);
+                done();
+            });
+        });
+    });
+
+    describe('#getUserLocationsNear()', function() {
+        it('should return the San Francisco location based on a query for near', function(done) {
+            UserLocation.getUserLocationsNear(sanfranciscoLoc, 100 /* meters */, 1000, function(err, docs) {
+                should.not.exist(err);
+                should.exist(docs);
+                if (err) {
+                    return done(err);
+                }
+                docs.should.have.lengthOf(1);
+                should.exist(docs[0]);
+                should.exist(docs[0].location);
                 done();
             });
         });

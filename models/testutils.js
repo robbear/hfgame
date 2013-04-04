@@ -19,6 +19,7 @@ var testUtils = {
     deleteMongoDB: function(cb) {
         // Example of native driver call
         mongoose.connection.db.executeDbCommand({dropDatabase:1}, function(err, result) {
+            mongoose.connection.close();
             if (cb) {
                 if (err) return cb(err);
                 return cb();
