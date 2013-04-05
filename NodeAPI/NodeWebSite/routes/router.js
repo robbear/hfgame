@@ -72,16 +72,21 @@ var routeExports = [
         description: "Sample put call with parameters. Uses HTTP PUT. Parameters set in the request body: 'name=foo&age=21'. Returns an echo of the name/age parameters sent.",
         parameters: [{'name': "Person's name"}, {'age': "Person's age"}]
     },
-    //
-    // BUGBUG - hardwired to test models access code paths
-    //
+    {
+        httpVerb: 'post',
+        exportName: 'User_createUser',
+        routeFn: usersController.createUser,
+        route: '/users/createuser',
+        description: "Create a new user account. Parameters are passed in the form body",
+        parameters: [{'username': 'new username', 'password': 'new password'}]
+    },
     {
         httpVerb: 'get',
-        exportName: 'testCreateUser',
-        routeFn: usersController.createUser,
-        route: '/testcreateuser',
-        description: "Test API to create a user, stressing the User model.",
-        parameters: []
+        exportName: 'User_login',
+        routeFn: usersController.login,
+        route: '/users/login',
+        description: "Log in to an existing account",
+        parameters: [{'username': 'username'}, {'password': 'password'}]
     }
 ];
 

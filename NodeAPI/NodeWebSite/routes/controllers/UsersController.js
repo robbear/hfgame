@@ -6,9 +6,33 @@ var restify = require('restify'),
 var User = hfConfig.userModel();
 
 exports.createUser = function(req, res, next) {
-    User.createUser('user1@test.com', 'user1password', function(err, user) {
-        // BUGBUG - process error for API reporting
+    var userName = req.params.username;
+    var password = req.params.password;
+
+    if (!userName || !password) {
+        return next(new restify.InvalidArgumentError("Invalid username or password"));
+    }
+
+    User.createUser(userName, password, function(err, user) {
         res.send(err ? err : user);
         next();
+    });
+};
+
+exports.login = function(req, res, next) {
+    var userName = req.params.username;
+    var password = req.params.password;
+
+    if (!userName || !password) {
+        return next(new restify.InvalidArgumentError("Invalid username or password"));
+    }
+
+    User.getAuthenticated(userName, password, function(err, user, reason) {
+        if (err || !user) {
+            logger.bunyanLogger().error('Failed to login user ' + userName +  ': ' + reason);
+            return next(new restify.InvalidArgumentError("Invalid username or password"));
+        }
+
+        res.send({result: "ok", user: {username: user.username, id: user.id}});
     });
 };
