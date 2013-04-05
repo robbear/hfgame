@@ -1,5 +1,6 @@
 var restify = require('restify'),
     fs = require('fs'),
+    testController = require('./controllers/TestController.js'),
     logger = require('../logger/logger'),
     hfConfig = require('../config/config.js');
 
@@ -31,22 +32,6 @@ var apiRoute = function (req, res, next) {
     next();
 }
 
-var testRoute = function (req, res, next) {
-    res.send({msg: 'testRoute value'});
-    next();
-}
-
-var testItemRoute = function (req, res, next) {
-    res.send({name: req.params.item, value: "Don't you wish we had a database?"});
-    next();
-}
-
-var testPutRoute = function (req, res, next) {
-    res.send({name: req.params.name, age: req.params.age});
-    next();
-}
-
-
 //
 // Define the routes and exports for all APIs.
 //
@@ -65,7 +50,7 @@ var routeExports = [
     {
         httpVerb: 'get',
         exportName: 'test',
-        routeFn: testRoute,
+        routeFn: testController.testRoute,
         route: '/test',
         description: 'Sample test api. Uses HTTP GET. Returns a bogus string.',
         parameters: []
@@ -73,7 +58,7 @@ var routeExports = [
     {
         httpVerb: 'get',
         exportName: 'testItem',
-        routeFn: testItemRoute,
+        routeFn: testController.testItemRoute,
         route: '/testitem/:item',
         description: 'Sample test api with parameter. Uses HTTP GET. Returns a simulated fetched item.',
         parameters: [{'item': 'Item identifier'}]
@@ -81,7 +66,7 @@ var routeExports = [
     {
         httpVerb: 'put',
         exportName: 'testPut',
-        routeFn: testPutRoute,
+        routeFn: testController.testPutRoute,
         route: '/testput',
         description: "Sample put call with parameters. Uses HTTP PUT. Parameters set in the request body: 'name=foo&age=21'. Returns an echo of the name/age parameters sent.",
         parameters: [{'name': "Person's name"}, {'age': "Person's age"}]
@@ -107,5 +92,3 @@ function addRouteExport(httpVerb, exportName, routeFn, route) {
     // Extend the exports.routeMap array with the new item
     exports.routeMap.push(routeMapItem);
 }
-
-
