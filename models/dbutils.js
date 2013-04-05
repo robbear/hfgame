@@ -5,7 +5,7 @@ if (debug) {
     mongoose.set('debug', true);
 }
 
-var testUtils = {
+var dbUtils = {
     database: {},
 
     connectToMongoDB: function(connectionString, cb) {
@@ -49,4 +49,4 @@ var testUtils = {
     }
 };
 
-module.exports = testUtils;
+module.exports = dbUtils;

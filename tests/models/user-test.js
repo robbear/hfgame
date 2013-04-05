@@ -1,5 +1,4 @@
 var should = require('should'),
-    TestUtils = require('../../models/testutils'),
     User = require('../../models/user');
 
 describe('User', function() {

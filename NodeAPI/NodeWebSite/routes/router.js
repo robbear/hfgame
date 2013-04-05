@@ -1,6 +1,7 @@
 var restify = require('restify'),
     fs = require('fs'),
     testController = require('./controllers/TestController.js'),
+    usersController = require('./controllers/UsersController.js'),
     logger = require('../logger/logger'),
     hfConfig = require('../config/config.js');
 
@@ -30,7 +31,7 @@ var apiRoute = function (req, res, next) {
 
     res.send(apis);
     next();
-}
+};
 
 //
 // Define the routes and exports for all APIs.
@@ -70,6 +71,17 @@ var routeExports = [
         route: '/testput',
         description: "Sample put call with parameters. Uses HTTP PUT. Parameters set in the request body: 'name=foo&age=21'. Returns an echo of the name/age parameters sent.",
         parameters: [{'name': "Person's name"}, {'age': "Person's age"}]
+    },
+    //
+    // BUGBUG - hardwired to test models access code paths
+    //
+    {
+        httpVerb: 'get',
+        exportName: 'testCreateUser',
+        routeFn: usersController.createUser,
+        route: '/testcreateuser',
+        description: "Test API to create a user, stressing the User model.",
+        parameters: []
     }
 ];
 

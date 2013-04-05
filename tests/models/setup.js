@@ -1,5 +1,5 @@
 var should = require('should'),
-    TestUtils = require('../../models/testutils');
+    DBUtils = require('../../models/dbutils');
 
 var usingMongoLab = false;
 
@@ -9,11 +9,11 @@ if (usingMongoLab) {
 }
 
 before(function(done) {
-    TestUtils.connectToMongoDB(connectionString, done);
+    DBUtils.connectToMongoDB(connectionString, done);
 });
 
 after(function(done) {
     if (usingMongoLab) return done();
 
-    TestUtils.deleteMongoDB(done);
+    DBUtils.deleteMongoDB(done);
 });

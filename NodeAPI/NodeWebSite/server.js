@@ -72,16 +72,27 @@ for (var i = 0; i < router.routeMap.length; i++) {
     }
 }
 
-
 //
-// Start the servers on the appropriate ports
+// Connect to the database
 //
-server.listen(process.env.PORT || 1338 , function() {
-    console.log('%s listening at %s', server.name, server.url);
-});
+hfConfig.dbUtils().connectToMongoDB(hfConfig.connectionString(), function(err) {
+    console.log('Callback entered in response to connecting to the database');
+    if (err) {
+        console.log('Failed to open database: ' + err.message);
+        throw ('Failed to open database: ' + err.message);
+    }
 
-if (hfConfig.usesHttps()) {
-    https_server.listen(443, function() {
-        console.log('%s listening at %s', https_server.name, https_server.url);
+    //
+    // Start the servers on the appropriate ports
+    //
+    console.log('Attempting to start the node server...');
+    server.listen(process.env.PORT || 1338 , function() {
+        console.log('%s listening at %s', server.name, server.url);
     });
-}
+
+    if (hfConfig.usesHttps()) {
+        https_server.listen(443, function() {
+            console.log('%s listening at %s', https_server.name, https_server.url);
+        });
+    }
+});
