@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Command line test tool
-# usage: runtests <all|models>
+# usage: runtests <all|models|rest>
 
 EXPECTED_ARGS=1
 E_BADARGS=65
@@ -23,18 +23,24 @@ trap 'error_handler ${LINENO} ${$?}' ERR
 usage()
 {
     echo "runtests - command line test tool"
-    echo "usage: ./runtests.sh <all|models>"
+    echo "usage: ./runtests.sh <all|models|rest>"
     echo ""
 }
 
 runAll()
 {
     runModelsTest
+    runRESTTest
 }
 
 runModelsTest()
 {
     ./node_modules/.bin/mocha --reporter spec ./models/*.js
+}
+
+runRESTTest()
+{
+    ./node_modules/.bin/mocha --reporter spec ./restapi/*.js
 }
 
 #
@@ -52,6 +58,9 @@ case "$1" in
 	;;
     'models')
 	runModelsTest
+	;;
+    'rest')
+	runRESTTest
 	;;
     *)
 	usage

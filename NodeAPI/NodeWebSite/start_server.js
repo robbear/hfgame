@@ -1,18 +1,24 @@
-exports.StartServer = function() {
+var silenceLogger = false;
+
+exports.SilenceLogger = function(silence) {
+    silenceLogger = silence;
+}
+
+exports.StartServer = function(startserver_callback) {
     var restify = require('restify'),
         fs = require('fs'),
         router = require('./routes/router'),
         logger = require('./logger/logger'),
         hfConfig = require('./config/config.js');
 
-    logger.bunyanLogger().info("***** Starting hfapi web service *****");
+    if(!silenceLogger) logger.bunyanLogger().info("***** Starting hfapi web service *****");
 
     //
     // HTTP server options
     //
     var http_options = {
         name: "hfAPI HTTP",
-        log: logger.bunyanLogger()
+        log: silenceLogger ? null : logger.bunyanLogger()
     }
 
     //
@@ -22,7 +28,7 @@ exports.StartServer = function() {
         name: "hfAPI HTTPS",
         key: fs.readFileSync('./certificates/ssl/self-signed/server.key'),
         certificate: fs.readFileSync('./certificates/ssl/self-signed/server.crt'),
-        log: logger.bunyanLogger()
+        log: silenceLogger ? null : logger.bunyanLogger()
     } : null;
 
 
@@ -35,7 +41,6 @@ exports.StartServer = function() {
     // Pre-router callback.
     //
     function preRoutingHandler(req, res, next) {
-        console.log("preRoutingHandler");
         return next();
     }
 
@@ -77,7 +82,6 @@ exports.StartServer = function() {
     // Connect to the database
     //
     hfConfig.dbUtils().connectToMongoDB(hfConfig.connectionString(), function(err) {
-        console.log('Callback entered in response to connecting to the database');
         if (err) {
             console.log('Failed to open database: ' + err.message);
             throw ('Failed to open database: ' + err.message);
@@ -86,14 +90,17 @@ exports.StartServer = function() {
         //
         // Start the servers on the appropriate ports
         //
-        console.log('Attempting to start the node server...');
         server.listen(process.env.PORT || 1338 , function() {
-            console.log('%s listening at %s', server.name, server.url);
+            if (!silenceLogger) console.log('%s listening at %s', server.name, server.url);
+
+            if (startserver_callback) {
+                startserver_callback();
+            }
         });
 
         if (hfConfig.usesHttps()) {
             https_server.listen(443, function() {
-                console.log('%s listening at %s', https_server.name, https_server.url);
+                if (!silenceLogger) console.log('%s listening at %s', https_server.name, https_server.url);
             });
         }
     });
