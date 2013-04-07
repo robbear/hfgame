@@ -14,8 +14,17 @@ exports.createUser = function(req, res, next) {
     }
 
     User.createUser(userName, password, function(err, user) {
-        res.send(err ? err : user);
-        next();
+        if (err || !user) {
+            return next(new restify.InvalidArgumentError("Invalid username or password"));
+        }
+        else {
+            //
+            // BUGBUG
+            // TODO: Need to define client model infrastructure.
+            //
+            res.send({ id: user.id, username: user.username });
+            next();
+        }
     });
 };
 
@@ -33,6 +42,10 @@ exports.login = function(req, res, next) {
             return next(new restify.InvalidArgumentError("Invalid username or password"));
         }
 
-        res.send({result: "ok", user: {username: user.username, id: user.id}});
+        //
+        // BUGBUG
+        // TODO: Need to define client model infrastructure
+        //
+        res.send({ id: user.id, username: user.username });
     });
 };
