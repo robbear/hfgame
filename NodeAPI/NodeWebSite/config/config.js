@@ -3,23 +3,23 @@ var _modelsPath = '../../../models/';
 // TODO: Set to true for production as part of the build process. TBD.
 var _usingMongoLab = false;
 
-var _projectName = 'hfgame';
+var _databaseName = 'hfgame';
 var _usesHttps = false;
 var _userModel = require(_modelsPath + 'user.js');
 var _dbUtils = require(_modelsPath + 'dbutils.js');
 var _userlocationModel = require(_modelsPath + 'userlocation.js');
-
-var _connectionString = 'mongodb://localhost:27017/' + _projectName;
-if (_usingMongoLab) {
-    _connectionString = 'mongodb://hfmongo:D0ntBl1nk@ds053497.mongolab.com:53497/' + _projectName;
-}
 
 exports.usesHttps = function () {
     return _usesHttps;
 };
 
 exports.connectionString = function() {
-    return _connectionString;
+    var connectionString = 'mongodb://localhost:27017/' + _databaseName;
+    if (_usingMongoLab) {
+        connectionString = 'mongodb://hfmongo:D0ntBl1nk@ds053497.mongolab.com:53497/' + _databaseName;
+    }
+
+    return connectionString;
 };
 
 exports.dbUtils = function() {
@@ -32,4 +32,11 @@ exports.userModel = function() {
 
 exports.userLocationModel = function() {
     return _userlocationModel;
+};
+
+//
+// Primarily used for unit tests to set the database name
+//
+exports.setDatabaseName = function(dbName) {
+    _databaseName = dbName;
 };
