@@ -8,7 +8,7 @@ var safe = true;
 var UserLocationSchema = new Schema({
     userId: { type: Schema.Types.ObjectId, required: true, index: 1 },
     location: { type: { type: String }, coordinates: [] },
-    creationDate: { type: Date, default: Date.now() }
+    date: { type: Date, default: Date.now() }
     }, {
     //autoIndex: false,
     safe: safe,
@@ -20,12 +20,12 @@ UserLocationSchema.index({ location: '2dsphere' });
 
 UserLocationSchema.statics.collectionName = COLLECTION_NAME;
 
-UserLocationSchema.statics.createUserLocation = function(userId, location, creationDate, cb) {
+UserLocationSchema.statics.createUserLocation = function(userId, location, date, cb) {
     var UserLocation = mongoose.model('UserLocation', UserLocationSchema);
     var userLoc = new UserLocation({
         userId: userId,
         location: { type: 'Point', coordinates: location },
-        creationDate: creationDate ? creationDate : Date.now()
+        date: date ? date : Date.now()
     });
     userLoc.save(function(err, userLoc) {
         if (cb) {
@@ -44,7 +44,7 @@ UserLocationSchema.statics.insertUserLocations = function(userId, locationsWithD
 
     //
     // locationsWithDate:
-    // { location: [], creationDate: Date }
+    // { location: [], date: Date }
     //
 
     var UserLocation = mongoose.model('UserLocation', UserLocationSchema);
@@ -52,8 +52,8 @@ UserLocationSchema.statics.insertUserLocations = function(userId, locationsWithD
     for (var i = 0; i < locationsWithDate.length; i++) {
         var modelItem = new UserLocation({
             userId: userId,
-            location: { type: 'Point', coordinates: locationsWithDate[i].location },
-            creationDate: locationsWithDate[i].creationDate
+            location: { type: 'Point', coordinates: locationsWithDate[i].coordinates },
+            date: locationsWithDate[i].date
         });
         modelLocs[i] = modelItem.toObject();
     }
@@ -70,8 +70,8 @@ UserLocationSchema.statics.getUserLocationsByDateRange = function(userId, start,
 
     var query = UserLocation.find({});
     query.where('userId', userId);
-    query.where('creationDate').gte(start);
-    query.where('creationDate').lt(end);
+    query.where('date').gte(start);
+    query.where('date').lt(end);
     if (limit) {
         query.limit(limit);
     }

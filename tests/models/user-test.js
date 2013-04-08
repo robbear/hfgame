@@ -1,7 +1,7 @@
 var should = require('should'),
     User = require('../../models/user');
 
-describe('User', function() {
+describe('User Model', function() {
     var MAX_USERS = 10;
 
     describe('#createUser()', function() {

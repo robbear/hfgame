@@ -2,7 +2,7 @@ var should = require('should'),
     User = require('../../models/user');
     UserLocation = require('../../models/userlocation');
 
-describe('UserLocation', function() {
+describe('UserLocation Model', function() {
     var seattleLoc = [122.3331, 47.6097];
     var sanfranciscoLoc = [122.4183, 37.7750];
     var newyorkLoc = [74.0064, 40.7142];
@@ -34,6 +34,7 @@ describe('UserLocation', function() {
                 should.exist(userLocation.location);
                 should.exist(userLocation.location.coordinates);
                 should.exist(userLocation.userId);
+                should.exist(userLocation.date);
                 if (err) {
                     return done(err);
                 }
@@ -43,6 +44,7 @@ describe('UserLocation', function() {
                     userLocation.location.coordinates[1].should.equal(seattleLoc[1]);
                     userLocation.userId.should.be.a('object');
                     userLocation.userId.toString().should.equal(userId);
+                    userLocation.date.should.be.a('object');
                     done();
                 }
             });
@@ -72,7 +74,7 @@ describe('UserLocation', function() {
     });
 
     describe('#insertUserLocations()', function() {
-        var locsWithDate = [{location: newyorkLoc, creationDate: newyorkDate}, {location: bostonLoc, creationDate: bostonDate}];
+        var locsWithDate = [{coordinates: newyorkLoc, date: newyorkDate}, {coordinates: bostonLoc, date: bostonDate}];
 
         it('should create location items for Boston and New York', function(done) {
             UserLocation.insertUserLocations(userId, locsWithDate, function(err, docs) {
@@ -100,7 +102,7 @@ describe('UserLocation', function() {
                 var lat = getRandomInt(latMin, latMax) / 10000.0;
                 var date = getRandomDate(new Date(START_DATE_STRING),  new Date(END_DATE_STRING));
 
-                locsWithDate[i] = { location: [lon, lat], creationDate: date };
+                locsWithDate[i] = { coordinates: [lon, lat], date: date };
             }
 
             UserLocation.insertUserLocations(userId, locsWithDate, function(err, docs) {
