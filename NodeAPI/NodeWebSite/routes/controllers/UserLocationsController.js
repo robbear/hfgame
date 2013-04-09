@@ -7,14 +7,23 @@ var UserLocation = hfConfig.userLocationModel();
 
 exports.createUserLocation = function(req, res, next) {
     var userId = req.params.userId;
-    var coords = req.params.coordinates;
+    var coordinates = req.params.coordinates;
     var date = req.params.date;
 
-    if (!userId || !coords || !Array.isArray(coords) || coords.length != 2) {
-        return next(new restify.InvalidArgumentError("One or more invalid arguments"));
+    //
+    // Validate the data
+    //
+    if (!userId) {
+        return next(new restify.InvalidArgumentError("No userid"));
+    }
+    if (!isValidDate(date)) {
+        return next(new restify.RestError("Invalid date"));
+    }
+    if (!isValidCoordinates(coordinates)) {
+        return next(new restify.InvalidArgumentError("Invalid coordinates"));
     }
 
-    UserLocation.createUserLocation(userId, coords, date, function(err, userLocation) {
+    UserLocation.createUserLocation(userId, coordinates, date, function(err, userLocation) {
         if (err) {
             return next(new restify.RestError(err.message));
         }
@@ -23,7 +32,7 @@ exports.createUserLocation = function(req, res, next) {
             return next(new restify.RestError("Unable to add location for userId: " + userId));
         }
 
-        res.send({ userId: userLocation.userId, coordinates: userLocation.location.coordinates, date: userLocation.date });
+        res.send({});
         next();
     });
 };
@@ -34,39 +43,28 @@ exports.insertUserLocations = function(req, res, next) {
 
     //
     // Validate the data
-    // BUGBUG
-    // TODO: Consider whether this data validation should go in the model class method
     //
     if (!userId) {
         return next(new restify.InvalidArgumentError("No userid"));
     }
     if (!userLocations) {
-        return next(new restify.InvalidArgumentError("No userlocations"));
+        return next(new restify.InvalidArgumentError("No locations provided"));
     }
     if (!Array.isArray(userLocations)) {
-        return next(new restify.InvalidArgumentError("userlocations must be an array of objects: { location: [lon, lat], date: date }"));
+        return next(new restify.InvalidArgumentError("locations must be an array of objects: { location: [lon, lat], date: date }"));
     }
     if (userLocations.length < 1) {
-        return next(new restify.InvalidArgumentError("userlocations must be an array of objects: { location: [lon, lat], date: date }"));
+        return next(new restify.InvalidArgumentError("locations must be an array of objects: { location: [lon, lat], date: date }"));
     }
     for (var i = 0; i < userLocations.length; i++) {
         var ul = userLocations[i];
         var coordinates = ul.coordinates;
-        if (!coordinates ||
-            !Array.isArray(coordinates) ||
-            coordinates.length != 2 ||
-            (typeof coordinates[0]) !== 'number' ||
-            (typeof coordinates[1]) !== 'number') {
-            return next(new restify.InvalidArgumentError("userlocations must be an array of objects: { location: [lon, lat], date: date }"));
+        if (!isValidCoordinates(coordinates)) {
+            return next(new restify.InvalidArgumentError("One or more invalid location coordinates"));
         }
-        // BUGBUG
-        // TODO: Can we pass in time ticks instead of string?
-        if (!ul.date || (typeof ul.date) !== 'string') {
-            return next(new restify.InvalidArgumentError("userlocations must be an array of objects: { location: [lon, lat], date: date }"))
+        if (!isValidDate(ul.date)) {
+            return next(new restify.InvalidArgumentError("One or more invalid dates}"));
         }
-
-        // BUGBUG
-        // TODO: Validate longitude and latitude values
     }
 
     UserLocation.insertUserLocations(userId, userLocations, function(err, docs) {
@@ -78,7 +76,49 @@ exports.insertUserLocations = function(req, res, next) {
             return next(new restify.RestError("Unable to add locations for userId: " + userId));
         }
 
-        res.send({count: docs.length});
+        res.send({});
         next();
     });
 };
+
+
+//
+// BUGBUG
+// TODO: Should these utility methods go in a shared module somewhere?
+//
+function isValidDate(obj) {
+    var d;
+
+    try {
+        d = new Date(obj);
+
+        if (Object.prototype.toString.call(d) !== "[object Date]") {
+            return false;
+        }
+
+        return !isNaN(d.getTime());
+    }
+    catch(err) {
+        return false;
+    }
+}
+
+function isValidCoordinates(coordinates) {
+    if (!coordinates) {
+        return false;
+    }
+    if (!Array.isArray(coordinates)) {
+        return false;
+    }
+    if (coordinates.length != 2) {
+        return false;
+    }
+    if ((typeof coordinates[0]) !== 'number' || (typeof coordinates[1]) !== 'number') {
+        return false;
+    }
+    if (coordinates[0] > 180.0 || coordinates[0] < -180.0 || coordinates[1] > 90.0 || coordinates[1] < -90.0) {
+        return false;
+    }
+
+    return true;
+}

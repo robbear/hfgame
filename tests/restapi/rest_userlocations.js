@@ -21,8 +21,6 @@ describe('UserLocations REST API', function() {
 
     describe('/users/createuser', function() {
         it('should create a test user with { username: \'' + username + '\', password: \'' + password + '\' }', function(done) {
-            // BUGBUG
-            // TODO: Client model
             client.post('/users/createuser', { username: username, password: password }, function(err, req, res, user) {
                 should.not.exist(err);
                 should.exist(user);
@@ -42,8 +40,6 @@ describe('UserLocations REST API', function() {
 
     describe('/users/login', function() {
         it('should allow a login for user { username: \'' + username + '\', password: \'' + password + '\' }', function(done) {
-            // BUGBUG
-            // TODO: Client model
             var url = '/users/login?username=' + username + '&password=' + password;
             client.get(url, function(err, req, res, user) {
                 should.not.exist(err);
@@ -66,26 +62,14 @@ describe('UserLocations REST API', function() {
     describe('/userlocations/createlocation', function() {
         it('should create a user location item', function(done) {
             var date = Date.now();
-            // BUGBUG
-            // TODO: Client model
-            client.post('/userlocations/createlocation', { userId: userId, coordinates: seattleCoordinates, date: date }, function(err, req, res, userLocation) {
+            client.post('/userlocations/createlocation', { userId: userId, coordinates: seattleCoordinates, date: date }, function(err, req, res, data) {
                 should.not.exist(err);
-                should.exist(userLocation);
-                if (err || !userLocation) {
+                should.exist(data);
+                if (err || !data) {
                     return done(err);
                 }
 
                 res.statusCode.should.equal(200);
-                userLocation.should.have.property('userId');
-                userLocation.should.have.property('coordinates');
-                userLocation.should.have.property('date');
-                userLocation.userId.should.be.a('string');
-                userLocation.coordinates.should.have.lengthOf(2);
-                userLocation.date.should.be.a('string');
-                userLocation.userId.should.equal(userId);
-                userLocation.coordinates[0].should.equal(seattleCoordinates[0]);
-                userLocation.coordinates[1].should.equal(seattleCoordinates[1]);
-                userLocation.date.should.equal(new Date(date).toJSON());
                 return done();
             });
         });
@@ -104,20 +88,17 @@ describe('UserLocations REST API', function() {
                 var lat = getRandomInt(latMin, latMax) / 10000.0;
                 var date = getRandomDate(new Date(START_DATE_STRING),  new Date(END_DATE_STRING));
 
-                // BUGBUG
-                // TODO: Client model
                 locsWithDate[i] = { coordinates: [lon, lat], date: date };
             }
 
-            client.post('/userlocations/createlocations', { userId: userId, locations: locsWithDate }, function(err, req, res, docs) {
+            client.post('/userlocations/createlocations', { userId: userId, locations: locsWithDate }, function(err, req, res, data) {
                 should.not.exist(err);
-                should.exist(docs);
-                if (err || !docs) {
+                should.exist(data);
+                if (err || !data) {
                     return done(err);
                 }
 
-                // BUGBUG
-                // TODO: Decide on docs return contents
+                res.statusCode.should.equal(200);
                 return done();
             });
         });

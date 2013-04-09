@@ -44,7 +44,7 @@ UserLocationSchema.statics.insertUserLocations = function(userId, locationsWithD
 
     //
     // locationsWithDate:
-    // { location: [], date: Date }
+    // [{ coordinates: [lon, lat], date: Date }]
     //
 
     var UserLocation = mongoose.model('UserLocation', UserLocationSchema);
