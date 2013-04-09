@@ -26,6 +26,7 @@ var apiRoute = function (req, res, next) {
         api.httpVerb = route.httpVerb;
         api.description = route.description;
         api.parameters = route.parameters;
+        api.returns = route.returns;
 
         apis.push(api);
     }
@@ -47,7 +48,8 @@ var routeExports = [
         routeFn: apiRoute,
         route: '/api',
         description: 'Returns a list of the currently supported APIs.',
-        parameters: '{}'
+        parameters: '{}',
+        returns: "API list"
     },
     {
         httpVerb: 'get',
@@ -55,7 +57,8 @@ var routeExports = [
         routeFn: testController.testRoute,
         route: '/test',
         description: 'Sample test api. Uses HTTP GET. Returns a bogus string.',
-        parameters: '{}'
+        parameters: '{}',
+        returns: "{}"
     },
     {
         httpVerb: 'get',
@@ -63,7 +66,8 @@ var routeExports = [
         routeFn: testController.testItemRoute,
         route: '/testitem/:item',
         description: 'Sample test api with parameter. Uses HTTP GET. Returns a simulated fetched item.',
-        parameters: "{item: 'Item identifier'}"
+        parameters: "{item: 'Item identifier'}",
+        returns: "{}"
     },
     {
         httpVerb: 'put',
@@ -71,7 +75,8 @@ var routeExports = [
         routeFn: testController.testPutRoute,
         route: '/testput',
         description: "Sample put call with parameters. Uses HTTP PUT. Parameters set in the request body: 'name=foo&age=21'. Returns an echo of the name/age parameters sent.",
-        parameters: "{name: 'name', age: 'Person age'}"
+        parameters: "{name: 'name', age: 'Person age'}",
+        returns: "{}"
     },
     {
         httpVerb: 'post',
@@ -79,7 +84,8 @@ var routeExports = [
         routeFn: usersController.createUser,
         route: '/users/createuser',
         description: "Create a new user account. Parameters are passed in the form body",
-        parameters: "{username: 'username', password: 'password'}"
+        parameters: "{username: 'username', password: 'password'}",
+        returns: "{ id: UserId, username: userName }"
     },
     {
         httpVerb: 'get',
@@ -87,7 +93,8 @@ var routeExports = [
         routeFn: usersController.login,
         route: '/users/login',
         description: "Log in to an existing account",
-        parameters: "{username: 'username', password: 'password'}"
+        parameters: "{username: 'username', password: 'password'}",
+        returns: "{ id: UserId, username: userName }"
     },
     {
         httpVerb: 'post',
@@ -95,7 +102,8 @@ var routeExports = [
         routeFn: userLocationsController.createUserLocation,
         route: '/userlocations/createlocation',
         description: "Create a user location. Parameters are passed in the form body.",
-        parameters: "{userId: userId, coordinates: [longitude, latitude], date: date}"
+        parameters: "{userId: userId, coordinates: [longitude, latitude], date: date}",
+        returns: "{}"
     },
     {
         httpVerb: 'post',
@@ -103,7 +111,17 @@ var routeExports = [
         routeFn: userLocationsController.insertUserLocations,
         route: '/userlocations/createlocations',
         description: "Create a collection of user locations. Parameters are passed in the form body.",
-        parameters: "{userId: userId, locations: [{coordinates: [longitude, latitude], date: date}]}"
+        parameters: "{userId: userId, locations: [{coordinates: [longitude, latitude], date: date}]}",
+        returns: "{}"
+    },
+    {
+        httpVerb: 'get',
+        exportName: 'UserLocation_getUserLocationsByDate',
+        routeFn: userLocationsController.getUserLocationsByDate,
+        route: '/userlocations/bydate',
+        description: "Get the locations for a user by specifying a range of dates.",
+        parameters: "{userId: 'userId', start: 'startDate', end: 'endDate', limit: 'max returned items'}",
+        returns: "[{ coordinates: [lon, lat], date: date }]"
     }
 ];
 

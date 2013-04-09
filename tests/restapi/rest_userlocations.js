@@ -103,6 +103,29 @@ describe('UserLocations REST API', function() {
             });
         });
     });
+
+    describe('/userlocations/bydate', function() {
+        it('should retrieve ' + MAX_RANDOM_LOCATIONS + ' random location items', function(done) {
+            // BUGBUG
+            // TODO: Need test that passes getTime() numeric values, too
+            var url = '/userlocations/bydate?userId=' + userId + '&start=' + START_DATE_STRING + '&end=' + END_DATE_STRING + '&limit=' + MAX_RANDOM_LOCATIONS;
+            client.get(url, function(err, req, res, locations) {
+                should.not.exist(err);
+                if (err || !locations) {
+                    return done(err);
+                }
+                should.exist(locations);
+                locations.should.have.lengthOf(MAX_RANDOM_LOCATIONS);
+                locations[0].should.have.property('coordinates').with.lengthOf(2);
+                locations[0].should.have.property('date');
+                locations[MAX_RANDOM_LOCATIONS - 1].should.have.property('coordinates').with.lengthOf(2);
+                locations[MAX_RANDOM_LOCATIONS - 1].should.have.property('date');
+
+                res.statusCode.should.equal(200);
+                return done();
+            });
+        });
+    });
 });
 
 function getRandomInt(min, max) {

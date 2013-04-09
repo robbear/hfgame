@@ -14,7 +14,7 @@ exports.createUserLocation = function(req, res, next) {
     // Validate the data
     //
     if (!userId) {
-        return next(new restify.InvalidArgumentError("No userid"));
+        return next(new restify.InvalidArgumentError("No userId"));
     }
     if (!isValidDate(date)) {
         return next(new restify.RestError("Invalid date"));
@@ -45,7 +45,7 @@ exports.insertUserLocations = function(req, res, next) {
     // Validate the data
     //
     if (!userId) {
-        return next(new restify.InvalidArgumentError("No userid"));
+        return next(new restify.InvalidArgumentError("No userId"));
     }
     if (!userLocations) {
         return next(new restify.InvalidArgumentError("No locations provided"));
@@ -81,6 +81,53 @@ exports.insertUserLocations = function(req, res, next) {
     });
 };
 
+exports.getUserLocationsByDate = function(req, res, next) {
+    var userId = req.params.userId;
+    var limit = req.params.limit;
+    var startDate = req.params.start;
+    var endDate = req.params.end;
+
+    var MAX_LIMIT = 1000000;
+
+    //
+    // Validate the data
+    //
+    if (!userId) {
+        return next(new restify.InvalidArgumentError("No userId"));
+    }
+    if (!isValidDate(startDate)) {
+        return next(new restify.InvalidArgumentError("Invalid start date"));
+    }
+    if (!isValidDate(endDate)) {
+        return next(new restify.InvalidArgumentError("Invalid end date"));
+    }
+    if (!limit) {
+        limit = MAX_LIMIT;
+    }
+    else {
+        limit = parseInt(limit, 10);
+    }
+    if (!limit || (typeof limit !== 'number') || limit < 1) {
+        limit = MAX_LIMIT;
+    }
+
+    UserLocation.getUserLocationsByDateRange(userId, startDate, endDate, limit, function(err, docs) {
+        // BUGBUG
+        // TODO: Need to document return data format
+        if (err) {
+            return next(new restify.RestError(err.message));
+        }
+
+        var locations = new Array(docs.length);
+        for (var i = 0; i < docs.length; i++) {
+            var doc = docs[i];
+            locations[i] = { coordinates: doc.location.coordinates, date: doc.date };
+        }
+
+        res.send(locations);
+        next();
+    });
+};
 
 //
 // BUGBUG
@@ -88,6 +135,10 @@ exports.insertUserLocations = function(req, res, next) {
 //
 function isValidDate(obj) {
     var d;
+
+    if (!obj) {
+        return false;
+    }
 
     try {
         d = new Date(obj);
