@@ -1,7 +1,5 @@
-// TODO: This path needs to be set to the production models path, based on the build process. TBD.
 var _modelsPath = '../../../models/';
-// TODO: Set to true for production as part of the build process. TBD.
-var _usingMongoLab = false;
+var _mongoBaseUrl = 'mongodb://localhost:27017/';
 
 var _databaseName = 'hfgame';
 var _usesHttps = false;
@@ -14,12 +12,7 @@ exports.usesHttps = function () {
 };
 
 exports.connectionString = function() {
-    var connectionString = 'mongodb://localhost:27017/' + _databaseName;
-    if (_usingMongoLab) {
-        connectionString = 'mongodb://hfmongo:D0ntBl1nk@ds053497.mongolab.com:53497/' + _databaseName;
-    }
-
-    return connectionString;
+    return _mongoBaseUrl + _databaseName;
 };
 
 exports.dbUtils = function() {
