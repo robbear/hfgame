@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Command line build tool to build hfapi
-# usage: jitsubuild <test1|test2|test3|staging|production>
+# usage: jitsubuild <test1|test2|test3|production>
 
 EXPECTED_ARGS=1
 E_BADARGS=65
-PACKAGE_NAME=""
+SUBDOMAIN_NAME=""
 BUILD_TARGET=""
 
 set -o pipefail     # trace ERR through pipes
@@ -25,7 +25,7 @@ trap 'error_handler ${LINENO} ${$?}' ERR
 usage()
 {
   echo "jitsubuild - command line tool to build hfapi"
-  echo "usage: ./jitsubuild.sh <test1|test2|test3|staging|production>"
+  echo "usage: ./jitsubuild.sh <test1|test2|test3|production>"
   echo ""
 }
 
@@ -97,6 +97,15 @@ editConfigFile()
   mv ./build/temp.js ./build/NodeWebSite/config/config.js
 }
 
+fixPackageJsonForDeployment()
+{
+  echo "---"
+  echo "Updating package.json with deployment subdomain"
+  sed -e "s/\"name\": \"hfapi\"/\"name\": \"$SUBDOMAIN_NAME\"/g" -e "s/\"subdomain\": \"hfapi\"/\"subdomain\": \"$SUBDOMAIN_NAME\"/g" <./build/NodeWebSite/package.json >./build/temp.json
+  rm ./build/NodeWebSite/package.json
+  mv ./build/temp.json ./build/NodeWebSite/package.json
+}
+
 #
 # Check for expected arguments
 #
@@ -108,19 +117,16 @@ fi
 
 case "$1" in
   'test1')
-    PACKAGE_NAME="HFTest1"
+    SUBDOMAIN_NAME="hftest1"
     ;;
   'test2')
-    PACKAGE_NAME="HFTest2"
+    SUBDOMAIN_NAME="hftest2"
     ;;
   'test3')
-    PACKAGE_NAME="HFTest3"
-    ;;
-  'staging')
-    PACKAGE_NAME="Staging"
+    SUBDOMAIN_NAME="hftest3"
     ;;
   'production')
-    PACKAGE_NAME="Production"
+    SUBDOMAIN_NAME="hfapi"
     ;;
   *)
     usage
@@ -129,7 +135,7 @@ esac
 
 BUILD_TARGET=$1
 
-echo "PACKAGE_NAME is set to $PACKAGE_NAME"
+echo "SUBDOMAIN_NAME is set to $SUBDOMAIN_NAME"
 echo "BUILD_TARGET is set to $BUILD_TARGET"
 
 createVersionFile
@@ -138,5 +144,6 @@ createBuildDirectory
 runTimeStamper
 #runStylesCacheBuster
 editConfigFile
+fixPackageJsonForDeployment
 echo "Done!"
 exit 0
