@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo "Only Nodejitsu builds are currently supported."
+echo "Note that hfbuild.sh needs to be updated, matching hf.com's version, to support Azure instantiation of npm install."
+echo "Since Windows servers don't support the bcrypt module installation (due to OpenSSL issues), we won't be supporting Azure for now."
+exit 1
+
 # Command line build tool to build hfapi
 # usage: hfbuild <test1|test2|test3|staging|production>
 
