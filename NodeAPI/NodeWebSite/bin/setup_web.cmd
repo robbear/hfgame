@@ -10,14 +10,11 @@ icacls ..\ /grant "Network Service":(OI)(CI)W
 if %ERRORLEVEL% neq 0 goto error
 echo OK
 
-echo Expanding the node_modules directory from the zip file
-7z x ..\node_modules.zip -o..\
-
-echo Ensuring the "%programfiles%\nodejs" directory exists...
-md "%programfiles%\nodejs"
-
-echo Copying node.exe to the "%programfiles%\nodejs" directory...
-copy /y node.exe "%programfiles%\nodejs"
+echo Unpacking nodejs to the "%programfiles%\nodejs" directory
+7z x -y nodejs.zip -o"%programfiles%"
+if %ERRORLEVEL% neq 0 goto error
+echo Unpacking nodejs to the "%programfiles(x86)%\nodejs" directory
+7z x -y nodejs.zip -o"%programfiles(x86)%"
 if %ERRORLEVEL% neq 0 goto error
 echo OK
 
@@ -27,8 +24,12 @@ if %ERRORLEVEL% neq 0 goto error
 echo OK
 
 echo Installing Visual Studio 2010 C++ Redistributable Package...
-vcredist_x64.exe /q 
+vcredist_x64.exe /q
 if %ERRORLEVEL% neq 0 goto error
+echo OK
+
+echo Running npm install
+start npminstall.cmd
 echo OK
 
 echo Installing iisnode...
@@ -64,7 +65,7 @@ powershell -c "set-executionpolicy unrestricted"
 powershell .\ChangeConfig.ps1 %apphostconfigfile%
 if %ERRORLEVEL% neq 0 goto error
 
-if "%PROCESSOR_ARCHITECTURE%"=="AMD64" set 
+if "%PROCESSOR_ARCHITECTURE%"=="AMD64" set
 copy /y "%IISNODE_BINARY_DIRECTORY%\iisnode_schema.xml" "%programfiles%\IIS Express\config\schema\iisnode_schema.xml"
 if %ERRORLEVEL% neq 0 goto error
 exit /b 0

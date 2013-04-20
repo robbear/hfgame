@@ -1,10 +1,5 @@
 #!/bin/bash
 
-echo "Only Nodejitsu builds are currently supported."
-echo "Note that hfbuild.sh needs to be updated, matching hf.com's version, to support Azure instantiation of npm install."
-echo "Since Windows servers don't support the bcrypt module installation (due to OpenSSL issues), we won't be supporting Azure for now."
-exit 1
-
 # Command line build tool to build hfapi
 # usage: hfbuild <test1|test2|test3|staging|production>
 
@@ -57,8 +52,8 @@ createBuildDirectory()
   cp -R ./NodeWebSite/bin/ ./build/NodeWebSite/bin/
   cp -R ./NodeWebSite/config/ ./build/NodeWebSite/config/
   cp -R ./NodeWebSite/logger/ ./build/NodeWebSite/logger/
-  cp -R ./NodeWebSite/node_modules/ ./build/NodeWebSite/node_modules/
   cp -R ./NodeWebSite/routes/ ./build/NodeWebSite/routes/
+  cp ./NodeWebSite/package.json ./build/NodeWebSite/
   cp ./NodeWebSite/*.js ./build/NodeWebSite/
   cp ./NodeWebSite/version.txt ./build/NodeWebSite/
   cp ./NodeWebSite/Web.cloud.config ./build/NodeWebSite/
@@ -66,12 +61,7 @@ createBuildDirectory()
   mkdir ./build/NodeWebSite/logfiles/
   cp ./NodeWebSite/logfiles/readme.txt ./build/NodeWebSite/logfiles/
   cp -R ../models ./build/NodeWebSite/models/ 
-
-  echo "---"
-  echo "Zipping up node_modules directory (7z.exe output redirected to /dev/null for brevity)"
-  cd NodeWebSite
-  ./bin/7z.exe a ../build/NodeWebSite/node_modules.zip node_modules > /dev/null
-  cd ..
+  rm -rf ./build/NodeWebSite/models/node_modules/
 
   echo "---"
   echo "Copying deployment configuration files to build"
