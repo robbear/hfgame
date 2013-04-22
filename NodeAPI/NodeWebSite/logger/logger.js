@@ -1,6 +1,14 @@
 var restify = require('restify'),
     bunyan = require('bunyan');
 
+var _useLogging = true;
+
+var _stubLogger = {
+    info: function() {},
+    trace: function() {},
+    error: function() {}
+};
+
 var _bunyanLogger = bunyan.createLogger({
     name: 'hfapi',
     streams: [
@@ -31,8 +39,12 @@ var _bunyanLogger = bunyan.createLogger({
     }
 });
 
+exports.useLogging = function(useLogging) {
+    _useLogging = useLogging;
+}
+
 exports.bunyanLogger = function () {
-    return _bunyanLogger;
+    return _useLogging ? _bunyanLogger : _stubLogger;
 }
 
 /* NEVER

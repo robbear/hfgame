@@ -1,13 +1,8 @@
-var _silenceLogger = false;
 var _databaseName = null;
-
-exports.SilenceLogger = function(silence) {
-    _silenceLogger = silence;
-}
 
 exports.SetDatabaseName = function(dbName) {
     _databaseName = dbName;
-}
+};
 
 exports.StartServer = function(startserver_callback) {
     var restify = require('restify'),
@@ -16,7 +11,7 @@ exports.StartServer = function(startserver_callback) {
         logger = require('./logger/logger'),
         hfConfig = require('./config/config.js');
 
-    if (!_silenceLogger) logger.bunyanLogger().info("***** Starting hfapi web service *****");
+    logger.bunyanLogger().info("%s***** Starting hfapi web service *****", hfConfig.tag());
     if (_databaseName) hfConfig.setDatabaseName(_databaseName);
 
     //
@@ -24,7 +19,7 @@ exports.StartServer = function(startserver_callback) {
     //
     var http_options = {
         name: "hfAPI HTTP",
-        log: _silenceLogger ? null : logger.bunyanLogger()
+        log: hfConfig.getRestifyLogging() ? logger.bunyanLogger() : null
     }
 
     //
@@ -34,7 +29,7 @@ exports.StartServer = function(startserver_callback) {
         name: "hfAPI HTTPS",
         key: fs.readFileSync('./certificates/ssl/self-signed/server.key'),
         certificate: fs.readFileSync('./certificates/ssl/self-signed/server.crt'),
-        log: _silenceLogger ? null : logger.bunyanLogger()
+        log: hfConfig.getRestifyLogging() ? logger.bunyanLogger() : null
     } : null;
 
 
@@ -87,33 +82,47 @@ exports.StartServer = function(startserver_callback) {
     //
     // Connect to the database
     //
-    var connectionString = hfConfig.connectionString();
-    hfConfig.dbUtils().connectToMongoDB(connectionString, function(err) {
-        if (err) {
-            console.log('Failed to open database: ' + err.message);
-            throw ('Failed to open database: ' + err.message);
-        }
-
-        //
-        // Start the servers on the appropriate ports
-        //
-        server.listen(process.env.PORT || 1338 , function() {
-            if (!_silenceLogger) console.log('%s listening at %s', server.name, server.url);
-
-            if (hfConfig.usesHttps()) {
-                https_server.listen(443, function() {
-                    if (!_silenceLogger) console.log('%s listening at %s', https_server.name, https_server.url);
-
-                    if (startserver_callback) {
-                        startserver_callback();
-                    }
-                });
+    var isStartupConnectionAttempt = true;
+    var connectWithRetry = function() {
+        logger.bunyanLogger().info('%sAttempting to connect to MongoDB. isStartupConnectionAttempt = %s', hfConfig.tag(), isStartupConnectionAttempt);
+        var connectionString = hfConfig.connectionString();
+        return hfConfig.dbUtils().connectToMongoDB(connectionString, function(err) {
+            if (err && isStartupConnectionAttempt) {
+                // Re-attempt only if this is part of app startup. Otherwise, we rely on auto-reconnect in
+                // the mongodb native driver to try again.
+                logger.bunyanLogger().error('%sFailed to connect to MongoDB. Attempting to connect again. Err: %s', hfConfig.tag(), err.message);
+                setTimeout(connectWithRetry, 5000);
+                return;
             }
             else {
+                isStartupConnectionAttempt = false;
+                logger.bunyanLogger().info('%sSuccessfully connected to MongoDB', hfConfig.tag());
+            }
+        });
+    };
+
+    logger.bunyanLogger().info("%s*** Calling connectWithRetry", hfConfig.tag());
+    connectWithRetry();
+
+    //
+    // Start the servers on the appropriate ports
+    //
+    server.listen(process.env.PORT || 1338 , function() {
+        logger.bunyanLogger().info('%s%s listening at %s', hfConfig.tag(), server.name, server.url);
+
+        if (hfConfig.usesHttps()) {
+            https_server.listen(443, function() {
+                logger.bunyanLogger().info('%s%s listening at %s', hfConfig.tag(), https_server.name, https_server.url);
+
                 if (startserver_callback) {
                     startserver_callback();
                 }
+            });
+        }
+        else {
+            if (startserver_callback) {
+                startserver_callback();
             }
-        });
+        }
     });
 };
