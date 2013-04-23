@@ -10,6 +10,10 @@ exports.createUserLocation = function(req, res, next) {
     var coordinates = req.params.coordinates;
     var date = req.params.date;
 
+    logger.bunyanLogger().info(
+        "%sREST API userlocations/createlocation: userId=%s, coordinates=%s, date=%s",
+        hfConfig.tag(), userId, coordinates, date);
+
     //
     // Validate the data
     //
@@ -25,13 +29,16 @@ exports.createUserLocation = function(req, res, next) {
 
     UserLocation.createUserLocation(userId, coordinates, date, function(err, userLocation) {
         if (err) {
+            logger.bunyanLogger().error("%s... userlocations/createlocation: err=%s", hfConfig.tag(), err.message);
             return next(new restify.RestError(err.message));
         }
 
         if (!userLocation) {
+            logger.bunyanLogger().info("%s... userlocations/createlocation: No userLocation found for %s", hfConfig.tag, userId);
             return next(new restify.RestError("Unable to add location for userId: " + userId));
         }
 
+        logger.bunyanLogger().info("%s... userlocations/createlocation: Successfully created location for user %s", hfConfig.tag(), userId);
         res.send({});
         next();
     });
@@ -40,6 +47,9 @@ exports.createUserLocation = function(req, res, next) {
 exports.insertUserLocations = function(req, res, next) {
     var userId = req.params.userId;
     var userLocations = req.params.locations;
+
+    var count = userLocations ? (userLocations.length ? userLocations.length : 0) : 0;
+    logger.bunyanLogger().info("%sREST API userlocations/createlocations: userId=%s, count=%d", hfConfig.tag(), userId, count);
 
     //
     // Validate the data
@@ -69,13 +79,16 @@ exports.insertUserLocations = function(req, res, next) {
 
     UserLocation.insertUserLocations(userId, userLocations, function(err, docs) {
         if (err) {
+            logger.bunyanLogger().error("%s... userlocations/createlocations error: %s", hfConfig.tag(), err.message);
             return next(new restify.RestError(err.message));
         }
 
         if (!docs) {
+            logger.bunyanLogger().info("%s... userlocations/createlocations - Unable to add locations for userId: %s", hfConfig.tag(), userId);
             return next(new restify.RestError("Unable to add locations for userId: " + userId));
         }
 
+        logger.bunyanLogger().info("%s... userlocations/createLocations success", hfConfig.tag());
         res.send({});
         next();
     });
@@ -88,6 +101,9 @@ exports.getUserLocationsByDate = function(req, res, next) {
     var endDate = req.params.end;
 
     var MAX_LIMIT = 1000000;
+
+    logger.bunyanLogger().info("%sREST API userlocations/bydate: userId=%s, limit=%d, start=%s, end=%s",
+        hfConfig.tag(), userId, limit, startDate, endDate);
 
     //
     // Validate the data
@@ -115,6 +131,7 @@ exports.getUserLocationsByDate = function(req, res, next) {
         // BUGBUG
         // TODO: Need to document return data format
         if (err) {
+            logger.bunyanLogger().error("%s... userlocations/bydate error: %s", hfConfig.tag(), err.message);
             return next(new restify.RestError(err.message));
         }
 
@@ -124,6 +141,7 @@ exports.getUserLocationsByDate = function(req, res, next) {
             locations[i] = { coordinates: doc.location.coordinates, date: doc.date };
         }
 
+        logger.bunyanLogger().info("%s... userlocations/bydate success", hfConfig.tag());
         res.send(locations);
         next();
     });
