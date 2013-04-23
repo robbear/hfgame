@@ -8,7 +8,7 @@ var _userModel = require(_modelsPath + 'user.js');
 var _dbUtils = require(_modelsPath + 'dbutils.js');
 var _userlocationModel = require(_modelsPath + 'userlocation.js');
 var _useLogging = true;
-var _useRestifyLogging = true;
+var _useRestifyLogging = false;
 var _TAG = "HFAPI: ";
 
 exports.usesHttps = function () {

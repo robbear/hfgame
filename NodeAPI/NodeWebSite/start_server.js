@@ -37,6 +37,28 @@ exports.StartServer = function(startserver_callback, dbconnected_callback) {
     var server = restify.createServer(http_options);
     var https_server = hfConfig.usesHttps() ? restify.createServer(https_options) : null;
 
+    // Error handlers
+    server.on('uncaughtException', function(req, res, route, err) {
+        logger.bunyanLogger().error("%sUncaught Exception: %s on route %s", hfConfig.tag(), err.message, route);
+        if (res._headerSent) {
+            return false;
+        }
+
+        res.send(new restify.InternalError("unexpected error"));
+        return true;
+    });
+
+    if (hfConfig.usesHttps()) {
+        https_server.on('uncaughtException', function(req, res, route, err) {
+            logger.bunyanLogger().error("%sUncaught Exception: %s on route %s", hfConfig.tag(), err.message, route);
+            if (res._headerSent) {
+                return false;
+            }
+
+            res.send(new restify.InternalError("unexpected error"));
+            return true;
+        });
+    }
 
     //
     // Pre-router callback.

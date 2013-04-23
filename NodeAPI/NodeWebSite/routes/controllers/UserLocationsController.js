@@ -38,8 +38,10 @@ exports.createUserLocation = function(req, res, next) {
             return next(new restify.RestError("Unable to add location for userId: " + userId));
         }
 
-        logger.bunyanLogger().info("%s... userlocations/createlocation: Successfully created location for user %s", hfConfig.tag(), userId);
-        res.send({});
+        if (!res._headerSent) {
+            logger.bunyanLogger().info("%s... userlocations/createlocation: Successfully created location for user %s", hfConfig.tag(), userId);
+            res.send({});
+        }
         next();
     });
 };
@@ -88,8 +90,10 @@ exports.insertUserLocations = function(req, res, next) {
             return next(new restify.RestError("Unable to add locations for userId: " + userId));
         }
 
-        logger.bunyanLogger().info("%s... userlocations/createLocations success", hfConfig.tag());
-        res.send({});
+        if (!res._headerSent) {
+            logger.bunyanLogger().info("%s... userlocations/createLocations success", hfConfig.tag());
+            res.send({});
+        }
         next();
     });
 };
@@ -141,8 +145,10 @@ exports.getUserLocationsByDate = function(req, res, next) {
             locations[i] = { coordinates: doc.location.coordinates, date: doc.date };
         }
 
-        logger.bunyanLogger().info("%s... userlocations/bydate success", hfConfig.tag());
-        res.send(locations);
+        if (!res._headerSent) {
+            logger.bunyanLogger().info("%s... userlocations/bydate success", hfConfig.tag());
+            res.send(locations);
+        }
         next();
     });
 };
