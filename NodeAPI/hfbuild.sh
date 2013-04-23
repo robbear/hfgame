@@ -53,6 +53,7 @@ createBuildDirectory()
   cp -R ./NodeWebSite/config/ ./build/NodeWebSite/config/
   cp -R ./NodeWebSite/logger/ ./build/NodeWebSite/logger/
   cp -R ./NodeWebSite/routes/ ./build/NodeWebSite/routes/
+  cp -R ./NodeWebSite/utilities/ ./build/NodeWebSite/utilities/
   cp ./NodeWebSite/package.json ./build/NodeWebSite/
   cp ./NodeWebSite/*.js ./build/NodeWebSite/
   cp ./NodeWebSite/version.txt ./build/NodeWebSite/
