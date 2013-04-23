@@ -8,7 +8,7 @@ before(function(done) {
     hfConfig.useLogging(false);
     hfConfig.setRestifyLogging(false);
     server.SetDatabaseName("rest-tests");
-    server.StartServer(done);
+    server.StartServer(null, done);
 });
 
 after(function(done) {

@@ -4,7 +4,7 @@ exports.SetDatabaseName = function(dbName) {
     _databaseName = dbName;
 };
 
-exports.StartServer = function(startserver_callback) {
+exports.StartServer = function(startserver_callback, dbconnected_callback) {
     var restify = require('restify'),
         fs = require('fs'),
         router = require('./routes/router'),
@@ -97,6 +97,9 @@ exports.StartServer = function(startserver_callback) {
             else {
                 isStartupConnectionAttempt = false;
                 logger.bunyanLogger().info('%sSuccessfully connected to MongoDB', hfConfig.tag());
+                if (dbconnected_callback) {
+                    dbconnected_callback();
+                }
             }
         });
     };

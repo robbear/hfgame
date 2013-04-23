@@ -5,6 +5,7 @@ describe('User Model', function() {
     var MAX_USERS = 10;
 
     describe('#createUser()', function() {
+        this.timeout(5000);
         var funcs = [];
 
         function createFunc(i, done) {
