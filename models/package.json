@@ -5,6 +5,6 @@
     "description": "Hyperfine HFGame Models",
     "dependencies": {
         "bcrypt-nodejs": "0.0.3",
-	"mongoose": "3.6.4"
+	"mongoose": "3.6.7"
     }
 }
