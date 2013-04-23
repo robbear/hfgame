@@ -1,14 +1,33 @@
 var mongoose = require('mongoose'),
+    connectionOpenCallback = null,
+    connectionErrorCallback = null,
     debug = false;
 
 if (debug) {
     mongoose.set('debug', true);
 }
 
+mongoose.connection.on("error", function(err) {
+    if (connectionErrorCallback) {
+        connectionErrorCallback(err);
+    }
+});
+
+mongoose.connection.on("open", function() {
+    if (connectionOpenCallback) {
+        connectionOpenCallback();
+    }
+});
+
 var dbUtils = {
-    connectToMongoDB: function(connectionString, cb) {
+    connectToMongoDB: function(connectionString, cb, cbOpen, cbError) {
+        connectionOpenCallback = cbOpen;
+        connectionErrorCallback = cbError;
+
         mongoose.connect(connectionString, function(err) {
-            if (cb) return cb(err);
+            if (cb) {
+                return cb(err);
+            }
         });
     },
 

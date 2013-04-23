@@ -1,6 +1,7 @@
 var restify = require('restify'),
     fs = require('fs'),
     logger = require('../../logger/logger'),
+    utilities = require('../../utilities/utilities'),
     hfConfig = require('../../config/config.js');
 
 var User = hfConfig.userModel();
@@ -20,6 +21,9 @@ exports.createUser = function(req, res, next) {
         if (err || !user) {
             if (err) {
                 logger.bunyanLogger().error("%s... users/createuser: err=%s", hfConfig.tag(), err.message);
+                if (utilities.isErrorDatabaseDisconnect(err)) {
+                    return next(new restify.InternalError("unexpected database error"));
+                }
             }
             logger.bunyanLogger().info("%s... users/createuser: Invalid username or password", hfConfig.tag());
             return next(new restify.InvalidArgumentError("Invalid username or password"));
@@ -53,6 +57,9 @@ exports.login = function(req, res, next) {
         if (err || !user) {
             if (err) {
                 logger.bunyanLogger().error("%s... users/login failed: err=%s", hfConfig.tag(), err.message);
+                if (utilities.isErrorDatabaseDisconnect(err)) {
+                    return next(new restify.InternalError("unexpected database error"));
+                }
             }
             logger.bunyanLogger().info('%s... users/login: Failed to login user %s: %d', hfConfig.tag(), userName, reason);
             return next(new restify.InvalidArgumentError("Invalid username or password"));

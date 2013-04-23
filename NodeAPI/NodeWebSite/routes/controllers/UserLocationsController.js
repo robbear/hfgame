@@ -1,6 +1,7 @@
 var restify = require('restify'),
     fs = require('fs'),
     logger = require('../../logger/logger'),
+    utilities = require('../../utilities/utilities'),
     hfConfig = require('../../config/config.js');
 
 var UserLocation = hfConfig.userLocationModel();
@@ -30,7 +31,12 @@ exports.createUserLocation = function(req, res, next) {
     UserLocation.createUserLocation(userId, coordinates, date, function(err, userLocation) {
         if (err) {
             logger.bunyanLogger().error("%s... userlocations/createlocation: err=%s", hfConfig.tag(), err.message);
-            return next(new restify.RestError(err.message));
+            if (utilities.isErrorDatabaseDisconnect(err)) {
+                return next(new restify.InternalError("unexpected database error"));
+            }
+            else {
+                return next(new restify.RestError(err.message));
+            }
         }
 
         if (!userLocation) {
@@ -82,7 +88,12 @@ exports.insertUserLocations = function(req, res, next) {
     UserLocation.insertUserLocations(userId, userLocations, function(err, docs) {
         if (err) {
             logger.bunyanLogger().error("%s... userlocations/createlocations error: %s", hfConfig.tag(), err.message);
-            return next(new restify.RestError(err.message));
+            if (utilities.isErrorDatabaseDisconnect(err)) {
+                return next(new restify.InternalError("unexpected database error"));
+            }
+            else {
+                return next(new restify.RestError(err.message));
+            }
         }
 
         if (!docs) {
@@ -136,7 +147,12 @@ exports.getUserLocationsByDate = function(req, res, next) {
         // TODO: Need to document return data format
         if (err) {
             logger.bunyanLogger().error("%s... userlocations/bydate error: %s", hfConfig.tag(), err.message);
-            return next(new restify.RestError(err.message));
+            if (utilities.isErrorDatabaseDisconnect(err)) {
+                return next(new restify.InternalError("unexpected database error"));
+            }
+            else {
+                return next(new restify.RestError(err.message));
+            }
         }
 
         var locations = new Array(docs.length);
