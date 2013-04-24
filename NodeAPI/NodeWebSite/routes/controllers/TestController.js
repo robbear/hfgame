@@ -1,20 +1,28 @@
 var restify = require('restify'),
     fs = require('fs'),
     logger = require('../../logger/logger'),
+    utilities = require('../../utilities/utilities'),
     hfConfig = require('../../config/config.js');
 
+var User = hfConfig.userModel();
+
 exports.testRoute = function(req, res, next) {
-    res.send({msg: 'testRoute value'});
-    next();
-};
+    logger.bunyanLogger().info("%sREST API /test", hfConfig.tag());
 
-exports.testItemRoute = function(req, res, next) {
-    res.send({name: req.params.item, value: "Don't you wish we had a database?"});
-    next();
-};
+    var isDatabaseOk = true;
 
-exports.testPutRoute = function(req, res, next) {
-    res.send({name: req.params.name, age: req.params.age});
-    next();
-};
+    User.getAuthenticated("fakeyfakeyfakey", "fakeyfakeyfakey", function(err, user, reason) {
+        if (err) {
+            logger.bunyanLogger().error("%s... /test failed: err=%s", hfConfig.tag(), err.message);
+            if (utilities.isErrorDatabaseDisconnect(err)) {
+                isDatabaseOk = false;
+            }
+        }
 
+        if (!res._headerSent) {
+            logger.bunyanLogger().info("%s... /test: %s", hfConfig.tag(), isDatabaseOk ? "Database is reachable" : "Database is not reachable");
+            res.send({ REST: "ok", Database: isDatabaseOk ? "ok" : "error" });
+        }
+        next();
+    });
+};

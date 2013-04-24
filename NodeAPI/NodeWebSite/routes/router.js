@@ -58,25 +58,7 @@ var routeExports = [
         route: '/test',
         description: 'Sample test api. Uses HTTP GET. Returns a bogus string.',
         parameters: '{}',
-        returns: "{}"
-    },
-    {
-        httpVerb: 'get',
-        exportName: 'testItem',
-        routeFn: testController.testItemRoute,
-        route: '/testitem/:item',
-        description: 'Sample test api with parameter. Uses HTTP GET. Returns a simulated fetched item.',
-        parameters: "{item: 'Item identifier'}",
-        returns: "{}"
-    },
-    {
-        httpVerb: 'put',
-        exportName: 'testPut',
-        routeFn: testController.testPutRoute,
-        route: '/testput',
-        description: "Sample put call with parameters. Uses HTTP PUT. Parameters set in the request body: 'name=foo&age=21'. Returns an echo of the name/age parameters sent.",
-        parameters: "{name: 'name', age: 'Person age'}",
-        returns: "{}"
+        returns: "{ REST: ok, Database: ok }"
     },
     {
         httpVerb: 'post',
