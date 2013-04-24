@@ -10,6 +10,8 @@ var _userlocationModel = require(_modelsPath + 'userlocation.js');
 var _useLogging = true;
 var _useRestifyLogging = false;
 var _TAG = "HFAPI: ";
+var _usePinger = true;
+var _pingerTimeoutSeconds = 15;
 
 exports.usesHttps = function () {
     return _usesHttps;
@@ -45,6 +47,19 @@ exports.getRestifyLogging = function() {
 
 exports.tag = function() {
     return _TAG;
+};
+
+exports.setPinger = function(usePinger, seconds) {
+    _usePinger = usePinger;
+    _pingerTimeoutSeconds = seconds;
+};
+
+exports.usePinger = function() {
+    return _usePinger;
+};
+
+exports.pingerTimeoutSeconds = function() {
+    return _pingerTimeoutSeconds;
 };
 
 //

@@ -9,6 +9,7 @@ exports.StartServer = function(startserver_callback, dbconnected_callback) {
         fs = require('fs'),
         router = require('./routes/router'),
         logger = require('./logger/logger'),
+        pinger = require('./utilities/pinger'),
         hfConfig = require('./config/config.js');
 
     logger.bunyanLogger().info("%s***** Starting hfapi web service *****", hfConfig.tag());
@@ -123,6 +124,8 @@ exports.StartServer = function(startserver_callback, dbconnected_callback) {
             if (dbconnected_callback) {
                 dbconnected_callback();
             }
+
+            pinger.start();
         }
     }
 

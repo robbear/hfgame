@@ -7,6 +7,7 @@ before(function(done) {
     this.timeout(10000);
     hfConfig.useLogging(false);
     hfConfig.setRestifyLogging(false);
+    hfConfig.setPinger(false, 15);
     server.SetDatabaseName("rest-tests");
     server.StartServer(null, done);
 });
