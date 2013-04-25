@@ -33,10 +33,8 @@ exports.createUser = function(req, res, next) {
             // BUGBUG
             // TODO: Need to define client model infrastructure.
             //
-            if (!res._headerSent) {
-                logger.bunyanLogger().info("%s... users/createuser: success. userid=%s, username=%s", hfConfig.tag(), user.id, user.username);
-                res.send({ id: user.id, username: user.username });
-            }
+            logger.bunyanLogger().info("%s... users/createuser: success. userid=%s, username=%s", hfConfig.tag(), user.id, user.username);
+            res.send({ id: user.id, username: user.username });
             next();
         }
     });
@@ -69,10 +67,8 @@ exports.login = function(req, res, next) {
         // BUGBUG
         // TODO: Need to define client model infrastructure
         //
-        if (!res._headerSent) {
-            logger.bunyanLogger().info("%s... users/login: success. userid=%s, username=%s", hfConfig.tag(), user.id, user.username);
-            res.send({ id: user.id, username: user.username });
-        }
+        logger.bunyanLogger().info("%s... users/login: success. userid=%s, username=%s", hfConfig.tag(), user.id, user.username);
+        res.send({ id: user.id, username: user.username });
         next();
     });
 };

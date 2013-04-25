@@ -1,6 +1,7 @@
 var mongoose = require('mongoose'),
     connectionOpenCallback = null,
     connectionErrorCallback = null,
+    connectionReconnectCallback = null,
     debug = false;
 
 if (debug) {
@@ -19,10 +20,17 @@ mongoose.connection.on("open", function() {
     }
 });
 
+mongoose.connection.on("reconnected", function() {
+    if (connectionReconnectCallback) {
+        connectionReconnectCallback();
+    }
+});
+
 var dbUtils = {
-    connectToMongoDB: function(connectionString, databaseOptions, cb, cbOpen, cbError) {
+    connectToMongoDB: function(connectionString, databaseOptions, cb, cbOpen, cbError, cbReconnect) {
         connectionOpenCallback = cbOpen;
         connectionErrorCallback = cbError;
+        connectionReconnectCallback = cbReconnect;
 
         mongoose.connect(connectionString, databaseOptions, function(err) {
             if (cb) {

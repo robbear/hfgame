@@ -120,7 +120,7 @@ exports.StartServer = function(startserver_callback, dbconnected_callback) {
         }
         else {
             isStartupConnectionAttempt = false;
-            logger.bunyanLogger().info('%sMongoDB connection instantiated', hfConfig.tag());
+            logger.bunyanLogger().info('%sMongoDB connection established', hfConfig.tag());
             if (dbconnected_callback) {
                 dbconnected_callback();
             }
@@ -130,7 +130,7 @@ exports.StartServer = function(startserver_callback, dbconnected_callback) {
     }
 
     function onDatabaseReconnect() {
-        logger.bunyanLogger().info('%sSuccessfully connected to MongoDB', hfConfig.tag());
+        logger.bunyanLogger().info('%sSuccessfully reconnected to MongoDB', hfConfig.tag());
     }
 
     function onDatabaseDisconnect(err) {
@@ -142,7 +142,7 @@ exports.StartServer = function(startserver_callback, dbconnected_callback) {
     var connectWithRetry = function() {
         logger.bunyanLogger().info('%sAttempting to connect to MongoDB. isStartupConnectionAttempt = %s', hfConfig.tag(), isStartupConnectionAttempt);
         var connectionString = hfConfig.connectionString();
-        return hfConfig.dbUtils().connectToMongoDB(connectionString, hfConfig.databaseOptions, onDatabaseConnect, onDatabaseReconnect, onDatabaseDisconnect);
+        return hfConfig.dbUtils().connectToMongoDB(connectionString, hfConfig.databaseOptions, onDatabaseConnect, null, onDatabaseDisconnect, onDatabaseReconnect);
     };
 
     logger.bunyanLogger().info("%s*** Calling connectWithRetry", hfConfig.tag());
