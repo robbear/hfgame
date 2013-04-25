@@ -9,7 +9,7 @@ if (usingMongoLab) {
 }
 
 before(function(done) {
-    DBUtils.connectToMongoDB(connectionString, done);
+    DBUtils.connectToMongoDB(connectionString, {server:{poolSize:10,auto_reconnect:true}}, done);
 });
 
 after(function(done) {

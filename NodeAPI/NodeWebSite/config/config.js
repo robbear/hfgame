@@ -10,10 +10,34 @@ var _userlocationModel = require(_modelsPath + 'userlocation.js');
 var _useLogging = true;
 var _useRestifyLogging = false;
 var _TAG = "HFAPI: ";
-var _usePinger = true;
+var _usePinger = false;
 var _pingerTimeoutSeconds = 15;
 
-exports.usesHttps = function () {
+//
+// See https://groups.google.com/forum/?fromgroups=#!topic/mongoose-orm/0bOPcbCD12Q for
+// information regarding keep-alive
+//
+exports.databaseOptions = {
+    /*
+    replset: {
+        strategy: 'ping',
+        rs_name: 'somerepsetname',
+        readSecondary: true,
+        socketOptions: {
+            keepAlive: 1
+        }
+    },
+    */
+    server: {
+        poolSize: 10,
+        auto_reconnect: true,
+        socketOptions: {
+            keepAlive: 1
+        }
+    }
+};
+
+exports.usesHttps = function() {
     return _usesHttps;
 };
 

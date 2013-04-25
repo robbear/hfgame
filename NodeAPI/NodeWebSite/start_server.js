@@ -142,7 +142,7 @@ exports.StartServer = function(startserver_callback, dbconnected_callback) {
     var connectWithRetry = function() {
         logger.bunyanLogger().info('%sAttempting to connect to MongoDB. isStartupConnectionAttempt = %s', hfConfig.tag(), isStartupConnectionAttempt);
         var connectionString = hfConfig.connectionString();
-        return hfConfig.dbUtils().connectToMongoDB(connectionString, onDatabaseConnect, onDatabaseReconnect, onDatabaseDisconnect);
+        return hfConfig.dbUtils().connectToMongoDB(connectionString, hfConfig.databaseOptions, onDatabaseConnect, onDatabaseReconnect, onDatabaseDisconnect);
     };
 
     logger.bunyanLogger().info("%s*** Calling connectWithRetry", hfConfig.tag());

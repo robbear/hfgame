@@ -20,11 +20,11 @@ mongoose.connection.on("open", function() {
 });
 
 var dbUtils = {
-    connectToMongoDB: function(connectionString, cb, cbOpen, cbError) {
+    connectToMongoDB: function(connectionString, databaseOptions, cb, cbOpen, cbError) {
         connectionOpenCallback = cbOpen;
         connectionErrorCallback = cbError;
 
-        mongoose.connect(connectionString, function(err) {
+        mongoose.connect(connectionString, databaseOptions, function(err) {
             if (cb) {
                 return cb(err);
             }
