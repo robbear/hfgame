@@ -10,7 +10,7 @@ var _userlocationModel = require(_modelsPath + 'userlocation.js');
 var _useLogging = true;
 var _useRestifyLogging = false;
 var _TAG = "HFAPI: ";
-var _usePinger = false;
+var _usePinger = true;
 var _pingerTimeoutSeconds = 15;
 
 //
