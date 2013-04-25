@@ -11,7 +11,7 @@ exports.testRoute = function(req, res, next) {
 
     var isDatabaseOk = true;
 
-    User.getAuthenticated("fakeyfakeyfakey", "fakeyfakeyfakey", function(err, user, reason) {
+    User.count({}, function(err, count) {
         if (err) {
             logger.bunyanLogger().error("%s... /test failed: err=%s", hfConfig.tag(), err.message);
             if (utilities.isErrorDatabaseDisconnect(err)) {

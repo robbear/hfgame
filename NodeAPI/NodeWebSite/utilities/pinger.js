@@ -6,7 +6,7 @@ var User = hfConfig.userModel();
 
 function ping() {
     logger.bunyanLogger().info("%s ***** PING *****");
-    User.getAuthenticated("fakeyfakeyfakey", "fakeyfakeyfakey", function(err, user, reason) {
+    User.count({}, function(err, count) {
         logger.bunyanLogger().info("%s ***** PING RESULT: %s *****", hfConfig.tag(), err ? err.message : "ok");
 
         if (hfConfig.usePinger()) {
