@@ -21,7 +21,7 @@ exports.testRoute = function(req, res, next) {
 
         if (!res._headerSent) {
             logger.bunyanLogger().info("%s... /test: %s", hfConfig.tag(), isDatabaseOk ? "Database is reachable" : "Database is not reachable");
-            res.send({ REST: "ok", Database: isDatabaseOk ? "ok" : "error" });
+            res.send({ REST: "ok", Database: isDatabaseOk ? "ok" : "error", Date: (new Date()).toString() });
         }
         next();
     });
