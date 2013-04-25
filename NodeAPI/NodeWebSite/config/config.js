@@ -11,7 +11,7 @@ var _useLogging = true;
 var _useRestifyLogging = false;
 var _TAG = "HFAPI: ";
 var _usePinger = true;
-var _pingerTimeoutSeconds = 15;
+var _pingerTimeoutSeconds = 45;
 
 //
 // See https://groups.google.com/forum/?fromgroups=#!topic/mongoose-orm/0bOPcbCD12Q for
