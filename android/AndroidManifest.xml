@@ -22,5 +22,7 @@
         </activity>
         <service android:name="HFGameService" android:label="Hyperfine Game Service" />
     </application>
+    
+    <uses-permission android:name="android.permission.INTERNET" />
 
 </manifest>
