@@ -3,3 +3,4 @@ gen
 bin_ant
 build
 local.properties
+.settings
