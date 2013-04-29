@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2013 Hyperfine Software Corp.
+// All rights reserved
+//
+
 package com.hyperfine.hfgame;
 
 public class Config
@@ -9,11 +14,11 @@ public class Config
     public static final boolean isAmazon = false;
     
     // Error logs - ship with this set to false
-    public static final boolean E = false;
+    public static final boolean E = true;
 	
     // Debug logs - ship with this set to false
-    public static final boolean D = false;
+    public static final boolean D = true;
 	
     // Verbose logs - ship with this set to false
-    public static final boolean V = false;
+    public static final boolean V = true;
 }
