@@ -6,8 +6,6 @@
 package com.hyperfine.hfgame.UI;
 
 import com.hyperfine.hfgame.R;
-import com.hyperfine.hfgame.R.layout;
-import com.hyperfine.hfgame.R.menu;
 import com.hyperfine.hfgame.services.HFGameService;
 
 import android.os.Bundle;
@@ -17,7 +15,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.Menu;
 
@@ -32,7 +29,6 @@ public class MainActivity extends Activity {
 
 	private HFGameService m_hfGameService;
 	private boolean m_fOrientationChanged = false;
-	private SharedPreferences m_prefs = null;
 	private int m_orientation;
 	
 	public ServiceConnection m_connection = new ServiceConnection() {
@@ -66,9 +62,7 @@ public class MainActivity extends Activity {
     	if(D)Log.d(TAG, "MainActivity.onCreate");
     	
         super.onCreate(savedInstanceState);
-        
-        m_prefs = getSharedPreferences(HFGameService.PREFS, Context.MODE_PRIVATE);
-        
+               
         setContentView(R.layout.activity_main);
         
         if (savedInstanceState != null) {
