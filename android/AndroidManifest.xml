@@ -12,7 +12,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".MainActivity"
+            android:name="com.hyperfine.hfgame.UI.MainActivity"
             android:label="@string/title_activity_main" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,7 +20,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name="HFGameService" android:label="Hyperfine Game Service" />
+        <service android:name="com.hyperfine.hfgame.services.HFGameService" android:label="Hyperfine Game Service" />
     </application>
     
     <uses-permission android:name="android.permission.INTERNET" />

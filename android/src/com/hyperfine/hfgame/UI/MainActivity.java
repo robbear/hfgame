@@ -3,7 +3,12 @@
 // All rights reserved
 //
 
-package com.hyperfine.hfgame;
+package com.hyperfine.hfgame.UI;
+
+import com.hyperfine.hfgame.R;
+import com.hyperfine.hfgame.R.layout;
+import com.hyperfine.hfgame.R.menu;
+import com.hyperfine.hfgame.services.HFGameService;
 
 import android.os.Bundle;
 import android.os.IBinder;
@@ -16,8 +21,8 @@ import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.Menu;
 
-import static com.hyperfine.hfgame.Config.D;
-//import static com.hyperfine.hfgame.Config.E;
+import static com.hyperfine.hfgame.utils.Config.D;
+//import static com.hyperfine.hfgame.utils.Config.E;
 
 public class MainActivity extends Activity {
 	

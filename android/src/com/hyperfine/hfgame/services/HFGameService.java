@@ -3,9 +3,10 @@
 // All rights reserved
 //
 
-package com.hyperfine.hfgame;
+package com.hyperfine.hfgame.services;
 
-import com.hyperfine.hfgame.RESTHelper.RESTHelperListener;
+import com.hyperfine.hfgame.utils.RESTHelper;
+import com.hyperfine.hfgame.utils.RESTHelper.RESTHelperListener;
 
 import android.app.Service;
 import android.content.Intent;
@@ -14,8 +15,8 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import static com.hyperfine.hfgame.Config.D;
-import static com.hyperfine.hfgame.Config.E;
+import static com.hyperfine.hfgame.utils.Config.D;
+import static com.hyperfine.hfgame.utils.Config.E;
 
 public class HFGameService extends Service implements RESTHelperListener {
 	

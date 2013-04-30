@@ -59,7 +59,7 @@ setBuildStringForRelease()
 {
     echo "---"
     echo "Setting build string for release ski"
-    sed -i -e 's/g000000000000/'$1'/g' build/src/com/hyperfine/hfgame/Config.java
+    sed -i -e 's/g000000000000/'$1'/g' build/src/com/hyperfine/hfgame/utils/Config.java
 }
 
 fixAntPropertiesForPassword()

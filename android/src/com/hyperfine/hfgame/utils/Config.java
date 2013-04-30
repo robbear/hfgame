@@ -3,7 +3,7 @@
 // All rights reserved
 //
 
-package com.hyperfine.hfgame;
+package com.hyperfine.hfgame.utils;
 
 public class Config
 {

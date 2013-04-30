@@ -1,4 +1,4 @@
-package com.hyperfine.hfgame;
+package com.hyperfine.hfgame.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,8 +15,8 @@ import org.apache.http.protocol.HttpContext;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import static com.hyperfine.hfgame.Config.D;
-import static com.hyperfine.hfgame.Config.E;
+import static com.hyperfine.hfgame.utils.Config.D;
+import static com.hyperfine.hfgame.utils.Config.E;
 
 public class RESTHelper {
 	
