@@ -47,6 +47,8 @@ public class PlaceDetailFragment extends Fragment implements LoaderCallbacks<Cur
 	 * @return {@link PlaceDetailFragment}
 	 */
 	public static PlaceDetailFragment newInstance(String reference, String id) {
+		if(D)Log.d(TAG, "PlaceDetailFragment.newInstance");
+		
 		PlaceDetailFragment f = new PlaceDetailFragment();
 
 		// Supply reference and ID inputs as arguments.
@@ -76,6 +78,8 @@ public class PlaceDetailFragment extends Fragment implements LoaderCallbacks<Cur
 	}
 
 	public void onActivityCreated(Bundle savedInstanceState) {
+		if(D)Log.d(TAG, "PlaceDetailFragment.onActivityCreated");
+		
 		super.onActivityCreated(savedInstanceState); 
 		activity = getActivity();
      
@@ -113,6 +117,8 @@ public class PlaceDetailFragment extends Fragment implements LoaderCallbacks<Cur
 
 	@Override
 	public void onResume() {
+		if(D)Log.d(TAG, "PlaceDetailFragment.onResume");
+		
 		super.onResume();
  
 		// Always refresh the details on resume, but don't force
@@ -132,6 +138,7 @@ public class PlaceDetailFragment extends Fragment implements LoaderCallbacks<Cur
 	 */
 	protected void updatePlace(String reference, String id, boolean forceUpdate) {
 		if (placeReference != null && placeId != null) {
+			if(D)Log.d(TAG, String.format("PlaceDetailFragment.updatePlace: reference=%s, id=%s, forceUpdate=%b", reference, id, forceUpdate));
 			// Start the PlaceDetailsUpdate Service to query the server for details
 			// on the specified venue. A "forced update" will ignore the caching latency 
 			// rules and query the server.
@@ -150,6 +157,8 @@ public class PlaceDetailFragment extends Fragment implements LoaderCallbacks<Cur
 	 * TODO Expand the projection to include any other details you are recording in the Place Detail Content Provider.
 	 */
 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+		if(D)Log.d(TAG, "PlaceDetailFragment.onCreateLoader");
+		
 		String[] projection = new String[] {PlaceDetailsContentProvider.KEY_NAME, 
 				PlaceDetailsContentProvider.KEY_PHONE, 
 				PlaceDetailsContentProvider.KEY_ADDRESS, 
@@ -168,6 +177,8 @@ public class PlaceDetailFragment extends Fragment implements LoaderCallbacks<Cur
 	 * When the Loader has completed, schedule an update of the Fragment UI on the main application thread.
 	 */
 	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+		if(D)Log.d(TAG, "PlaceDetailFragment.onLoadFinished");
+		
 		if (data.moveToFirst()) {
 			final String name = data.getString(data.getColumnIndex(PlaceDetailsContentProvider.KEY_NAME));
 			final String phone = data.getString(data.getColumnIndex(PlaceDetailsContentProvider.KEY_PHONE));
@@ -198,6 +209,7 @@ public class PlaceDetailFragment extends Fragment implements LoaderCallbacks<Cur
 	 * {@inheritDoc}
 	 */
 	public void onLoaderReset(Loader<Cursor> loader) {
+		if(D)Log.d(TAG, "PlaceDetailFragment.onLoaderReset");
 		handler.post(new Runnable () {
 			public void run() {
 				nameTextView.setText("");

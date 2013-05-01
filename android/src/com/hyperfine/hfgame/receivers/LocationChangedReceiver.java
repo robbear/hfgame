@@ -44,6 +44,9 @@ public class LocationChangedReceiver extends BroadcastReceiver {
 		if (intent.hasExtra(locationKey)) {
 			Location location = (Location)intent.getExtras().get(locationKey);
 			if(D)Log.d(TAG, "LocationChangedReceiver.onReceive - Actively Updating place list");
+			if(D)Log.d(TAG, String.format(
+					"... location: accuracy: %f, long: %f, lat: %f, alt: %f", 
+					location.getAccuracy(), location.getLongitude(), location.getLatitude(), location.getAltitude()));
 			Intent updateServiceIntent = new Intent(context, PlacesUpdateService.class);
 			updateServiceIntent.putExtra(Config.PlacesConstants.EXTRA_KEY_LOCATION, location);
 			updateServiceIntent.putExtra(Config.PlacesConstants.EXTRA_KEY_RADIUS, Config.PlacesConstants.DEFAULT_RADIUS);

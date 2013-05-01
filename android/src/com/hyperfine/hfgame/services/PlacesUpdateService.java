@@ -86,6 +86,13 @@ public class PlacesUpdateService extends IntentService {
 		prefs = getSharedPreferences(Config.PlacesConstants.SHARED_PREFERENCE_FILE, Context.MODE_PRIVATE);
 		prefsEditor = prefs.edit();
 	}
+	
+	@Override
+	public void onDestroy() {
+		if(D)Log.d(TAG, "PlacesUpdateService.onDestroy");
+		
+		super.onDestroy();
+	}
 
 	/**
 	 * {@inheritDoc}

@@ -73,6 +73,13 @@ public class PlaceCheckinService extends IntentService {
 		Intent retryIntent = new Intent(Config.PlacesConstants.RETRY_QUEUED_CHECKINS_ACTION);
 		retryQueuedCheckinsPendingIntent = PendingIntent.getBroadcast(this, 0, retryIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 	}
+	
+	@Override
+	public void onDestroy() {
+		if(D)Log.d(TAG, "PlaceCheckinService.onDestroy");
+		
+		super.onDestroy();
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -104,11 +111,15 @@ public class PlaceCheckinService extends IntentService {
 		// Check to see if we are connected to a data network.
 		NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
 		boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+		
+		if(D)Log.d(TAG, String.format("PlaceCheckinService.onHandleIntent - isConnected=%b", isConnected));
 
 		// If we're not connected then disable the retry Alarm, enable the Connectivity Changed Receiver
 		// and add the new checkin directly to the queue. The Connectivity Changed Receiver will listen
 		// for when we connect to a network and start this service to retry the checkins.
 		if (!isConnected) {
+			if(D)Log.d(TAG, "... we're not connected, so enable ConnectivityChangedReceiver and cancel the alarm. Add the checkin to the queue.");
+			
 			// No connection so no point triggering an alarm to retry until we're connected.
 			alarmManager.cancel(retryQueuedCheckinsPendingIntent);
       
@@ -124,10 +135,17 @@ public class PlaceCheckinService extends IntentService {
 			addToQueue(timeStamp, reference, id);
 		}
 		else { 
+			if(D)Log.d(TAG, "... we're connected ...");
+			
 			// Execute the checkin. If it fails, add it to the retry queue.
 			if (reference != null) {
+				if(D)Log.d(TAG,  "... executing the checkin ...");
 				if (!checkin(timeStamp, reference, id)) {
+					if(D)Log.d(TAG, "... the checkin failed, so adding to the queue ...");
 					addToQueue(timeStamp, reference, id);
+				}
+				else {
+					if(D)Log.d(TAG, "... the checkin was successful ...");
 				}
 			}
     
@@ -136,6 +154,7 @@ public class PlaceCheckinService extends IntentService {
 			Cursor queuedCheckins = contentResolver.query(QueuedCheckinsContentProvider.CONTENT_URI, null, null, null, null);
 			try {
 				// Retry each checkin.
+				if(D)Log.d(TAG, String.format("... retrying %d queued checkins ...", queuedCheckins.getCount()));
 				while (queuedCheckins.moveToNext()) {
 					long queuedTimeStamp =  queuedCheckins.getLong(queuedCheckins.getColumnIndex(QueuedCheckinsContentProvider.KEY_TIME_STAMP));
 					String queuedReference =  queuedCheckins.getString(queuedCheckins.getColumnIndex(QueuedCheckinsContentProvider.KEY_REFERENCE));
@@ -146,6 +165,7 @@ public class PlaceCheckinService extends IntentService {
 				}
        
 				// Delete the queued checkins that were successful.
+				if(D)Log.d(TAG, String.format("... deleting %d successful checkins...", successfulCheckins.size()));
 				if (successfulCheckins.size() > 0) {
 					StringBuilder sb = new StringBuilder("("+QueuedCheckinsContentProvider.KEY_REFERENCE + "='" + successfulCheckins.get(0) + "'");
 					for (int i = 1; i < successfulCheckins.size(); i++)
@@ -158,11 +178,14 @@ public class PlaceCheckinService extends IntentService {
 				// If there are still queued checkins then set a non-waking alarm to retry them.
 				// BUGBUG
 				queuedCheckins.requery();
+				if(D)Log.d(TAG, String.format("... we now have %d queuedCheckins. If it's more than 0, we'll create a non-waking alarm ...", queuedCheckins.getCount()));
 				if (queuedCheckins.getCount() > 0) {
+					if(D)Log.d(TAG, "... setting a non-waking alarm ...");
 					long triggerAtTime = System.currentTimeMillis() + Config.PlacesConstants.CHECKIN_RETRY_INTERVAL;
 					alarmManager.set(AlarmManager.ELAPSED_REALTIME, triggerAtTime, retryQueuedCheckinsPendingIntent);
 				}
 				else {
+					if(D)Log.d(TAG, "... canceling the alarm ...");
 					alarmManager.cancel(retryQueuedCheckinsPendingIntent);
 				}
 			}
@@ -182,6 +205,9 @@ public class PlaceCheckinService extends IntentService {
 	 */
 	protected boolean checkin(long timeStamp, String reference, String id) {
 		if (reference != null) {
+			
+			if(D)Log.d(TAG, "PlaceCheckinService.checkin");
+			
 			try {
 				// Construct the URI required to perform a checkin.
 				// TODO Replace this with the checkin URI for your own web service.
@@ -217,19 +243,33 @@ public class PlaceCheckinService extends IntentService {
 				}
 				// If the checkin fails return false.
 				else {
+					if(D)Log.d(TAG, "PlaceCheckinService.checkin - failed, returning false");
 					return false;
 				}
 			} 
 			catch (ClientProtocolException e) {
-				if(E)Log.e(TAG, e.getMessage());
+				if(E)Log.e(TAG, "PlaceCheckinService.checkin", e);
+				e.printStackTrace();
 			} 
 			catch (IOException e) {
-				if(E)Log.e(TAG, e.getMessage());
+				if(E)Log.e(TAG, "PlaceCheckinService.checkin", e);
+				e.printStackTrace();
 			} 
 			catch (URISyntaxException e) {
-				if(E)Log.e(TAG, e.getMessage());
+				if(E)Log.e(TAG, "PlaceCheckinService.checkin", e);
+				e.printStackTrace();
+			}
+			catch (Exception e) {
+				if(E)Log.e(TAG, "PlaceCheckinService.checkin", e);
+				e.printStackTrace();				
+			}
+			catch (OutOfMemoryError e) {
+				if(E)Log.e(TAG, "PlaceCheckinService.checkin", e);
+				e.printStackTrace();				
 			}
 		}
+		
+		if(D)Log.d(TAG, "PlaceCheckinService.checkin - returning FALSE");
 		return false;
 	}
   

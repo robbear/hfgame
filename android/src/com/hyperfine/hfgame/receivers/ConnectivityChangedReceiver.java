@@ -12,7 +12,7 @@ import android.util.Log;
 import com.hyperfine.hfgame.services.PlaceCheckinService;
 
 import static com.hyperfine.hfgame.utils.Config.D;
-import static com.hyperfine.hfgame.utils.Config.E;
+//import static com.hyperfine.hfgame.utils.Config.E;
 
 /**
  * This Receiver class is designed to listen for changes in connectivity.
@@ -38,6 +38,8 @@ public class ConnectivityChangedReceiver extends BroadcastReceiver {
 		boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     
 		if (isConnected) {
+			if(D)Log.d(TAG, "ConnectivityChangedReceiver.onReceive - isConnected = TRUE");
+			
 			PackageManager pm = context.getPackageManager();
       
 			ComponentName connectivityReceiver = new ComponentName(context, ConnectivityChangedReceiver.class);
@@ -65,6 +67,9 @@ public class ConnectivityChangedReceiver extends BroadcastReceiver {
 			// Commit any queued checkins now that we have connectivity
 			Intent checkinServiceIntent = new Intent(context, PlaceCheckinService.class);
 			context.startService(checkinServiceIntent);
+		}
+		else {
+			if(D)Log.d(TAG, "ConnectivityChangedReceiver.onReceive - isConnected = FALSE");			
 		}
 	}
 }

@@ -27,6 +27,8 @@ public class PowerStateChangedReceiver extends BroadcastReceiver {
 		if(D)Log.d(TAG, "PowerStateChangedReceiver.onReceive");
 		
 		boolean batteryLow = intent.getAction().equals(Intent.ACTION_BATTERY_LOW);
+		
+		if(D)Log.d(TAG, String.format("... battery is%s low", batteryLow ? "" : " NOT"));
  
 		PackageManager pm = context.getPackageManager();
 		ComponentName passiveLocationReceiver = new ComponentName(context, PassiveLocationChangedReceiver.class);

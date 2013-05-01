@@ -32,6 +32,7 @@ public class NewCheckinReceiver extends BroadcastReceiver {
 		
 		String id = intent.getStringExtra(Config.PlacesConstants.EXTRA_KEY_ID);
 		if (id != null) {
+			if(D)Log.d(TAG, String.format("... id=%s so calling CheckinNotificationService", id));
 			Intent serviceIntent = new Intent(context, CheckinNotificationService.class);
 			serviceIntent.putExtra(Config.PlacesConstants.EXTRA_KEY_ID, id);
 			context.startService(serviceIntent);

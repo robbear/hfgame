@@ -278,6 +278,7 @@ public class PlaceActivity extends FragmentActivity {
 	/**
 	 * Stop listening for location updates
 	 */
+	@SuppressWarnings("unused")
 	protected void disableLocationUpdates() {
 		unregisterReceiver(locProviderDisabledReceiver);
 		locationManager.removeUpdates(locationListenerPendingIntent);

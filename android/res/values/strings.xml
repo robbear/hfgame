@@ -7,6 +7,5 @@
     <string name="refresh">Refresh</string>
     <string name="checkin_text">Checked in to </string>
     <string name="checkin_button_text">Checkin</string>
-    <string name="backup_manager_key"></string>
     
 </resources>

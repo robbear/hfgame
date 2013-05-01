@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +19,7 @@ import com.hyperfine.hfgame.content_providers.PlaceDetailsContentProvider;
 import com.hyperfine.hfgame.utils.Config;
 
 import static com.hyperfine.hfgame.utils.Config.D;
-import static com.hyperfine.hfgame.utils.Config.E;
+//import static com.hyperfine.hfgame.utils.Config.E;
 
 // TODO Update this UI with details related to your checkin. That might include point / rewards
 // TODO Or incentives to review or rate the establishment.
@@ -38,6 +39,8 @@ public class CheckinFragment extends Fragment implements LoaderCallbacks<Cursor>
 	 * @return A new CheckinFragment
 	 */
 	public static CheckinFragment newInstance(String id) {
+		if(D)Log.d(TAG, "CheckinFragment.newInstance");
+		
 		CheckinFragment f = new CheckinFragment();
 
 		// Supply id input as an argument.
@@ -62,6 +65,8 @@ public class CheckinFragment extends Fragment implements LoaderCallbacks<Cursor>
 	 * @param id Identifier of the venue checked in to
 	 */
 	public void setPlaceId(String id) {
+		if(D)Log.d(TAG, String.format("CheckinFragment.setPlaceId: id=%s", id));
+		
 		// Update the place ID and restart the loader to update the UI.
 		placeId = id; 
 		if (placeId != null)
@@ -69,6 +74,8 @@ public class CheckinFragment extends Fragment implements LoaderCallbacks<Cursor>
 	}
   
 	public void onActivityCreated(Bundle savedInstanceState) {
+		if(D)Log.d(TAG, "CheckinFragment.onActivityCreated");
+		
 		super.onActivityCreated(savedInstanceState); 
 		activity = getActivity();
   
@@ -91,6 +98,8 @@ public class CheckinFragment extends Fragment implements LoaderCallbacks<Cursor>
 
 	@Override
 	public void onResume() {
+		if(D)Log.d(TAG, "CheckinFragment.onResume");
+		
 		super.onResume();
 	}
   
@@ -100,6 +109,8 @@ public class CheckinFragment extends Fragment implements LoaderCallbacks<Cursor>
 	 * the venue that has been checked in to.
 	 */
 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+		if(D)Log.d(TAG, "CheckinFragment.onCreateLoader");
+		
 		String[] projection = new String[] {PlaceDetailsContentProvider.KEY_NAME};
     
 		String selection = PlaceDetailsContentProvider.KEY_ID + "='" + placeId + "'";
@@ -113,6 +124,8 @@ public class CheckinFragment extends Fragment implements LoaderCallbacks<Cursor>
 	 * When this load has finished, update the UI with the name of the venue.
 	 */
 	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+		if(D)Log.d(TAG, "CheckinFragment.onLoadFinished");
+		
 		if (data.moveToFirst()) {
 			final String venueName = data.getString(data.getColumnIndex(PlaceDetailsContentProvider.KEY_NAME));
 			handler.post(new Runnable () {
@@ -127,6 +140,8 @@ public class CheckinFragment extends Fragment implements LoaderCallbacks<Cursor>
 	 * {@inheritDoc}
 	 */
 	public void onLoaderReset(Loader<Cursor> loader) {
+		if(D)Log.d(TAG, "CheckinFragment.onLoaderReset");
+		
 		handler.post(new Runnable () {
 			public void run() {
 				checkPlaceNameTextView.setText("");

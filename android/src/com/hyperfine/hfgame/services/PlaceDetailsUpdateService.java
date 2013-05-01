@@ -63,6 +63,13 @@ public class PlaceDetailsUpdateService extends IntentService {
 		cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
 		prefs = getSharedPreferences(Config.PlacesConstants.SHARED_PREFERENCE_FILE, Context.MODE_PRIVATE);
 	}
+	
+	@Override
+	public void onDestroy() {
+		if(D)Log.d(TAG, "PlaceDetailsUpdateService.onDestroy");
+		
+		super.onDestroy();
+	}
 
 	/**
 	 * {@inheritDoc}

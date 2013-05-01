@@ -33,17 +33,21 @@ public class PassiveLocationChangedReceiver extends BroadcastReceiver {
 	 */
 	@Override
 	public void onReceive(Context context, Intent intent) {
+		if(D)Log.d(TAG, "PassiveLocationChangedReceiver.onReceive");
+		
 		String key = LocationManager.KEY_LOCATION_CHANGED;
 		Location location = null;
     
 		if (intent.hasExtra(key)) {
 			// This update came from Passive provider, so we can extract the location
 			// directly.
+			if(D)Log.d(TAG, "PassiveLocationChangedReceiver.onReceive - update is from Passive provider");
 			location = (Location)intent.getExtras().get(key);      
 		}
 		else {
 			// This update came from a recurring alarm. We need to determine if there
 			// has been a more recent Location received than the last location we used.
+			if(D)Log.d(TAG, "PassiveLocationChangedReceiver.onReceive - update is from a recurring alarm");
       
 			// Get the best last location detected from the providers.
 			LastLocationFinder lastLocationFinder = new LastLocationFinder(context);
@@ -70,6 +74,9 @@ public class PassiveLocationChangedReceiver extends BroadcastReceiver {
 		// Start the Service used to find nearby points of interest based on the last detected location.
 		if (location != null) {
 			if(D)Log.d(TAG, "PassiveLocationChangedReceiver.onReceive - Passively updating place list.");
+			if(D)Log.d(TAG, String.format(
+					"...passive location: accuracy: %f, long: %f, lat: %f, alt: %f", 
+					location.getAccuracy(), location.getLongitude(), location.getLatitude(), location.getAltitude()));
 			Intent updateServiceIntent = new Intent(context, PlacesUpdateService.class);
 			updateServiceIntent.putExtra(Config.PlacesConstants.EXTRA_KEY_LOCATION, location);
 			updateServiceIntent.putExtra(Config.PlacesConstants.EXTRA_KEY_RADIUS, Config.PlacesConstants.DEFAULT_RADIUS);

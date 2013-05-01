@@ -59,7 +59,7 @@ public class Config
     	 * TODO Update these values for your app.
     	 */
     	// The default search radius when searching for places nearby.
-    	public static final int DEFAULT_RADIUS = 150;
+    	public static final int DEFAULT_RADIUS = 5000;/*150;*/
     	// The maximum distance the user should travel between location updates. 
     	public static final int MAX_DISTANCE = DEFAULT_RADIUS/2;
     	// The maximum time that should pass before the user gets a location update.
@@ -95,7 +95,7 @@ public class Config
     	 
     	  
     	/**
-    	 * These values are constants used for intents, exteas, and shared preferences.
+    	 * These values are constants used for intents, extras, and shared preferences.
     	 * You shouldn't need to modify them.
     	 */
     	public static final String SHARED_PREFERENCE_FILE = "SHARED_PREFERENCE_FILE";

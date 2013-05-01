@@ -17,7 +17,7 @@ import com.hyperfine.hfgame.UI.PlaceActivity;
 import com.hyperfine.hfgame.content_providers.PlaceDetailsContentProvider;
 
 import static com.hyperfine.hfgame.utils.Config.D;
-import static com.hyperfine.hfgame.utils.Config.E;
+//import static com.hyperfine.hfgame.utils.Config.E;
 
 
 /**
@@ -56,6 +56,13 @@ public class CheckinNotificationService extends IntentService {
 		notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
     
 		projection = new String[] {PlaceDetailsContentProvider.KEY_ID, PlaceDetailsContentProvider.KEY_NAME};
+	}
+	
+	@Override
+	public void onDestroy() {
+		if(D)Log.d(TAG, "CheckinNotificationService.onDestroy");
+		
+		super.onDestroy();
 	}
 
 	/**
