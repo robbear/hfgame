@@ -62,7 +62,7 @@ describe('UserLocations REST API', function() {
     describe('/userlocations/createlocation', function() {
         it('should create a user location item', function(done) {
             var date = Date.now();
-            client.post('/userlocations/createlocation', { userId: userId, coordinates: seattleCoordinates, date: date }, function(err, req, res, data) {
+            client.post('/userlocations/createlocation', { userId: userId, coordinates: seattleCoordinates, altitude: 5.0, accuracy: 10.0, date: date }, function(err, req, res, data) {
                 should.not.exist(err);
                 should.exist(data);
                 if (err || !data) {
@@ -88,7 +88,7 @@ describe('UserLocations REST API', function() {
                 var lat = getRandomInt(latMin, latMax) / 10000.0;
                 var date = getRandomDate(new Date(START_DATE_STRING),  new Date(END_DATE_STRING));
 
-                locsWithDate[i] = { coordinates: [lon, lat], date: date };
+                locsWithDate[i] = { coordinates: [lon, lat], altitude: 5.0, accuracy: 10.0, date: date };
             }
 
             client.post('/userlocations/createlocations', { userId: userId, locations: locsWithDate }, function(err, req, res, data) {
@@ -117,6 +117,8 @@ describe('UserLocations REST API', function() {
                 should.exist(locations);
                 locations.should.have.lengthOf(MAX_RANDOM_LOCATIONS);
                 locations[0].should.have.property('coordinates').with.lengthOf(2);
+                locations[0].should.have.property('altitude');
+                locations[0].should.have.property('accuracy');
                 locations[0].should.have.property('date');
                 locations[MAX_RANDOM_LOCATIONS - 1].should.have.property('coordinates').with.lengthOf(2);
                 locations[MAX_RANDOM_LOCATIONS - 1].should.have.property('date');

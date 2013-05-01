@@ -8,6 +8,8 @@ var safe = true;
 var UserLocationSchema = new Schema({
     userId: { type: Schema.Types.ObjectId, required: true, index: 1 },
     location: { type: { type: String }, coordinates: [] },
+    altitude: { type: Number, default: 0.0 },
+    accuracy: { type: Number, default: 0.0 },
     date: { type: Date, default: Date.now() }
     }, {
     //autoIndex: false,
@@ -20,11 +22,13 @@ UserLocationSchema.index({ location: '2dsphere' });
 
 UserLocationSchema.statics.collectionName = COLLECTION_NAME;
 
-UserLocationSchema.statics.createUserLocation = function(userId, location, date, cb) {
+UserLocationSchema.statics.createUserLocation = function(userId, location, altitude, accuracy, date, cb) {
     var UserLocation = mongoose.model('UserLocation', UserLocationSchema);
     var userLoc = new UserLocation({
         userId: userId,
         location: { type: 'Point', coordinates: location },
+        altitude: altitude,
+        accuracy: accuracy,
         date: date ? date : Date.now()
     });
     userLoc.save(function(err, userLoc) {
@@ -44,7 +48,7 @@ UserLocationSchema.statics.insertUserLocations = function(userId, locationsWithD
 
     //
     // locationsWithDate:
-    // [{ coordinates: [lon, lat], date: Date }]
+    // [{ coordinates: [lon, lat], altitude: altitude, accuracy: accuracy, date: Date }]
     //
 
     var UserLocation = mongoose.model('UserLocation', UserLocationSchema);
@@ -53,6 +57,8 @@ UserLocationSchema.statics.insertUserLocations = function(userId, locationsWithD
         var modelItem = new UserLocation({
             userId: userId,
             location: { type: 'Point', coordinates: locationsWithDate[i].coordinates },
+            altitude: locationsWithDate[i].altitude,
+            accuracy: locationsWithDate[i].accuracy,
             date: locationsWithDate[i].date
         });
         modelLocs[i] = modelItem.toObject();

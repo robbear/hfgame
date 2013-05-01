@@ -84,7 +84,7 @@ var routeExports = [
         routeFn: userLocationsController.createUserLocation,
         route: '/userlocations/createlocation',
         description: "Create a user location. Parameters are passed in the form body.",
-        parameters: "{userId: userId, coordinates: [longitude, latitude], date: date}",
+        parameters: "{userId: userId, coordinates: [longitude, latitude], altitude: altitude, accuracy: accuracy, date: date}",
         returns: "{}"
     },
     {
@@ -93,7 +93,7 @@ var routeExports = [
         routeFn: userLocationsController.insertUserLocations,
         route: '/userlocations/createlocations',
         description: "Create a collection of user locations. Parameters are passed in the form body.",
-        parameters: "{userId: userId, locations: [{coordinates: [longitude, latitude], date: date}]}",
+        parameters: "{userId: userId, locations: [{coordinates: [longitude, latitude], altitude: altitude, accuracy: accuracy, date: date}]}",
         returns: "{}"
     },
     {
@@ -103,7 +103,7 @@ var routeExports = [
         route: '/userlocations/bydate',
         description: "Get the locations for a user by specifying a range of dates.",
         parameters: "{userId: 'userId', start: 'startDate', end: 'endDate', limit: 'max returned items'}",
-        returns: "[{ coordinates: [lon, lat], date: date }]"
+        returns: "[{ coordinates: [lon, lat], altitude: altitude, accuracy: accuracy, date: date }]"
     }
 ];
 

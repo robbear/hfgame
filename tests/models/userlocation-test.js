@@ -28,12 +28,14 @@ describe('UserLocation Model', function() {
 
     describe('#createUserLocation() - Seattle', function() {
         it('should create a location item for Seattle', function(done) {
-            UserLocation.createUserLocation(userId, seattleLoc, null, function(err, userLocation) {
+            UserLocation.createUserLocation(userId, seattleLoc, 5.0, 10.0, null, function(err, userLocation) {
                 should.not.exist(err);
                 should.exist(userLocation);
                 should.exist(userLocation.location);
                 should.exist(userLocation.location.coordinates);
                 should.exist(userLocation.userId);
+                should.exist(userLocation.altitude);
+                should.exist(userLocation.accuracy);
                 should.exist(userLocation.date);
                 if (err) {
                     return done(err);
@@ -45,6 +47,8 @@ describe('UserLocation Model', function() {
                     userLocation.userId.should.be.a('object');
                     userLocation.userId.toString().should.equal(userId);
                     userLocation.date.should.be.a('object');
+                    userLocation.altitude.should.equal(5.0);
+                    userLocation.accuracy.should.equal(10.0);
                     done();
                 }
             });
@@ -53,12 +57,14 @@ describe('UserLocation Model', function() {
 
     describe('#createUserLocation() - San Francisco', function() {
         it('should create a location item for San Francisco', function(done) {
-            UserLocation.createUserLocation(userId, sanfranciscoLoc, null, function(err, userLocation) {
+            UserLocation.createUserLocation(userId, sanfranciscoLoc, 5.0, 10.0, null, function(err, userLocation) {
                 should.not.exist(err);
                 should.exist(userLocation);
                 should.exist(userLocation.location);
                 should.exist(userLocation.location.coordinates);
                 should.exist(userLocation.userId);
+                should.exist(userLocation.altitude);
+                should.exist(userLocation.accuracy);
                 if (err) {
                     return done(err);
                 }
@@ -67,6 +73,8 @@ describe('UserLocation Model', function() {
                     userLocation.location.coordinates[1].should.equal(sanfranciscoLoc[1]);
                     userLocation.userId.should.be.a('object');
                     userLocation.userId.toString().should.equal(userId);
+                    userLocation.altitude.should.equal(5.0);
+                    userLocation.accuracy.should.equal(10.0);
                     done();
                 }
             });
@@ -74,7 +82,10 @@ describe('UserLocation Model', function() {
     });
 
     describe('#insertUserLocations()', function() {
-        var locsWithDate = [{coordinates: newyorkLoc, date: newyorkDate}, {coordinates: bostonLoc, date: bostonDate}];
+        var locsWithDate = [
+            {coordinates: newyorkLoc, altitude: 5.0, accuracy: 10.0, date: newyorkDate},
+            {coordinates: bostonLoc, altitude: 5.0, accuracy: 10.0, date: bostonDate}
+        ];
 
         it('should create location items for Boston and New York', function(done) {
             UserLocation.insertUserLocations(userId, locsWithDate, function(err, docs) {
@@ -102,7 +113,7 @@ describe('UserLocation Model', function() {
                 var lat = getRandomInt(latMin, latMax) / 10000.0;
                 var date = getRandomDate(new Date(START_DATE_STRING),  new Date(END_DATE_STRING));
 
-                locsWithDate[i] = { coordinates: [lon, lat], date: date };
+                locsWithDate[i] = { coordinates: [lon, lat], altitude: 5.0, accuracy: 10.0, date: date };
             }
 
             UserLocation.insertUserLocations(userId, locsWithDate, function(err, docs) {

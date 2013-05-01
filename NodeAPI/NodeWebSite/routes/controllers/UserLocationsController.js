@@ -10,6 +10,8 @@ exports.createUserLocation = function(req, res, next) {
     var userId = req.params.userId;
     var coordinates = req.params.coordinates;
     var date = req.params.date;
+    var altitude = req.params.altitude;
+    var accuracy = req.params.accuracy;
 
     logger.bunyanLogger().info(
         "%sREST API userlocations/createlocation: userId=%s, coordinates=%s, date=%s",
@@ -27,8 +29,14 @@ exports.createUserLocation = function(req, res, next) {
     if (!isValidCoordinates(coordinates)) {
         return next(new restify.InvalidArgumentError("Invalid coordinates"));
     }
+    if (!altitude || !isNumber(accuracy)) {
+        altitude = 0.0;
+    }
+    if (!accuracy || !isNumber(accuracy)) {
+        accuracy = 0.0;
+    }
 
-    UserLocation.createUserLocation(userId, coordinates, date, function(err, userLocation) {
+    UserLocation.createUserLocation(userId, coordinates, altitude, accuracy, date, function(err, userLocation) {
         if (err) {
             logger.bunyanLogger().error("%s... userlocations/createlocation: err=%s", hfConfig.tag(), err.message);
             if (utilities.isErrorDatabaseDisconnect(err)) {
@@ -67,19 +75,27 @@ exports.insertUserLocations = function(req, res, next) {
         return next(new restify.InvalidArgumentError("No locations provided"));
     }
     if (!Array.isArray(userLocations)) {
-        return next(new restify.InvalidArgumentError("locations must be an array of objects: { location: [lon, lat], date: date }"));
+        return next(new restify.InvalidArgumentError("locations must be an array of objects: { location: [lon, lat], altitude: altitude, accuracy: accuracy, date: date }"));
     }
     if (userLocations.length < 1) {
-        return next(new restify.InvalidArgumentError("locations must be an array of objects: { location: [lon, lat], date: date }"));
+        return next(new restify.InvalidArgumentError("locations must be an array of objects: { location: [lon, lat], altitude: altitude, accuracy: accuracy, date: date }"));
     }
     for (var i = 0; i < userLocations.length; i++) {
         var ul = userLocations[i];
         var coordinates = ul.coordinates;
+        var altitude = ul.altitude;
+        var accuracy = ul.accuracy;
         if (!isValidCoordinates(coordinates)) {
             return next(new restify.InvalidArgumentError("One or more invalid location coordinates"));
         }
         if (!isValidDate(ul.date)) {
             return next(new restify.InvalidArgumentError("One or more invalid dates}"));
+        }
+        if (!altitude || !isNumber(accuracy)) {
+            userLocations[i].altitude = 0.0;
+        }
+        if (!accuracy || !isNumber(accuracy)) {
+            userLocations[i].accuracy = 0.0;
         }
     }
 
@@ -154,7 +170,7 @@ exports.getUserLocationsByDate = function(req, res, next) {
         var locations = new Array(docs.length);
         for (var i = 0; i < docs.length; i++) {
             var doc = docs[i];
-            locations[i] = { coordinates: doc.location.coordinates, date: doc.date };
+            locations[i] = { coordinates: doc.location.coordinates, altitude: doc.altitude, accuracy: doc.accuracy, date: doc.date };
         }
 
         logger.bunyanLogger().info("%s... userlocations/bydate success", hfConfig.tag());
@@ -206,4 +222,8 @@ function isValidCoordinates(coordinates) {
     }
 
     return true;
+}
+
+function isNumber(val) {
+    return !isNaN(parseFloat(val) && isFinite(val));
 }
