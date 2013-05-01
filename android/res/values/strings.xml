@@ -4,5 +4,9 @@
     <string name="hello_world">Hyperfine</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_main">Hyperfine Game</string>
-
+    <string name="refresh">Refresh</string>
+    <string name="checkin_text">Checked in to </string>
+    <string name="checkin_button_text">Checkin</string>
+    <string name="backup_manager_key"></string>
+    
 </resources>
