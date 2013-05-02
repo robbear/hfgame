@@ -29,6 +29,7 @@ public class Config
     
     // HFGame REST api base url
     public static final String restBaseUrl = "http://hfapi.jit.su/";
+    //public static final String restBaseUrl = "http://192.168.0.104:1338/";
     
     //
     // PlacesConstants

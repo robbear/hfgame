@@ -27,6 +27,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import com.hyperfine.hfgame.utils.Config;
+import com.hyperfine.hfgame.PlacesApplication;
 import com.hyperfine.hfgame.R;
 import com.hyperfine.hfgame.SDK.UserAPI;
 import com.hyperfine.hfgame.UI.fragments.CheckinFragment;
@@ -160,27 +161,33 @@ public class PlaceActivity extends FragmentActivity {
 			}
 		}
 		
-		UserAPI.login(m_userName, m_password, new RESTHelperListener() {
-			public void onRESTResponse(int httpResult, String responseString) {
-				if(D)Log.d(TAG, String.format("PlaceActivity.UserAPI.login: httpResult=%d, response=%s", httpResult, responseString));
-				if (httpResult == 200) {
-					try {
-						JSONObject json = new JSONObject(responseString);
-						m_userId = json.getString("id");
-						
-						if(D)Log.d(TAG, String.format("PlaceActivity.UserAPI.login: m_userId is now set to %s", m_userId));
+		PlacesApplication app = (PlacesApplication)getApplication();
+		m_userId = app.getUserId();
+		if (m_userId == null) {
+			UserAPI.login(m_userName, m_password, new RESTHelperListener() {
+				public void onRESTResponse(int httpResult, String responseString) {
+					if(D)Log.d(TAG, String.format("PlaceActivity.UserAPI.login: httpResult=%d, response=%s", httpResult, responseString));
+					if (httpResult == 200) {
+						try {
+							JSONObject json = new JSONObject(responseString);
+							m_userId = json.getString("id");
+							PlacesApplication app = (PlacesApplication)getApplication();
+							app.setUserId(m_userId);
+							
+							if(D)Log.d(TAG, String.format("PlaceActivity.UserAPI.login: m_userId is now set to %s", m_userId));
+						}
+						catch (Exception e) {
+							if(E)Log.e(TAG, "PlaceActivity.UserAPI.login", e);
+							e.printStackTrace();
+						}
+						catch (OutOfMemoryError e) {
+							if(E)Log.e(TAG, "PlaceActivity.UserAPI.login", e);
+							e.printStackTrace();
+						}
 					}
-					catch (Exception e) {
-						if(E)Log.e(TAG, "PlaceActivity.UserAPI.login", e);
-						e.printStackTrace();
-					}
-					catch (OutOfMemoryError e) {
-						if(E)Log.e(TAG, "PlaceActivity.UserAPI.login", e);
-						e.printStackTrace();
-					}
-				}
-			}			
-		});
+				}			
+			});
+		}
 	}
 
 	@Override

@@ -6,6 +6,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -30,7 +32,10 @@ import android.os.BatteryManager;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.hyperfine.hfgame.PlacesApplication;
 import com.hyperfine.hfgame.utils.Config;
+import com.hyperfine.hfgame.utils.RESTHelper.RESTHelperListener;
+import com.hyperfine.hfgame.SDK.UserLocationAPI;
 import com.hyperfine.hfgame.content_providers.PlaceDetailsContentProvider;
 import com.hyperfine.hfgame.content_providers.PlacesContentProvider;
 import com.hyperfine.hfgame.receivers.ConnectivityChangedReceiver;
@@ -185,7 +190,8 @@ public class PlacesUpdateService extends IntentService {
 			}
       
 			if (doUpdate) {
-				if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - refreshing places");
+				if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - refreshing places and calling UserLocationAPI");
+				storeUserLocation(location);
 				
 				// Refresh the prefetch count for each new location.
 				prefetchCount = 0;
@@ -204,6 +210,30 @@ public class PlacesUpdateService extends IntentService {
 		}
 		
 		if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - Place List Download Service Complete");
+	}
+	
+	/**
+	 * Stores the user location in the database via the UserLocationAPI
+	 * @param location Location
+	 */
+	protected void storeUserLocation(Location location) {
+		if(D)Log.d(TAG, "PlacesUpdateService.storeUserLocation");
+		
+		PlacesApplication app = (PlacesApplication)getApplication();
+		String userId = app.getUserId();
+		if (userId == null) {
+			if(D)Log.d(TAG, "PlacesUpdateService.storeUserLocation - no userId yet, so bailing.");
+			return;			
+		}
+
+		UserLocationAPI.createLocation(
+				userId, location.getLongitude(), location.getLatitude(), 
+				location.getAltitude(), (double)location.getAccuracy(), location.getTime(), 
+				new RESTHelperListener() {
+					public void onRESTResponse(int httpResult, String responseString) {
+						if(D)Log.d(TAG, String.format("PlacesUpdateService.UserLocationAPI.createLocation: httpResult=%d, response=%s", httpResult, responseString));
+					}					
+				});
 	}
   
 	/**
