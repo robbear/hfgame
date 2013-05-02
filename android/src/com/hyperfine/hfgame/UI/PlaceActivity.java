@@ -1,5 +1,7 @@
 package com.hyperfine.hfgame.UI;
 
+import org.json.JSONObject;
+
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -26,6 +28,7 @@ import android.view.MenuItem;
 
 import com.hyperfine.hfgame.utils.Config;
 import com.hyperfine.hfgame.R;
+import com.hyperfine.hfgame.SDK.UserAPI;
 import com.hyperfine.hfgame.UI.fragments.CheckinFragment;
 import com.hyperfine.hfgame.UI.fragments.PlaceDetailFragment;
 import com.hyperfine.hfgame.UI.fragments.PlaceListFragment;
@@ -35,10 +38,11 @@ import com.hyperfine.hfgame.receivers.PassiveLocationChangedReceiver;
 import com.hyperfine.hfgame.services.PlacesUpdateService;
 import com.hyperfine.hfgame.utils.LastLocationFinder;
 import com.hyperfine.hfgame.utils.LocationUpdateRequester;
+import com.hyperfine.hfgame.utils.RESTHelper.RESTHelperListener;
 import com.hyperfine.hfgame.utils.SharedPreferenceSaver;
 
 import static com.hyperfine.hfgame.utils.Config.D;
-//import static com.hyperfine.hfgame.utils.Config.E;
+import static com.hyperfine.hfgame.utils.Config.E;
 
 /**
  * Main application Activity. Used for all application UI, including pre/post Honeycomb 
@@ -79,6 +83,11 @@ public class PlaceActivity extends FragmentActivity {
   
 	protected IntentFilter newCheckinFilter;
 	protected ComponentName newCheckinReceiverName;
+	
+	// For API testing...
+	private String m_userId = null;
+	private String m_userName = "test1@test.com";
+	private String m_password = "password";
 
   
 	@Override
@@ -150,6 +159,28 @@ public class PlaceActivity extends FragmentActivity {
 				setIntent(intent);
 			}
 		}
+		
+		UserAPI.login(m_userName, m_password, new RESTHelperListener() {
+			public void onRESTResponse(int httpResult, String responseString) {
+				if(D)Log.d(TAG, String.format("PlaceActivity.UserAPI.login: httpResult=%d, response=%s", httpResult, responseString));
+				if (httpResult == 200) {
+					try {
+						JSONObject json = new JSONObject(responseString);
+						m_userId = json.getString("id");
+						
+						if(D)Log.d(TAG, String.format("PlaceActivity.UserAPI.login: m_userId is now set to %s", m_userId));
+					}
+					catch (Exception e) {
+						if(E)Log.e(TAG, "PlaceActivity.UserAPI.login", e);
+						e.printStackTrace();
+					}
+					catch (OutOfMemoryError e) {
+						if(E)Log.e(TAG, "PlaceActivity.UserAPI.login", e);
+						e.printStackTrace();
+					}
+				}
+			}			
+		});
 	}
 
 	@Override

@@ -11,8 +11,8 @@ public class TestAPI {
 	
 	public final static String TAG = "HFGame";
 	
-	public static void Test(RESTHelper.RESTHelperListener listener) {
-		if(D)Log.d(TAG, "TestAPI.Test");
+	public static void test(RESTHelper.RESTHelperListener listener) {
+		if(D)Log.d(TAG, "TestAPI.test");
 		
 		RESTHelper restHelper = new RESTHelper();
 		

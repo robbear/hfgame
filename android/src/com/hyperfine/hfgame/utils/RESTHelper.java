@@ -76,6 +76,7 @@ public class RESTHelper {
 					
 					sbQuery.append(isFirst ? "?" : "&");
 					sbQuery.append(String.format("%s=%s", key, value));
+					isFirst = false;
 				}
 			}
 			url = new URL(rctp.m_url + sbQuery.toString());

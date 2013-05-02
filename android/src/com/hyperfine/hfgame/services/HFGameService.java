@@ -88,12 +88,12 @@ public class HFGameService extends Service {
 				return;
 			}
 			
-			TestAPI.Test(new RESTHelperListener() {
+			TestAPI.test(new RESTHelperListener() {
 				public void onRESTResponse(int httpResult, String responseString) {
-					if(D)Log.d(TAG, String.format("HFGameService.Test.onRESTResponse: httpResult=%d, response=%s", httpResult, responseString));
+					if(D)Log.d(TAG, String.format("HFGameService.test.onRESTResponse: httpResult=%d, response=%s", httpResult, responseString));
 
 					if (m_fServiceDestroyed) {
-						if(D)Log.d(TAG, "HFGameService.Test.onRESTResponse - service destroyed. Bailing.");
+						if(D)Log.d(TAG, "HFGameService.test.onRESTResponse - service destroyed. Bailing.");
 						return;
 					}
 					
