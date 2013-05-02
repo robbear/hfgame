@@ -134,6 +134,8 @@ public class PlacesUpdateService extends IntentService {
 		// There's no point trying to poll the server for updates if we're not connected, and the 
 		// connectivity receiver will turn the location-based updates back on once we have a connection.
 		if (!isConnected) {
+			if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - we are not currently connected");
+			
 			PackageManager pm = getPackageManager();
       
 			ComponentName connectivityReceiver = new ComponentName(this, ConnectivityChangedReceiver.class);
@@ -153,6 +155,11 @@ public class PlacesUpdateService extends IntentService {
 					PackageManager.DONT_KILL_APP);
 		}
 		else {
+			if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - we're connected");
+			if(D)Log.d(TAG, String.format(
+					"--- and our location is: long: %f, lat: %f, altitude: %f, accuracy: %f",
+					location.getLongitude(), location.getLatitude(), location.getAltitude(), location.getAccuracy()));
+			
 			// If we are connected check to see if this is a forced update (typically triggered
 			// when the location has changed).
 			boolean doUpdate = intent.getBooleanExtra(Config.PlacesConstants.EXTRA_KEY_FORCEREFRESH, false);
@@ -161,6 +168,8 @@ public class PlacesUpdateService extends IntentService {
 			// check to see if we've moved far enough, or there's been a long enough delay since
 			// the last update and if so, enforce a new update.
 			if (!doUpdate) {
+				if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - not a forced update");
+				
 				// Retrieve the last update time and place.
 				long lastTime = prefs.getLong(Config.PlacesConstants.SP_KEY_LAST_LIST_UPDATE_TIME, Long.MIN_VALUE);
 				long lastLat = prefs.getLong(Config.PlacesConstants.SP_KEY_LAST_LIST_UPDATE_LAT, Long.MIN_VALUE);
@@ -176,6 +185,8 @@ public class PlacesUpdateService extends IntentService {
 			}
       
 			if (doUpdate) {
+				if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - refreshing places");
+				
 				// Refresh the prefetch count for each new location.
 				prefetchCount = 0;
 				// Remove the old locations
@@ -192,7 +203,7 @@ public class PlacesUpdateService extends IntentService {
 			startService(checkinServiceIntent);
 		}
 		
-		if(D)Log.d(TAG, "Place List Download Service Complete");
+		if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - Place List Download Service Complete");
 	}
   
 	/**
