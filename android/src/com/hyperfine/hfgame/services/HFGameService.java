@@ -93,7 +93,7 @@ public class HFGameService extends Service implements RESTHelperListener {
 			// Ensure the last one was removed
 			m_restHelper.unregisterRESTHelperListener(HFGameService.this);
 			m_restHelper.registerRESTHelperListener(HFGameService.this);
-			m_restHelper.restCallAsync();
+			m_restHelper.restCallAsync(RESTHelper.HttpVerb.GET, "http://hfapi.jit.su/test", null);
 		}
 	}
 	
