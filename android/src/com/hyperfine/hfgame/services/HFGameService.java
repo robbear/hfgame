@@ -5,7 +5,7 @@
 
 package com.hyperfine.hfgame.services;
 
-import com.hyperfine.hfgame.utils.RESTHelper;
+import com.hyperfine.hfgame.SDK.TestAPI;
 import com.hyperfine.hfgame.utils.RESTHelper.RESTHelperListener;
 
 import android.app.Service;
@@ -18,7 +18,7 @@ import android.util.Log;
 import static com.hyperfine.hfgame.utils.Config.D;
 import static com.hyperfine.hfgame.utils.Config.E;
 
-public class HFGameService extends Service implements RESTHelperListener {
+public class HFGameService extends Service {
 	
 	public final static String TAG = "HFGame";
 	
@@ -27,7 +27,6 @@ public class HFGameService extends Service implements RESTHelperListener {
 	
 	public final static String DEFAULT_API_BASEURL = "http://hfapi.jit.su/";
 	
-	private RESTHelper m_restHelper = null;
 	private boolean m_fServiceDestroyed = false;
 	
 	@Override
@@ -35,7 +34,6 @@ public class HFGameService extends Service implements RESTHelperListener {
 		if(D)Log.d(TAG, "HFGameService.onCreate - starting HFGameService");
 		
 		m_fServiceDestroyed = false;
-		m_restHelper = new RESTHelper();
 		startTestIntervalAsync();
 	}
 	
@@ -90,10 +88,18 @@ public class HFGameService extends Service implements RESTHelperListener {
 				return;
 			}
 			
-			// Ensure the last one was removed
-			m_restHelper.unregisterRESTHelperListener(HFGameService.this);
-			m_restHelper.registerRESTHelperListener(HFGameService.this);
-			m_restHelper.restCallAsync(RESTHelper.HttpVerb.GET, "http://hfapi.jit.su/test", null);
+			TestAPI.Test(new RESTHelperListener() {
+				public void onRESTResponse(int httpResult, String responseString) {
+					if(D)Log.d(TAG, String.format("HFGameService.Test.onRESTResponse: httpResult=%d, response=%s", httpResult, responseString));
+
+					if (m_fServiceDestroyed) {
+						if(D)Log.d(TAG, "HFGameService.Test.onRESTResponse - service destroyed. Bailing.");
+						return;
+					}
+					
+					startTestIntervalAsync();
+				}				
+			});
 		}
 	}
 	
@@ -112,24 +118,7 @@ public class HFGameService extends Service implements RESTHelperListener {
 			e.printStackTrace();			
 		}
 	}
-	
-	//
-	// RESTHelperListener methods
-	//
-	
-	public void onRESTResponse(String stringResponse) {
-		if(D)Log.d(TAG, String.format("HFGameService.onRESTResponse: %s", stringResponse));
 		
-		m_restHelper.unregisterRESTHelperListener(this);
-		
-		if (m_fServiceDestroyed) {
-			if(D)Log.d(TAG, "HFGameService.OnRESTResponse - service destroyed. Bailing.");
-			return;
-		}
-		
-		startTestIntervalAsync();
-	}
-	
 	//
 	// Binder methods
 	//

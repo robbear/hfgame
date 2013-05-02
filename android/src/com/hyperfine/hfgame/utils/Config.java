@@ -27,6 +27,9 @@ public class Config
     // Verbose logs - ship with this set to false
     public static final boolean V = true;
     
+    // HFGame REST api base url
+    public static final String restBaseUrl = "http://hfapi.jit.su/";
+    
     //
     // PlacesConstants
     //

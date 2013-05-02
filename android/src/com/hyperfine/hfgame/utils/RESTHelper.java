@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.json.JSONObject;
@@ -25,28 +24,8 @@ public class RESTHelper {
 	public final static int READ_TIMEOUT = 10000;
 	public final static int CONNECT_TIMEOUT = 10000;
 	
-	private ArrayList<RESTHelperListener> m_restHelperListeners = new ArrayList<RESTHelperListener>();
-	
 	public interface RESTHelperListener {
-		public void onRESTResponse(String stringResponse);
-	}
-	
-	public void registerRESTHelperListener(RESTHelperListener listener) {
-		if(D)Log.d(TAG, "RESTHelper.registerRESTHelperListener");
-		
-		if (!m_restHelperListeners.contains(listener)) {
-			m_restHelperListeners.add(listener);
-		}
-		if(D)Log.d(TAG, String.format("RESTHelper.registerRESTHelperListener: now have %d listeners", m_restHelperListeners.size()));		
-	}
-	
-	public void unregisterRESTHelperListener(RESTHelperListener listener) {
-		if(D)Log.d(TAG, "RESTHelper.unregisterRESTHelperListener");
-		
-		if (m_restHelperListeners.contains(listener)) {
-			m_restHelperListeners.remove(listener);
-		}		
-		if(D)Log.d(TAG, String.format("RESTHelper.unregisterRESTHelperListener: now have %d listeners", m_restHelperListeners.size()));
+		public void onRESTResponse(int httpResult, String responseString);
 	}
 	
 	public enum HttpVerb {
@@ -57,25 +36,29 @@ public class RESTHelper {
 	}
 	
 	private class RESTCallTaskParams {
-		public RESTCallTaskParams(HttpVerb verb, String url, JSONObject parameters) {
+		public RESTCallTaskParams(HttpVerb verb, String url, JSONObject parameters, RESTHelperListener listener) {
 			m_verb = verb;
 			m_url = url;
 			m_parameters = parameters;
+			m_listener = listener;
+			m_responseString = "{ result: \"error\" }";
+			m_httpResult = 500;
 		}
 		
 		public HttpVerb m_verb;
 		public String m_url;
 		public JSONObject m_parameters;
+		public RESTHelperListener m_listener;
+		public String m_responseString;
+		public int m_httpResult;
 	}
 	
-	private String CallHttpGet(RESTCallTaskParams rctp) {
+	private void CallHttpGet(RESTCallTaskParams rctp) {
 		OutputStream os = null;
 		InputStream is = null;
 		BufferedReader br = null;
 		HttpURLConnection conn = null;
 		URL url;
-		String response = "";
-		int httpResult;
 
 		if(D)Log.d(TAG, String.format("RESTHelper.CallHttpGet: url=%s, params=%s", rctp.m_url, rctp.m_parameters == null ? "{}" : rctp.m_parameters.toString()));
 
@@ -102,8 +85,8 @@ public class RESTHelper {
 			conn.setConnectTimeout(CONNECT_TIMEOUT);
 			is = conn.getInputStream();
 	
-			httpResult = conn.getResponseCode();
-			if(D)Log.d(TAG, String.format("CallHttpGet - httpResult = %d", httpResult));
+			rctp.m_httpResult = conn.getResponseCode();
+			if(D)Log.d(TAG, String.format("CallHttpGet - httpResult = %d", rctp.m_httpResult));
 	
 			br = new BufferedReader(new InputStreamReader(is));
 			StringBuilder sb = new StringBuilder(is.available());
@@ -111,7 +94,7 @@ public class RESTHelper {
 			while ((line = br.readLine()) != null) {
 				sb.append(line);
 			}
-			response = sb.toString();
+			rctp.m_responseString = sb.toString();
 		}
 		catch (Exception e) {
 			if(E)Log.e(TAG, "RESTHelper.CallHttpGet", e);
@@ -144,18 +127,14 @@ public class RESTHelper {
 				conn.disconnect();
 			}
 		}
-		
-		return response;		
 	}
 	
-	private String CallHttpPost(RESTCallTaskParams rctp) {
+	private void CallHttpPost(RESTCallTaskParams rctp) {
 		OutputStream os = null;
 		InputStream is = null;
 		BufferedReader br = null;
 		HttpURLConnection conn = null;
 		URL url;
-		String response = "";
-		int httpResult;
 		
 		if(D)Log.d(TAG, String.format("RESTHelper.CallHttpPost: url=%s, params=%s", rctp.m_url, rctp.m_parameters == null ? "{}" : rctp.m_parameters.toString()));
 		
@@ -183,8 +162,8 @@ public class RESTHelper {
 			os.write(jsonParams.getBytes());
 			os.flush();
 			
-			httpResult = conn.getResponseCode();
-			if(D)Log.d(TAG, String.format("RESTHelper - httpResult = %d", httpResult));
+			rctp.m_httpResult = conn.getResponseCode();
+			if(D)Log.d(TAG, String.format("RESTHelper - httpResult = %d", rctp.m_httpResult));
 			
 			is = conn.getInputStream();
 			br = new BufferedReader(new InputStreamReader(is));
@@ -193,7 +172,7 @@ public class RESTHelper {
 			while ((line = br.readLine()) != null) {
 				sb.append(line);
 			}
-			response = sb.toString();
+			rctp.m_responseString = sb.toString();
 		}
 		catch (Exception e) {
 			if(E)Log.e(TAG, "RESTHelper.CallHttpPost", e);
@@ -226,28 +205,24 @@ public class RESTHelper {
 				conn.disconnect();
 			}
 		}
-		
-		return response;
 	}
 
-	private class RESTCallTask extends AsyncTask<Object, Void, String> {
+	private class RESTCallTask extends AsyncTask<Object, Void, Object> {
 
 		@Override
-		protected String doInBackground(Object... params) {
+		protected Object doInBackground(Object... params) {
 			if(D)Log.d(TAG, "RESTHelper.RESTCallTask.doInBackground");
 			
 			RESTCallTaskParams rctp = (RESTCallTaskParams)params[0];
-			
-			String response = null;
-			
+					
 			switch (rctp.m_verb){
 				case GET:
-					response = CallHttpGet(rctp);
+					CallHttpGet(rctp);
 					break;
 				case PUT:
 					break;
 				case POST:
-					response = CallHttpPost(rctp);
+					CallHttpPost(rctp);
 					break;
 				case DELETE:
 					break;
@@ -255,29 +230,27 @@ public class RESTHelper {
 					break;
 			}
 			
-			return response;
+			return rctp;
 		}
 		
 		@Override
-		protected void onPostExecute(String responseString) {
-			if(D)Log.d(TAG, String.format("RESTHelper.RESTCallTask.onPostExecute: responseString=%s", responseString));
+		protected void onPostExecute(Object obj) {
+			RESTCallTaskParams rctp = (RESTCallTaskParams)obj;
 			
-			// Clone the arraylist so that mods on the array list due to actions in the callback to
-			// not result in a ConcurrentModificationException
-			ArrayList<RESTHelperListener> restHelperListeners = new ArrayList<RESTHelperListener>(RESTHelper.this.m_restHelperListeners);
+			if(D)Log.d(TAG, String.format("RESTHelper.RESTCallTask.onPostExecute: responseString=%s", rctp.m_responseString));
 			
-			for (RESTHelperListener rhl : restHelperListeners) {
-				rhl.onRESTResponse(responseString);
+			if (rctp.m_listener != null) {
+				rctp.m_listener.onRESTResponse(rctp.m_httpResult, rctp.m_responseString);
 			}
 			
 			return;
 		}
 	}
 	
-	public void restCallAsync(HttpVerb verb, String url, JSONObject parameters) {
+	public void restCallAsync(HttpVerb verb, String url, JSONObject parameters, RESTHelperListener listener) {
 		if(D)Log.d(TAG, String.format("RESTHelper.restCallAsync: verb=%s, url=%s, parameters=%s", verb.toString(), url, parameters == null ? "{}" : parameters.toString()));
 		
-		RESTCallTaskParams rctp = new RESTCallTaskParams(verb, url, parameters);
+		RESTCallTaskParams rctp = new RESTCallTaskParams(verb, url, parameters, listener);
 		
 		try {
 			new RESTCallTask().execute(rctp);
