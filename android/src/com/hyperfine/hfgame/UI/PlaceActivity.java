@@ -1,7 +1,10 @@
 package com.hyperfine.hfgame.UI;
 
+import java.text.SimpleDateFormat;
+
 import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -25,11 +28,13 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import com.hyperfine.hfgame.utils.Config;
 import com.hyperfine.hfgame.PlacesApplication;
 import com.hyperfine.hfgame.R;
 import com.hyperfine.hfgame.SDK.UserAPI;
+import com.hyperfine.hfgame.SDK.UserLocationAPI;
 import com.hyperfine.hfgame.UI.fragments.CheckinFragment;
 import com.hyperfine.hfgame.UI.fragments.PlaceDetailFragment;
 import com.hyperfine.hfgame.UI.fragments.PlaceListFragment;
@@ -86,6 +91,19 @@ public class PlaceActivity extends FragmentActivity {
 	protected IntentFilter newCheckinFilter;
 	protected ComponentName newCheckinReceiverName;
 	
+	protected TextView m_numCallsText;
+	protected TextView m_longitudeText;
+	protected TextView m_latitudeText;
+	protected TextView m_altitudeText;
+	protected TextView m_accuracyText;
+	protected TextView m_dateText;
+	
+	protected double m_currentLongitude = 0.0;
+	protected double m_currentLatitude = 0.0;
+	protected double m_currentAltitude = 0.0;
+	protected float m_currentAccuracy = 0;
+	protected long m_currentTime = 0;
+	
 	// For API testing...
 	private String m_userId = null;
 	private String m_userName = "test1@test.com";
@@ -95,11 +113,18 @@ public class PlaceActivity extends FragmentActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		if(D)Log.d(TAG, "PlaceActivity.onCreate");
-		
+			
 		super.onCreate(savedInstanceState);
     
 		// Inflate the layout
 		setContentView(R.layout.main);
+		
+		m_numCallsText = (TextView)findViewById(R.id.main_numcalls_text);
+		m_longitudeText = (TextView)findViewById(R.id.main_longitude_text);
+		m_latitudeText = (TextView)findViewById(R.id.main_latitude_text);
+		m_altitudeText = (TextView)findViewById(R.id.main_altitude_text);
+		m_accuracyText = (TextView)findViewById(R.id.main_accuracy_text);
+		m_dateText = (TextView)findViewById(R.id.main_date_text);
     
 		// Get a handle to the Fragments
 		placeListFragment = (PlaceListFragment)getSupportFragmentManager().findFragmentById(R.id.list_fragment);
@@ -167,6 +192,7 @@ public class PlaceActivity extends FragmentActivity {
 		PlacesApplication app = (PlacesApplication)getApplication();
 		m_userId = app.getUserId();
 		if (m_userId == null) {
+			if(D)Log.d(TAG, "PlaceActivity.onCreate - m_userId is null, so logging in");
 			UserAPI.login(m_userName, m_password, new RESTHelperListener() {
 				public void onRESTResponse(int httpResult, String responseString) {
 					if(D)Log.d(TAG, String.format("PlaceActivity.UserAPI.login: httpResult=%d, response=%s", httpResult, responseString));
@@ -219,6 +245,8 @@ public class PlaceActivity extends FragmentActivity {
     
 		// Update the CheckinFragment with the last checkin.
 		updateCheckinFragment(prefs.getString(Config.PlacesConstants.SP_KEY_LAST_CHECKIN_ID, null));
+		
+		updateLocationMetricsUI();
     
 		// Get the last known location (and optionally request location updates) and
 		// update the place list.
@@ -257,10 +285,16 @@ public class PlaceActivity extends FragmentActivity {
 	 * @param updateWhenLocationChanges Request location updates
 	 */
 	protected void getLocationAndUpdatePlaces(boolean updateWhenLocationChanges) {
+		
+		if(D)Log.d(TAG, String.format("PlaceActivity.getLocationAndUpdatePlaces - updateWhenLocationChanges=%b", updateWhenLocationChanges));
+		
 		// This isn't directly affecting the UI, so put it on a worker thread.
 		AsyncTask<Void, Void, Void> findLastLocationTask = new AsyncTask<Void, Void, Void>() {
 			@Override
 			protected Void doInBackground(Void... params) {
+				
+				if(D)Log.d(TAG, "PlaceActivity.findLastLocationTask.doInBackground");
+				
 				// Find the last known location, specifying a required accuracy of within the min distance between updates
 				// and a required latency of the minimum time required between updates.
 				Location lastKnownLocation = lastLocationFinder.getLastBestLocation(Config.PlacesConstants.MAX_DISTANCE, 
@@ -287,7 +321,7 @@ public class PlaceActivity extends FragmentActivity {
 	 * @param updateWhenLocationChanges Request location updates
 	 */
 	protected void toggleUpdatesWhenLocationChanges(boolean updateWhenLocationChanges) {
-		if(D)Log.d(TAG, "PlaceActivity.toggleUpdatesWhenLocationChanges");
+		if(D)Log.d(TAG, String.format("PlaceActivity.toggleUpdatesWhenLocationChanges: updateWhenLocationChanges=%b", updateWhenLocationChanges));
 		
 		// Save the location update status in shared preferences
 		prefsEditor.putBoolean(Config.PlacesConstants.SP_KEY_FOLLOW_LOCATION_CHANGES, updateWhenLocationChanges);
@@ -347,8 +381,11 @@ public class PlaceActivity extends FragmentActivity {
 	 */
 	protected LocationListener oneShotLastLocationUpdateListener = new LocationListener() {
 		public void onLocationChanged(Location l) {
-			if(D)Log.d(TAG, "PlaceActivity.onShotLastLocationUpdateListener.onLocationChanged");
+			if(D)Log.d(TAG, String.format(
+					"PlaceActivity.oneShotLastLocationUpdateListener.onLocationChanged: long=%f, lat=%f, alt=%f, acc=%f",
+					l.getLongitude(), l.getLatitude(), l.getAltitude(), l.getAccuracy()));
 			
+			storeUserLocation(l);
 			updatePlaces(l, Config.PlacesConstants.DEFAULT_RADIUS, true);
 		}
    
@@ -364,7 +401,13 @@ public class PlaceActivity extends FragmentActivity {
 	 * Provider.
 	 */
 	protected LocationListener bestInactiveLocationProviderListener = new LocationListener() {		
-		public void onLocationChanged(Location l) {}
+		public void onLocationChanged(Location l) {
+			if(D)Log.d(TAG, String.format(
+					"PlaceActivity.bestInactiveLocationProviderListener.onLocationChanged: long=%f, lat=%f, alt=%f, acc=%f",
+					l.getLongitude(), l.getLatitude(), l.getAltitude(), l.getAccuracy()));
+			
+			storeUserLocation(l);
+		}
 		public void onProviderDisabled(String provider) {}
 		public void onStatusChanged(String provider, int status, Bundle extras) {}
 		public void onProviderEnabled(String provider) {
@@ -415,6 +458,54 @@ public class PlaceActivity extends FragmentActivity {
 			if(D)Log.d(TAG, "PlaceActivity.updatePlaces - Updating place list for: No Previous Location Found");
 		}
 	}
+	
+	protected void updateLocationMetricsUI() {
+		if(D)Log.d(TAG, "PlaceActivity.updateLocationMetricsUI");
+		
+		if (m_numCallsText != null) { // And, subsequently, the availability of all text views...
+			m_numCallsText.setText(String.valueOf(((PlacesApplication)getApplication()).getNumUserLocationCalls() + 1));
+			m_longitudeText.setText(String.valueOf(m_currentLongitude));
+			m_latitudeText.setText(String.valueOf(m_currentLatitude));
+			m_altitudeText.setText(String.valueOf(m_currentAltitude));
+			m_accuracyText.setText(String.valueOf(m_currentAccuracy));
+			
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String dateString = df.format(m_currentTime);
+			m_dateText.setText(dateString);
+		}
+	}
+	
+	@SuppressLint("SimpleDateFormat") 
+	protected void storeUserLocation(Location location) {
+		if(D)Log.d(TAG, "PlaceActivity.storeUserLocation");
+		
+		if (m_userId == null) {
+			if(D)Log.d(TAG, "PlaceActivity.storeUserLocation - no userId yet, so bailing.");
+			return;			
+		}
+		
+		m_currentLongitude = location.getLongitude();
+		m_currentLatitude = location.getLatitude();
+		m_currentAltitude = location.getAltitude();
+		m_currentAccuracy = location.getAccuracy();
+		m_currentTime = location.getTime();
+		
+		updateLocationMetricsUI();
+		
+		UserLocationAPI.createLocation(
+				m_userId, m_currentLongitude, m_currentLatitude,m_currentAltitude, (double)m_currentAccuracy, m_currentTime, 
+				new RESTHelperListener() {
+					public void onRESTResponse(int httpResult, String responseString) {
+						PlacesApplication app = (PlacesApplication)getApplication();
+						int nCalls = app.getNumUserLocationCalls();
+						nCalls++;
+						app.setNumUserLocationCalls(nCalls);
+						if(D)Log.d(TAG, String.format(
+								"PlaceActivity.UserLocationAPI.createLocation: numCalls=%d, httpResult=%d, response=%s", nCalls, 
+								httpResult, responseString));
+					}					
+				});
+	}	
   
 	/**
 	 * Updates (or displays) the venue detail Fragment when a venue is selected

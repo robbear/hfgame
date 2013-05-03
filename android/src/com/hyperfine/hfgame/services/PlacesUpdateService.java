@@ -1,7 +1,9 @@
 package com.hyperfine.hfgame.services;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -190,15 +192,19 @@ public class PlacesUpdateService extends IntentService {
 			}
       
 			if (doUpdate) {
-				if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - refreshing places and calling UserLocationAPI");
+				if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - refreshing places.");
+				/* NEVER
 				storeUserLocation(location);
+				*/
 				
 				// Refresh the prefetch count for each new location.
 				prefetchCount = 0;
 				// Remove the old locations
 				removeOldLocations(location, radius);
 				// Hit the server for new venues for the current location.
-				refreshPlaces(location, radius);
+				// BUGBUG - Not making this call for now.
+				//refreshPlaces(location, radius);
+				if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - not calling refreshPlaces as this code is commented out for now.");
 			}
 			else {
 				if(D)Log.d(TAG, "Place List is fresh: Not refreshing");
@@ -216,6 +222,7 @@ public class PlacesUpdateService extends IntentService {
 	 * Stores the user location in the database via the UserLocationAPI
 	 * @param location Location
 	 */
+	/* NEVER
 	protected void storeUserLocation(Location location) {
 		if(D)Log.d(TAG, "PlacesUpdateService.storeUserLocation");
 		
@@ -235,6 +242,7 @@ public class PlacesUpdateService extends IntentService {
 					}					
 				});
 	}
+	*/
   
 	/**
 	 * Polls the underlying service to return a list of places within the specified
@@ -279,7 +287,20 @@ public class PlacesUpdateService extends IntentService {
 				
 				// Use the XML Pull Parser to extract each nearby location.
 				// TODO Replace the XML parsing to extract your own place list.
-				InputStream in = httpConnection.getInputStream();     
+				InputStream in = httpConnection.getInputStream();
+				
+				// TEST code
+				/*
+				BufferedReader br = new BufferedReader(new InputStreamReader(in));
+				StringBuilder sb = new StringBuilder(in.available());
+				String line;
+				while ((line = br.readLine()) != null) {
+					sb.append(line);
+				}
+				if(D)Log.d(TAG, String.format("PlacesUpdateService.refreshPlaces: response=%s", sb.toString()));
+				return;
+				*/
+				
 				XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
 				factory.setNamespaceAware(true);
 				XmlPullParser xpp = factory.newPullParser();
