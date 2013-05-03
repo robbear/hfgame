@@ -69,7 +69,7 @@ public class Config
     	// The maximum distance the user should travel between location updates. 
     	public static final int MAX_DISTANCE = DEFAULT_RADIUS/2;
     	// The maximum time that should pass before the user gets a location update.
-    	public static final long MAX_TIME = AlarmManager.INTERVAL_FIFTEEN_MINUTES;
+    	public static final long MAX_TIME = 5000; /*AlarmManager.INTERVAL_FIFTEEN_MINUTES;*/
     	 
     	// You will generally want passive location updates to occur less frequently
     	// than active updates. You need to balance location freshness with battery life.

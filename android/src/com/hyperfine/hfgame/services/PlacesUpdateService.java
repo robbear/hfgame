@@ -1,15 +1,11 @@
 package com.hyperfine.hfgame.services;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -54,6 +50,8 @@ import static com.hyperfine.hfgame.utils.Config.E;
 public class PlacesUpdateService extends IntentService {  
 
 	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Services";
+	
+	public final static String LOCATION_STORED_BROADCAST = "com.hyperfine.hfgame.intent.action.LOCATION_STORED";
   
 	protected ContentResolver contentResolver;
 	protected SharedPreferences prefs;
@@ -193,9 +191,7 @@ public class PlacesUpdateService extends IntentService {
       
 			if (doUpdate) {
 				if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - refreshing places.");
-				/* NEVER
 				storeUserLocation(location);
-				*/
 				
 				// Refresh the prefetch count for each new location.
 				prefetchCount = 0;
@@ -222,7 +218,6 @@ public class PlacesUpdateService extends IntentService {
 	 * Stores the user location in the database via the UserLocationAPI
 	 * @param location Location
 	 */
-	/* NEVER
 	protected void storeUserLocation(Location location) {
 		if(D)Log.d(TAG, "PlacesUpdateService.storeUserLocation");
 		
@@ -232,17 +227,38 @@ public class PlacesUpdateService extends IntentService {
 			if(D)Log.d(TAG, "PlacesUpdateService.storeUserLocation - no userId yet, so bailing.");
 			return;			
 		}
-
+		
+		double longitude = location.getLongitude();
+		double latitude = location.getLatitude();
+		double altitude = location.getAltitude();
+		float accuracy = location.getAccuracy();
+		long timeVal = location.getTime();
+		
+		// Broadcast the result
+		Intent broadcastIntent = new Intent();
+		broadcastIntent.setAction(PlacesUpdateService.LOCATION_STORED_BROADCAST);
+		broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
+		broadcastIntent.putExtra("longitude", longitude);
+		broadcastIntent.putExtra("latitude", latitude);
+		broadcastIntent.putExtra("altitude", altitude);
+		broadcastIntent.putExtra("accuracy", accuracy);
+		broadcastIntent.putExtra("date", timeVal);
+		
+		if(D)Log.d(TAG, "PlacesUpdateService.storeUserLocation - broadcasting LOCATION_STORED notification");
+		sendBroadcast(broadcastIntent);
+		
 		UserLocationAPI.createLocation(
-				userId, location.getLongitude(), location.getLatitude(), 
-				location.getAltitude(), (double)location.getAccuracy(), location.getTime(), 
+				userId, longitude, latitude, altitude, (double)accuracy, timeVal, 
 				new RESTHelperListener() {
 					public void onRESTResponse(int httpResult, String responseString) {
 						if(D)Log.d(TAG, String.format("PlacesUpdateService.UserLocationAPI.createLocation: httpResult=%d, response=%s", httpResult, responseString));
+						PlacesApplication app = (PlacesApplication)getApplication();
+						int nCalls = app.getNumUserLocationCalls();
+						nCalls++;
+						app.setNumUserLocationCalls(nCalls);
 					}					
 				});
 	}
-	*/
   
 	/**
 	 * Polls the underlying service to return a list of places within the specified

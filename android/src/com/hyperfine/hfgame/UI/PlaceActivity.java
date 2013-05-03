@@ -34,7 +34,6 @@ import com.hyperfine.hfgame.utils.Config;
 import com.hyperfine.hfgame.PlacesApplication;
 import com.hyperfine.hfgame.R;
 import com.hyperfine.hfgame.SDK.UserAPI;
-import com.hyperfine.hfgame.SDK.UserLocationAPI;
 import com.hyperfine.hfgame.UI.fragments.CheckinFragment;
 import com.hyperfine.hfgame.UI.fragments.PlaceDetailFragment;
 import com.hyperfine.hfgame.UI.fragments.PlaceListFragment;
@@ -103,6 +102,8 @@ public class PlaceActivity extends FragmentActivity {
 	protected double m_currentAltitude = 0.0;
 	protected float m_currentAccuracy = 0;
 	protected long m_currentTime = 0;
+	
+	protected LocationUpdateReceiver m_locationUpdateReceiver;
 	
 	// For API testing...
 	private String m_userId = null;
@@ -217,6 +218,8 @@ public class PlaceActivity extends FragmentActivity {
 				}			
 			});
 		}
+
+		m_locationUpdateReceiver = new LocationUpdateReceiver();
 	}
 
 	@Override
@@ -252,6 +255,11 @@ public class PlaceActivity extends FragmentActivity {
 		// update the place list.
 		boolean followLocationChanges = prefs.getBoolean(Config.PlacesConstants.SP_KEY_FOLLOW_LOCATION_CHANGES, true);
 		getLocationAndUpdatePlaces(followLocationChanges);
+		
+		// Register the broadcast receiver for location stored notifications
+		IntentFilter filter = new IntentFilter(PlacesUpdateService.LOCATION_STORED_BROADCAST);
+		filter.addCategory(Intent.CATEGORY_DEFAULT);
+		registerReceiver(m_locationUpdateReceiver, filter);		
 	}
   
 	@Override
@@ -275,6 +283,8 @@ public class PlaceActivity extends FragmentActivity {
     
 		// Stop listening for location updates when the Activity is inactive.
 		disableLocationUpdates();
+		
+		unregisterReceiver(m_locationUpdateReceiver);
     
 		super.onPause();
 	}
@@ -385,7 +395,6 @@ public class PlaceActivity extends FragmentActivity {
 					"PlaceActivity.oneShotLastLocationUpdateListener.onLocationChanged: long=%f, lat=%f, alt=%f, acc=%f",
 					l.getLongitude(), l.getLatitude(), l.getAltitude(), l.getAccuracy()));
 			
-			storeUserLocation(l);
 			updatePlaces(l, Config.PlacesConstants.DEFAULT_RADIUS, true);
 		}
    
@@ -404,9 +413,7 @@ public class PlaceActivity extends FragmentActivity {
 		public void onLocationChanged(Location l) {
 			if(D)Log.d(TAG, String.format(
 					"PlaceActivity.bestInactiveLocationProviderListener.onLocationChanged: long=%f, lat=%f, alt=%f, acc=%f",
-					l.getLongitude(), l.getLatitude(), l.getAltitude(), l.getAccuracy()));
-			
-			storeUserLocation(l);
+					l.getLongitude(), l.getLatitude(), l.getAltitude(), l.getAccuracy()));			
 		}
 		public void onProviderDisabled(String provider) {}
 		public void onStatusChanged(String provider, int status, Bundle extras) {}
@@ -459,8 +466,9 @@ public class PlaceActivity extends FragmentActivity {
 		}
 	}
 	
+	@SuppressLint("SimpleDateFormat") 
 	protected void updateLocationMetricsUI() {
-		if(D)Log.d(TAG, "PlaceActivity.updateLocationMetricsUI");
+		if(D)Log.d(TAG, String.format("PlaceActivity.updateLocationMetricsUI - m_numCallsText %s", m_numCallsText == null ? "is null" : "is not null"));
 		
 		if (m_numCallsText != null) { // And, subsequently, the availability of all text views...
 			m_numCallsText.setText(String.valueOf(((PlacesApplication)getApplication()).getNumUserLocationCalls() + 1));
@@ -475,7 +483,22 @@ public class PlaceActivity extends FragmentActivity {
 		}
 	}
 	
-	@SuppressLint("SimpleDateFormat") 
+	public class LocationUpdateReceiver extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if(D)Log.d(TAG, "PlaceActivity.LocationUpdateReceiver.onReceive");
+			
+			m_currentLongitude = intent.getDoubleExtra("longitude", 0.0);
+			m_currentLatitude = intent.getDoubleExtra("latitude", 0.0);
+			m_currentAltitude = intent.getDoubleExtra("altitude", 0.0);
+			m_currentAccuracy = intent.getFloatExtra("accuracy", 0);
+			m_currentTime = intent.getLongExtra("date", 0);
+			
+			updateLocationMetricsUI();
+		}		
+	}
+	
+	/* NEVER
 	protected void storeUserLocation(Location location) {
 		if(D)Log.d(TAG, "PlaceActivity.storeUserLocation");
 		
@@ -505,7 +528,8 @@ public class PlaceActivity extends FragmentActivity {
 								httpResult, responseString));
 					}					
 				});
-	}	
+	}
+	*/	
   
 	/**
 	 * Updates (or displays) the venue detail Fragment when a venue is selected
