@@ -10,6 +10,7 @@ import android.net.NetworkInfo;
 import android.util.Log;
 
 import com.hyperfine.hfgame.services.PlaceCheckinService;
+import com.hyperfine.hfgame.utils.Config;
 
 import static com.hyperfine.hfgame.utils.Config.D;
 //import static com.hyperfine.hfgame.utils.Config.E;
@@ -24,7 +25,8 @@ import static com.hyperfine.hfgame.utils.Config.D;
  * and re-enables passive location updates.
  */
 public class ConnectivityChangedReceiver extends BroadcastReceiver {
-	public static final String TAG = "HFGame";
+
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Receivers";
 	
 	@Override
 	public void onReceive(Context context, Intent intent) {

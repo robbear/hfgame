@@ -6,6 +6,7 @@
 package com.hyperfine.hfgame.services;
 
 import com.hyperfine.hfgame.SDK.TestAPI;
+import com.hyperfine.hfgame.utils.Config;
 import com.hyperfine.hfgame.utils.RESTHelper.RESTHelperListener;
 
 import android.app.Service;
@@ -20,7 +21,7 @@ import static com.hyperfine.hfgame.utils.Config.E;
 
 public class HFGameService extends Service {
 	
-	public final static String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Services";
 	
 	public final static String PREFS = "hfgame";
 	public final static String PREFS_API_BASEURL = "prefs_hfgame_api_url";

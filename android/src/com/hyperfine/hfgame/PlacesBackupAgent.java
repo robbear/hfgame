@@ -13,7 +13,7 @@ import static com.hyperfine.hfgame.utils.Config.D;
  * to the Google Backup Service.
  */
 public class PlacesBackupAgent extends BackupAgentHelper {
-	public final static String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_App";
 	
 	@Override
 	public void onCreate() {

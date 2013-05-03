@@ -10,7 +10,7 @@ import static com.hyperfine.hfgame.utils.Config.D;
 
 public class PlacesApplication extends Application {
 	
-	public final static String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_App";
 	
 	private String m_userId = null;
   

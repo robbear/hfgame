@@ -27,6 +27,8 @@ public class Config
     // Verbose logs - ship with this set to false
     public static final boolean V = true;
     
+    public static final boolean unifiedLogs = false;
+    
     // HFGame REST api base url
     public static final String restBaseUrl = "http://hfapi.jit.su/";
     //public static final String restBaseUrl = "http://192.168.0.104:1338/";

@@ -1,5 +1,7 @@
 package com.hyperfine.hfgame.content_providers;
 
+import com.hyperfine.hfgame.utils.Config;
+
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -29,7 +31,8 @@ public class QueuedCheckinsContentProvider extends ContentProvider {
 	/** The underlying database */
 	private SQLiteDatabase checkinsDB;
 
-	private static final String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_ContentProviders";
+
 	private static final String DATABASE_NAME = "checkins.db";
 	private static final int DATABASE_VERSION = 3;
 	private static final String CHECKINS_TABLE = "checkins";

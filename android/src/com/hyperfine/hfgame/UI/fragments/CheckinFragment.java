@@ -29,7 +29,7 @@ import static com.hyperfine.hfgame.utils.Config.D;
  */
 public class CheckinFragment extends Fragment implements LoaderCallbacks<Cursor> {
 	
-	public static final String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_UI";
   
 	/**
 	 * Factory that return a new instance of the {@link CheckinFragment} 
@@ -86,7 +86,9 @@ public class CheckinFragment extends Fragment implements LoaderCallbacks<Cursor>
 	}
   
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {    
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		if(D)Log.d(TAG, "CheckinFragment.onCreateView");
+		
 		View view = inflater.inflate(R.layout.checkin_box, container, false);
 		checkPlaceNameTextView = (TextView)view.findViewById(R.id.checkin_place_name);
     
@@ -130,6 +132,7 @@ public class CheckinFragment extends Fragment implements LoaderCallbacks<Cursor>
 			final String venueName = data.getString(data.getColumnIndex(PlaceDetailsContentProvider.KEY_NAME));
 			handler.post(new Runnable () {
 				public void run() {
+					if(D)Log.d(TAG, "CheckinFragment.onLoadFinished.run");
 					checkPlaceNameTextView.setText(venueName);
 				}        
 			});
@@ -144,6 +147,7 @@ public class CheckinFragment extends Fragment implements LoaderCallbacks<Cursor>
 		
 		handler.post(new Runnable () {
 			public void run() {
+				if(D)Log.d(TAG, "CheckinFragment.onLoaderReset.run");
 				checkPlaceNameTextView.setText("");
 			}
 		});

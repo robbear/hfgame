@@ -7,6 +7,7 @@ package com.hyperfine.hfgame.UI;
 
 import com.hyperfine.hfgame.R;
 import com.hyperfine.hfgame.services.HFGameService;
+import com.hyperfine.hfgame.utils.Config;
 
 import android.os.Bundle;
 import android.os.IBinder;
@@ -23,7 +24,7 @@ import static com.hyperfine.hfgame.utils.Config.D;
 
 public class MainActivity extends Activity {
 	
-	public final static String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_UI";
 	
 	public final static String INSTANCE_STATE_ORIENTATION_CHANGED = "orientation_changed";
 

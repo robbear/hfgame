@@ -9,7 +9,7 @@ import static com.hyperfine.hfgame.utils.Config.D;
 
 public class TestAPI {
 	
-	public final static String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_SDK";
 	
 	public static void test(RESTHelper.RESTHelperListener listener) {
 		if(D)Log.d(TAG, "TestAPI.test");

@@ -20,7 +20,7 @@ import static com.hyperfine.hfgame.utils.Config.D;
  * updates should be enabled after a reboot.
  */
 public class BootReceiver extends BroadcastReceiver {
-	public final static String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Receivers";
 	
 	@Override
 	public void onReceive(Context context, Intent intent) {

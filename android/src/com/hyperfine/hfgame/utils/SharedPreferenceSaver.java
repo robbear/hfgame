@@ -16,7 +16,8 @@ import static com.hyperfine.hfgame.utils.Config.D;
  * to the Google {@link BackupService} on platforms where this is available.
  */
 public class SharedPreferenceSaver {
-	public final static String TAG = "HFGame";
+
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Utils";
 	
 	protected Context m_context;
 	protected BackupManager m_backupManager;

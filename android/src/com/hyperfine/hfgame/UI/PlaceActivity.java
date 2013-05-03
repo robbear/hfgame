@@ -59,7 +59,8 @@ import static com.hyperfine.hfgame.utils.Config.E;
  * TODO and service-specific features and requirements
  */
 public class PlaceActivity extends FragmentActivity {
-	public final static String TAG = "HFGame";
+
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_UI";
 
 	// TODO (RETO) Add "refreshing" icons when stuff is blank or refreshing.
 
@@ -93,6 +94,8 @@ public class PlaceActivity extends FragmentActivity {
   
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		if(D)Log.d(TAG, "PlaceActivity.onCreate");
+		
 		super.onCreate(savedInstanceState);
     
 		// Inflate the layout
@@ -192,6 +195,8 @@ public class PlaceActivity extends FragmentActivity {
 
 	@Override
 	protected void onResume() {
+		if(D)Log.d(TAG, "PlaceActivity.onResume");
+		
 		super.onResume();
 		// Commit shared preference that says we're in the foreground.
 		prefsEditor.putBoolean(Config.PlacesConstants.EXTRA_KEY_IN_BACKGROUND, false);
@@ -223,6 +228,8 @@ public class PlaceActivity extends FragmentActivity {
   
 	@Override
 	protected void onPause() {
+		if(D)Log.d(TAG, "PlaceActivity.onPause");
+		
 		// Commit shared preference that says we're in the background.
 		prefsEditor.putBoolean(Config.PlacesConstants.EXTRA_KEY_IN_BACKGROUND, true);
 		sharedPreferenceSaver.savePreferences(prefsEditor, false);
@@ -279,7 +286,9 @@ public class PlaceActivity extends FragmentActivity {
 	 * Choose if we should receive location updates. 
 	 * @param updateWhenLocationChanges Request location updates
 	 */
-	protected void toggleUpdatesWhenLocationChanges(boolean updateWhenLocationChanges) {   
+	protected void toggleUpdatesWhenLocationChanges(boolean updateWhenLocationChanges) {
+		if(D)Log.d(TAG, "PlaceActivity.toggleUpdatesWhenLocationChanges");
+		
 		// Save the location update status in shared preferences
 		prefsEditor.putBoolean(Config.PlacesConstants.SP_KEY_FOLLOW_LOCATION_CHANGES, updateWhenLocationChanges);
 		sharedPreferenceSaver.savePreferences(prefsEditor, true);
@@ -295,6 +304,8 @@ public class PlaceActivity extends FragmentActivity {
 	 * Start listening for location updates.
 	 */
 	protected void requestLocationUpdates() {
+		if(D)Log.d(TAG, "PlaceActivity.requestLocationUpdates");
+		
 		// Normal updates while activity is visible.
 		locationUpdateRequester.requestLocationUpdates(Config.PlacesConstants.MAX_TIME, Config.PlacesConstants.MAX_DISTANCE, criteria, locationListenerPendingIntent);
 
@@ -318,6 +329,8 @@ public class PlaceActivity extends FragmentActivity {
 	 */
 	@SuppressWarnings("unused")
 	protected void disableLocationUpdates() {
+		if(D)Log.d(TAG, "PlaceActivity.disableLocationUpdates");
+		
 		unregisterReceiver(locProviderDisabledReceiver);
 		locationManager.removeUpdates(locationListenerPendingIntent);
 		locationManager.removeUpdates(bestInactiveLocationProviderListener);
@@ -334,6 +347,8 @@ public class PlaceActivity extends FragmentActivity {
 	 */
 	protected LocationListener oneShotLastLocationUpdateListener = new LocationListener() {
 		public void onLocationChanged(Location l) {
+			if(D)Log.d(TAG, "PlaceActivity.onShotLastLocationUpdateListener.onLocationChanged");
+			
 			updatePlaces(l, Config.PlacesConstants.DEFAULT_RADIUS, true);
 		}
    
@@ -348,11 +363,13 @@ public class PlaceActivity extends FragmentActivity {
 	 * requestLocationUpdates to re-register the location listeners using the better Location
 	 * Provider.
 	 */
-	protected LocationListener bestInactiveLocationProviderListener = new LocationListener() {
+	protected LocationListener bestInactiveLocationProviderListener = new LocationListener() {		
 		public void onLocationChanged(Location l) {}
 		public void onProviderDisabled(String provider) {}
 		public void onStatusChanged(String provider, int status, Bundle extras) {}
 		public void onProviderEnabled(String provider) {
+			if(D)Log.d(TAG, "PlaceActivity.bestInactiveLocationProviderListener.onProviderEnabled");
+			
 			// Re-register the location listeners using the better Location Provider.
 			requestLocationUpdates();
 		}
@@ -366,6 +383,8 @@ public class PlaceActivity extends FragmentActivity {
 	protected BroadcastReceiver locProviderDisabledReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
+			if(D)Log.d(TAG, "PlaceActivity.locProviderDisabledReceiver.onReceive");
+			
 			boolean providerDisabled = !intent.getBooleanExtra(LocationManager.KEY_PROVIDER_ENABLED, false);
 			// Re-register the location listeners using the best available Location Provider.
 			if (providerDisabled)
@@ -382,7 +401,7 @@ public class PlaceActivity extends FragmentActivity {
 	 */
 	protected void updatePlaces(Location location, int radius, boolean forceRefresh) {
 		if (location != null) {
-			if(D)Log.d(TAG, "Updating place list.");
+			if(D)Log.d(TAG, "PlaceActivity.updatePlaces - Updating place list.");
 			// Start the PlacesUpdateService. Note that we use an action rather than specifying the 
 			// class directly. That's because we have different variations of the Service for different
 			// platform versions.
@@ -393,7 +412,7 @@ public class PlaceActivity extends FragmentActivity {
 			startService(updateServiceIntent);
 		}
 		else {
-			if(D)Log.d(TAG, "Updating place list for: No Previous Location Found");
+			if(D)Log.d(TAG, "PlaceActivity.updatePlaces - Updating place list for: No Previous Location Found");
 		}
 	}
   
@@ -409,6 +428,8 @@ public class PlaceActivity extends FragmentActivity {
 		// A back-button click should reverse this operation.
 		// This is the phone-portrait mode.
 		if (findViewById(R.id.main_fragment_container) != null) {
+			if(D)Log.d(TAG, "PlaceActivity.selectDetail - main_fragment_container != null");
+			
 			placeDetailFragment = PlaceDetailFragment.newInstance(reference, id);
 			FragmentManager fragmentManager = getSupportFragmentManager();
 			FragmentTransaction ft = fragmentManager.beginTransaction();
@@ -425,6 +446,8 @@ public class PlaceActivity extends FragmentActivity {
 			// selected Place.
 		} 
 		else {
+			if(D)Log.d(TAG, "PlaceActivity.selectDetail - main_fragment_container == null");
+			
 			placeDetailFragment = PlaceDetailFragment.newInstance(reference, id);
 			FragmentManager fragmentManager = getSupportFragmentManager();
 			FragmentTransaction ft = fragmentManager.beginTransaction();
@@ -442,6 +465,8 @@ public class PlaceActivity extends FragmentActivity {
 	protected BroadcastReceiver checkinReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
+			if(D)Log.d(TAG, "PlacesActivity.checkinReceiver.onReceive");
+			
 			String id = intent.getStringExtra(Config.PlacesConstants.EXTRA_KEY_ID);
 			if (id != null)
 				updateCheckinFragment(id);
@@ -454,6 +479,8 @@ public class PlaceActivity extends FragmentActivity {
 	 * @param id Place Identifier
 	 */
 	public void updateCheckinFragment(String id) {
+		if(D)Log.d(TAG, "PlaceActivity.updateCheckinFragment");
+		
 		if (id != null) {
 			checkinFragment.setPlaceId(id);
       
@@ -464,6 +491,8 @@ public class PlaceActivity extends FragmentActivity {
   
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
+		if(D)Log.d(TAG, "PlaceActivity.onCreateOptionsMenu");
+		
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.main_menu, menu);
 		return true;
@@ -471,6 +500,8 @@ public class PlaceActivity extends FragmentActivity {
   
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+		if(D)Log.d(TAG, "PlaceActivity.onOptionsItemSelected");
+		
 		// Handle item selection
 		switch (item.getItemId()) {
 		case R.id.refresh:

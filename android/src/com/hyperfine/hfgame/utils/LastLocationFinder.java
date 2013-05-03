@@ -29,7 +29,8 @@ import static com.hyperfine.hfgame.utils.Config.D;
  */
 public class LastLocationFinder {
   
-	protected static String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Utils";
+
 	protected static String SINGLE_LOCATION_UPDATE_ACTION = "com.hyperfine.hfgame.SINGLE_LOCATION_UPDATE_ACTION";
 	  
 	protected PendingIntent m_singleUpatePI;
@@ -43,7 +44,7 @@ public class LastLocationFinder {
 	 * @param context Context
 	 */
 	public LastLocationFinder(Context context) {
-		if(D)Log.d(TAG, "LastLocationFinger.constructor");
+		if(D)Log.d(TAG, "LastLocationFinder.constructor");
 		
 		m_context = context;
 		m_locationManager = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);

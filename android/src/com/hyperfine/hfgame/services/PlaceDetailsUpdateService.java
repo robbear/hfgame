@@ -42,7 +42,7 @@ import static com.hyperfine.hfgame.utils.Config.E;
  */
 public class PlaceDetailsUpdateService extends IntentService {
   
-	protected static String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Services";
   
 	protected ContentResolver contentResolver;
 	protected String[] projection;

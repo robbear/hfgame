@@ -12,7 +12,7 @@ import static com.hyperfine.hfgame.utils.Config.E;
 
 public class UserAPI {
 
-	public final static String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_SDK";
 
 	public static void login(String userName, String password, RESTHelper.RESTHelperListener listener) {
 		if(D)Log.d(TAG, String.format("UserAPI.login: userName=%s", userName));

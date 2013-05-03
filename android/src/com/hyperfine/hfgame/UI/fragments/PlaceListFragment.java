@@ -29,7 +29,7 @@ import static com.hyperfine.hfgame.utils.Config.D;
  */
 public class PlaceListFragment extends ListFragment implements LoaderCallbacks<Cursor> {
 	
-	public static final String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_UI";
   
 	protected Cursor cursor = null;
 	protected SimpleCursorAdapter adapter;
@@ -65,6 +65,8 @@ public class PlaceListFragment extends ListFragment implements LoaderCallbacks<C
 	 */
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long theid) {
+		if(D)Log.d(TAG, "PlaceListFragment.onListItemClick");
+		
 		super.onListItemClick(l, v, position, theid);
     
 		// Find the ID and Reference of the selected venue.
@@ -93,6 +95,8 @@ public class PlaceListFragment extends ListFragment implements LoaderCallbacks<C
 	 * currently stored in the {@link PlacesContentProvider}.
 	 */
 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+		if(D)Log.d(TAG, "PlaceListFragment.onCreateLoader");
+		
 		String[] projection = new String[] {PlacesContentProvider.KEY_ID,PlacesContentProvider.KEY_NAME, PlacesContentProvider.KEY_DISTANCE, PlacesContentProvider.KEY_REFERENCE};
     
 		return new CursorLoader(activity, PlacesContentProvider.CONTENT_URI, 
@@ -104,6 +108,8 @@ public class PlaceListFragment extends ListFragment implements LoaderCallbacks<C
 	 * When the loading has completed, assign the cursor to the adapter / list.
 	 */
 	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+		if(D)Log.d(TAG, "PlaceListFragment.onLoadFinished");
+		
 		adapter.swapCursor(data);
 	}
 
@@ -111,6 +117,8 @@ public class PlaceListFragment extends ListFragment implements LoaderCallbacks<C
 	 * {@inheritDoc}
 	 */
 	public void onLoaderReset(Loader<Cursor> loader) {
+		if(D)Log.d(TAG, "PlaceListFragment.onLoaderReset");
+		
 		adapter.swapCursor(null);
 	}
 }

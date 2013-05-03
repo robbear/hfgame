@@ -10,7 +10,8 @@ import static com.hyperfine.hfgame.utils.Config.D;
  * available in Honeycomb and later. 
  */
 public class AppStrictMode {
-	public static String TAG = "HFGame";
+
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Utils";
   
 	/**
 	 * Enable {@link StrictMode}

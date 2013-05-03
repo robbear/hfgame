@@ -20,7 +20,7 @@ import static com.hyperfine.hfgame.utils.Config.D;
  */
 public class LocationChangedReceiver extends BroadcastReceiver {
   
-	protected static String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Receivers";
   
 	/**
 	 * When a new location is received, extract it from the Intent and use

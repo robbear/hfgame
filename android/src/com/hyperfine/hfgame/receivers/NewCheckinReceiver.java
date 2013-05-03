@@ -19,7 +19,7 @@ import static com.hyperfine.hfgame.utils.Config.D;
  */
 public class NewCheckinReceiver extends BroadcastReceiver {
   
-	protected static String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Receivers";
   
 	/**
 	 * When a successful checkin is announced, extract the unique ID of the place

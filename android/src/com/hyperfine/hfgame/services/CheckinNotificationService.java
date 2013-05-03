@@ -37,7 +37,7 @@ import static com.hyperfine.hfgame.utils.Config.D;
  */
 public class CheckinNotificationService extends IntentService {
   
-	protected static String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Services";
   
 	protected ContentResolver contentResolver;
 	protected NotificationManager notificationManager;

@@ -1,5 +1,7 @@
 package com.hyperfine.hfgame.content_providers;
 
+import com.hyperfine.hfgame.utils.Config;
+
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -28,7 +30,8 @@ public class PlacesContentProvider extends ContentProvider {
 	/** The underlying database */
 	private SQLiteDatabase placesDB;
 
-	private static final String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_ContentProviders";
+
 	private static final String DATABASE_NAME = "places.db";
 	private static final int DATABASE_VERSION = 6;
 	private static final String PLACES_TABLE = "places";

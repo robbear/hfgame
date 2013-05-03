@@ -14,7 +14,8 @@ import static com.hyperfine.hfgame.utils.Config.D;
  * Uses broadcast Intents to notify the app of location changes.
  */
 public class LocationUpdateRequester {
-	public final static String TAG = "HFGame";
+
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Utils";
 	
 	protected LocationManager m_locationManager;
 

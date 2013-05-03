@@ -37,7 +37,7 @@ import static com.hyperfine.hfgame.utils.Config.E;
 */
 public class PlaceDetailFragment extends Fragment implements LoaderCallbacks<Cursor> {
 	
-	public static final String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_UI";
 
 	/**
 	 * Factory that produces a new {@link PlaceDetailFragment} populated with
@@ -96,7 +96,9 @@ public class PlaceDetailFragment extends Fragment implements LoaderCallbacks<Cur
 	}
 
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {    
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		if(D)Log.d(TAG, "PlaceDetailFragment.onCreateView");
+		
 		View view = inflater.inflate(R.layout.place_detail, container, false);
 		nameTextView = (TextView)view.findViewById(R.id.detail_name);
 		phoneTextView = (TextView)view.findViewById(R.id.detail_phone);
@@ -195,6 +197,8 @@ public class PlaceDetailFragment extends Fragment implements LoaderCallbacks<Cur
    
 			handler.post(new Runnable () {
 				public void run() {
+					if(D)Log.d(TAG, "PlaceDetailFragment.onLoadFinished.run");
+					
 					nameTextView.setText(name);
 					phoneTextView.setText(phone);
 					addressTextView.setText(address);
@@ -212,6 +216,7 @@ public class PlaceDetailFragment extends Fragment implements LoaderCallbacks<Cur
 		if(D)Log.d(TAG, "PlaceDetailFragment.onLoaderReset");
 		handler.post(new Runnable () {
 			public void run() {
+				if(D)Log.d(TAG, "PlaceDetailFragment.onLoaderReset.run");
 				nameTextView.setText("");
 				phoneTextView.setText("");
 				addressTextView.setText("");
@@ -226,6 +231,8 @@ public class PlaceDetailFragment extends Fragment implements LoaderCallbacks<Cur
 	 */
 	protected OnClickListener checkinButtonOnClickListener = new OnClickListener() {
 		public void onClick(View view) {
+			if(D)Log.d(TAG, "PlaceDetailFragment.checkinButton.onClick");
+			
 			// TODO Pass in additional parameters to your checkin / rating / review service as appropriate
 			// TODO In some cases you may prefer to open a new Activity with checkin details before initiating the Service.
 			Intent checkinServiceIntent = new Intent(getActivity(), PlaceCheckinService.class);
@@ -242,8 +249,12 @@ public class PlaceDetailFragment extends Fragment implements LoaderCallbacks<Cur
 	 * @param id Checked-in place ID
 	 */
 	public void checkedIn(String id) {
-		if (placeId == null)
+		if(D)Log.d(TAG, "PlaceDetailFragment.checkedIn");
+		
+		if (placeId == null) {
 			if(E)Log.e(TAG, "Place ID = null");
+		}
+		
 		boolean checkedIn = id != null && placeId != null && placeId.equals(id);
 		checkinButton.setEnabled(!checkedIn);
 		checkedInText.setVisibility(checkedIn ? View.VISIBLE : View.INVISIBLE);

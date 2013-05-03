@@ -1,5 +1,7 @@
 package com.hyperfine.hfgame.receivers;
 
+import com.hyperfine.hfgame.utils.Config;
+
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -20,7 +22,8 @@ import static com.hyperfine.hfgame.utils.Config.D;
  * resumed.
  */
 public class PowerStateChangedReceiver extends BroadcastReceiver {
-	public static final String TAG = "HFGame";
+
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Receivers";
 	
 	@Override
 	public void onReceive(Context context, Intent intent) {

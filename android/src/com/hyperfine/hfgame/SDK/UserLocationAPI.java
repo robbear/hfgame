@@ -16,7 +16,7 @@ import static com.hyperfine.hfgame.utils.Config.E;
 
 public class UserLocationAPI {
 
-	public final static String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_SDK";
 
 	@SuppressLint("SimpleDateFormat") 
 	public static void createLocation(

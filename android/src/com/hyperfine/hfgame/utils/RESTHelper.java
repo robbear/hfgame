@@ -19,7 +19,7 @@ import static com.hyperfine.hfgame.utils.Config.E;
 
 public class RESTHelper {
 	
-	public final static String TAG = "HFGame";
+	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Utils";
 	
 	public final static int READ_TIMEOUT = 10000;
 	public final static int CONNECT_TIMEOUT = 10000;
