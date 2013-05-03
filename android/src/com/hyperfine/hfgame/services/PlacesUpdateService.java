@@ -242,31 +242,41 @@ public class PlacesUpdateService extends IntentService {
 	 * @param location Location
 	 * @param radius Radius
 	 */
-	protected void refreshPlaces(Location location, int radius) {   
+	protected void refreshPlaces(Location location, int radius) {
+		if(D)Log.d(TAG, "PlacesUpdateService.refreshPlaces");
+		
 		// Log to see if we'll be prefetching the details page of each new place.
 		if (mobileData) {
-			if(D)Log.d(TAG, "Not prefetching due to being on mobile");
+			if(D)Log.d(TAG, "--- Not prefetching due to being on mobile");
 		} 
 		else if (lowBattery) {
-			if(D)Log.d(TAG, "Not prefetching due to low battery");
+			if(D)Log.d(TAG, "--- Not prefetching due to low battery");
 		}
 
 		long currentTime = System.currentTimeMillis();
 		URL url;
     
 		try {
+			// BUGBUG - Try using JSON rather than XML
 			// TODO Replace this with a URI to your own service.
 			String locationStr = location.getLatitude() + "," + location.getLongitude();
 			String baseURI = Config.PlacesConstants.PLACES_LIST_BASE_URI;
 			String placesFeed = baseURI + "&location=" + locationStr + "&radius=" + radius + Config.PlacesConstants.PLACES_API_KEY;
 			url = new URL(placesFeed);
+			
+			if(D)Log.d(TAG, String.format("PlacesUpdateService.refreshPlaces: placesFeed=%s", placesFeed));
            
 			// Open the connection
 			URLConnection connection = url.openConnection();
 			HttpsURLConnection httpConnection = (HttpsURLConnection)connection; 
-			int responseCode = httpConnection.getResponseCode(); 
+			int responseCode = httpConnection.getResponseCode();
+			
+			if(D)Log.d(TAG, String.format("PlacesUpdateService.refreshPlaces: responseCode=%d", responseCode));
 
-			if (responseCode == HttpURLConnection.HTTP_OK) { 
+			if (responseCode == HttpURLConnection.HTTP_OK) {
+				
+				if(D)Log.d(TAG, "PlacesUpdateService.refreshPlaces - process response");
+				
 				// Use the XML Pull Parser to extract each nearby location.
 				// TODO Replace the XML parsing to extract your own place list.
 				InputStream in = httpConnection.getInputStream();     
@@ -277,6 +287,7 @@ public class PlacesUpdateService extends IntentService {
 				xpp.setInput(in, null);
 				int eventType = xpp.getEventType();
 				while (eventType != XmlPullParser.END_DOCUMENT) {
+					if(D)Log.d(TAG, String.format("... START_TAG=%d and eventType=%d and xpp.getName()=%s", XmlPullParser.START_TAG, eventType, xpp.getName()));
 					if (eventType == XmlPullParser.START_TAG && xpp.getName().equals("result")) {
 						eventType = xpp.next();
 						String id = "";
@@ -313,6 +324,7 @@ public class PlacesUpdateService extends IntentService {
 						placeLocation.setLongitude(Double.valueOf(locationLng));
            
 						// Add each new place to the Places Content Provider
+						if(D)Log.d(TAG, String.format("PlacesUpdateService.refreshPlaces - calling addPlace for %s with long=%s and lat=%s", name, locationLng, locationLat));
 						addPlace(location, id, name, vicinity, types, placeLocation, viewport, icon, reference, currentTime);
 					}
 					eventType = xpp.next();
@@ -328,19 +340,18 @@ public class PlacesUpdateService extends IntentService {
 				prefsEditor.putLong(Config.PlacesConstants.SP_KEY_LAST_LIST_UPDATE_TIME, System.currentTimeMillis());      
 				prefsEditor.commit();
 			}
-			else {
-				if(E)Log.e(TAG, responseCode + ": " + httpConnection.getResponseMessage());
-			}
-      
 		} 
 		catch (MalformedURLException e) {
-			if(E)Log.e(TAG, e.getMessage());
+			if(E)Log.e(TAG, "PlacesUpdateService.refreshPlaces", e);
+			e.printStackTrace();
 		} 
 		catch (IOException e) {
-			if(E)Log.e(TAG, e.getMessage());
+			if(E)Log.e(TAG, "PlacesUpdateService.refreshPlaces", e);
+			e.printStackTrace();
 		} 
 		catch (XmlPullParserException e) {
-			if(E)Log.e(TAG, e.getMessage());
+			if(E)Log.e(TAG, "PlacesUpdateService.refreshPlaces", e);
+			e.printStackTrace();
 		}
 		finally {
 		}
@@ -362,6 +373,9 @@ public class PlacesUpdateService extends IntentService {
 	 * @return Successfully added
 	 */
 	protected boolean addPlace(Location currentLocation, String id, String name, String vicinity, String types, Location location, String viewport, String icon, String reference, long currentTime) {
+		
+		if(D)Log.d(TAG, "PlacesUpdateService.addPlace");
+		
 		// Contruct the Content Values
 		ContentValues values = new ContentValues();
 		values.put(PlacesContentProvider.KEY_ID, id);  
@@ -398,7 +412,8 @@ public class PlacesUpdateService extends IntentService {
 			}
 		}
 		catch (Exception ex) { 
-			if(E)Log.e("PLACES", "Adding " + name + " failed.");
+			if(E)Log.e(TAG, String.format("PlacesUpdateService.addPlaces - Adding %s failed.", name), ex);
+			ex.printStackTrace();
 		}
     
 		// If we haven't yet reached our prefetching limit, and we're either
@@ -429,6 +444,8 @@ public class PlacesUpdateService extends IntentService {
    	 * @param radius Radius
    	 */
 	protected void removeOldLocations(Location location, int radius) {
+		if(D)Log.d(TAG, "PlacesUpdateService.removeOldLocations");
+		
 		// Stale Detail Pages
 		long minTime = System.currentTimeMillis()-Config.PlacesConstants.MAX_DETAILS_UPDATE_LATENCY;
 		String where = PlaceDetailsContentProvider.KEY_LAST_UPDATE_TIME + " < " + minTime + " AND " +
