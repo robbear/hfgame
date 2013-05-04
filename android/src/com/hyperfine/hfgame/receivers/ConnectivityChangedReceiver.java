@@ -9,7 +9,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
 
-import com.hyperfine.hfgame.services.PlaceCheckinService;
 import com.hyperfine.hfgame.utils.Config;
 
 import static com.hyperfine.hfgame.utils.Config.D;
@@ -66,9 +65,7 @@ public class ConnectivityChangedReceiver extends BroadcastReceiver {
 					PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, 
 					PackageManager.DONT_KILL_APP);
       
-			// Commit any queued checkins now that we have connectivity
-			Intent checkinServiceIntent = new Intent(context, PlaceCheckinService.class);
-			context.startService(checkinServiceIntent);
+			// Here we would do any work required upon newly acquired connectivity
 		}
 		else {
 			if(D)Log.d(TAG, "ConnectivityChangedReceiver.onReceive - isConnected = FALSE");			

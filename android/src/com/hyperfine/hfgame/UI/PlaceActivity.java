@@ -8,7 +8,6 @@ import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -22,8 +21,6 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,11 +31,7 @@ import com.hyperfine.hfgame.utils.Config;
 import com.hyperfine.hfgame.PlacesApplication;
 import com.hyperfine.hfgame.R;
 import com.hyperfine.hfgame.SDK.UserAPI;
-import com.hyperfine.hfgame.UI.fragments.CheckinFragment;
-import com.hyperfine.hfgame.UI.fragments.PlaceDetailFragment;
-import com.hyperfine.hfgame.UI.fragments.PlaceListFragment;
 import com.hyperfine.hfgame.receivers.LocationChangedReceiver;
-import com.hyperfine.hfgame.receivers.NewCheckinReceiver;
 import com.hyperfine.hfgame.receivers.PassiveLocationChangedReceiver;
 import com.hyperfine.hfgame.services.PlacesUpdateService;
 import com.hyperfine.hfgame.utils.LastLocationFinder;
@@ -68,28 +61,21 @@ public class PlaceActivity extends FragmentActivity {
 
 	// TODO (RETO) Add "refreshing" icons when stuff is blank or refreshing.
 
-	protected PackageManager packageManager;
-	protected NotificationManager notificationManager;
-	protected LocationManager locationManager;
+	protected PackageManager m_packageManager;
+	protected NotificationManager m_notificationManager;
+	protected LocationManager m_locationManager;
   
 	// protected boolean followLocationChanges = true;
-	protected SharedPreferences prefs;
-	protected Editor prefsEditor;
-	protected SharedPreferenceSaver sharedPreferenceSaver;
+	protected SharedPreferences m_prefs;
+	protected Editor m_prefsEditor;
+	protected SharedPreferenceSaver m_sharedPreferenceSaver;
 
-	protected Criteria criteria;
-	protected LastLocationFinder lastLocationFinder;
-	protected LocationUpdateRequester locationUpdateRequester;
-	protected PendingIntent locationListenerPendingIntent;
-	protected PendingIntent locationListenerPassivePendingIntent;
+	protected Criteria m_criteria;
+	protected LastLocationFinder m_lastLocationFinder;
+	protected LocationUpdateRequester m_locationUpdateRequester;
+	protected PendingIntent m_locationListenerPendingIntent;
+	protected PendingIntent m_locationListenerPassivePendingIntent;
  
-	protected PlaceListFragment placeListFragment;
-	protected CheckinFragment checkinFragment;
-	protected PlaceDetailFragment placeDetailFragment;
-  
-	protected IntentFilter newCheckinFilter;
-	protected ComponentName newCheckinReceiverName;
-	
 	protected TextView m_numCallsText;
 	protected TextView m_longitudeText;
 	protected TextView m_latitudeText;
@@ -127,69 +113,48 @@ public class PlaceActivity extends FragmentActivity {
 		m_accuracyText = (TextView)findViewById(R.id.main_accuracy_text);
 		m_dateText = (TextView)findViewById(R.id.main_date_text);
     
-		// Get a handle to the Fragments
-		placeListFragment = (PlaceListFragment)getSupportFragmentManager().findFragmentById(R.id.list_fragment);
-		checkinFragment = (CheckinFragment)getSupportFragmentManager().findFragmentById(R.id.checkin_fragment);
-    
 		// Get references to the managers
-		packageManager = getPackageManager();
-		notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-		locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+		m_packageManager = getPackageManager();
+		m_notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+		m_locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
     
 		// Get a reference to the Shared Preferences and a Shared Preference Editor.
-		prefs = getSharedPreferences(Config.PlacesConstants.SHARED_PREFERENCE_FILE, Context.MODE_PRIVATE);
-		prefsEditor = prefs.edit();  
+		m_prefs = getSharedPreferences(Config.PlacesConstants.SHARED_PREFERENCE_FILE, Context.MODE_PRIVATE);
+		m_prefsEditor = m_prefs.edit();  
     
 		// Instantiate a SharedPreferenceSaver class based on the available platform version.
 		// This will be used to save shared preferences
-		sharedPreferenceSaver = new SharedPreferenceSaver(this);
+		m_sharedPreferenceSaver = new SharedPreferenceSaver(this);
            
 		// Save that we've been run once.
-		prefsEditor.putBoolean(Config.PlacesConstants.SP_KEY_RUN_ONCE, true);
-		sharedPreferenceSaver.savePreferences(prefsEditor, false);
+		m_prefsEditor.putBoolean(Config.PlacesConstants.SP_KEY_RUN_ONCE, true);
+		m_sharedPreferenceSaver.savePreferences(m_prefsEditor, false);
     
 		// Specify the Criteria to use when requesting location updates while the application is Active
-		criteria = new Criteria();
+		m_criteria = new Criteria();
 		if (Config.PlacesConstants.USE_GPS_WHEN_ACTIVITY_VISIBLE) {
-			criteria.setAccuracy(Criteria.ACCURACY_FINE);
+			m_criteria.setAccuracy(Criteria.ACCURACY_FINE);
 		}
 		else {
-			criteria.setPowerRequirement(Criteria.POWER_LOW);
+			m_criteria.setPowerRequirement(Criteria.POWER_LOW);
 		}
     
 		// Setup the location update Pending Intents
 		Intent activeIntent = new Intent(this, LocationChangedReceiver.class);
-		locationListenerPendingIntent = PendingIntent.getBroadcast(this, 0, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+		m_locationListenerPendingIntent = PendingIntent.getBroadcast(this, 0, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 		Intent passiveIntent = new Intent(this, PassiveLocationChangedReceiver.class);
-		locationListenerPassivePendingIntent = PendingIntent.getBroadcast(this, 0, passiveIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+		m_locationListenerPassivePendingIntent = PendingIntent.getBroadcast(this, 0, passiveIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 		// Instantiate a LastLocationFinder class.
 		// This will be used to find the last known location when the application starts.
-		lastLocationFinder = new LastLocationFinder(this);
-		lastLocationFinder.setChangedLocationListener(oneShotLastLocationUpdateListener);
+		m_lastLocationFinder = new LastLocationFinder(this);
+		m_lastLocationFinder.setChangedLocationListener(oneShotLastLocationUpdateListener);
     
 		// Instantiate a Location Update Requester class based on the available platform version.
 		// This will be used to request location updates.
-		locationUpdateRequester = new LocationUpdateRequester(locationManager);
-    
-		// Create an Intent Filter to listen for checkins
-		newCheckinReceiverName = new ComponentName(this, NewCheckinReceiver.class);
-		newCheckinFilter = new IntentFilter(Config.PlacesConstants.NEW_CHECKIN_ACTION);
-    
-		// Check to see if an Place ID has been specified in the launch Intent.
-		// If so, we should display the details for the specified venue.
-		if (getIntent().hasExtra(Config.PlacesConstants.EXTRA_KEY_ID)) {
-			Intent intent = getIntent();
-			String key = intent.getStringExtra(Config.PlacesConstants.EXTRA_KEY_ID);
-			if (key != null) {
-				selectDetail(null, key);
-				// Remove the ID from the Intent (so that a resume doesn't reselect).
-				intent.removeExtra(Config.PlacesConstants.EXTRA_KEY_ID);
-				setIntent(intent);
-			}
-		}
-		
+		m_locationUpdateRequester = new LocationUpdateRequester(m_locationManager);
+        
 		PlacesApplication app = (PlacesApplication)getApplication();
 		m_userId = app.getUserId();
 		if (m_userId == null) {
@@ -228,32 +193,14 @@ public class PlaceActivity extends FragmentActivity {
 		
 		super.onResume();
 		// Commit shared preference that says we're in the foreground.
-		prefsEditor.putBoolean(Config.PlacesConstants.EXTRA_KEY_IN_BACKGROUND, false);
-		sharedPreferenceSaver.savePreferences(prefsEditor, false);
-    
-		// Disable the Manifest Checkin Receiver when the Activity is visible.
-		// The Manifest Checkin Receiver is designed to run only when the Application
-		// isn't active to notify the user of pending checkins that have succeeded 
-		// (usually through a Notification). 
-		// When the Activity is visible we capture checkins through the checkinReceiver.
-		packageManager.setComponentEnabledSetting(newCheckinReceiverName,
-				PackageManager.COMPONENT_ENABLED_STATE_DISABLED, 
-				PackageManager.DONT_KILL_APP);
-    
-		// Register the checkinReceiver to listen for checkins while the Activity is visible.
-		registerReceiver(checkinReceiver, newCheckinFilter);
-    
-		// Cancel notifications.
-		notificationManager.cancel(Config.PlacesConstants.CHECKIN_NOTIFICATION);
-    
-		// Update the CheckinFragment with the last checkin.
-		updateCheckinFragment(prefs.getString(Config.PlacesConstants.SP_KEY_LAST_CHECKIN_ID, null));
-		
+		m_prefsEditor.putBoolean(Config.PlacesConstants.EXTRA_KEY_IN_BACKGROUND, false);
+		m_sharedPreferenceSaver.savePreferences(m_prefsEditor, false);
+    		
 		updateLocationMetricsUI();
     
 		// Get the last known location (and optionally request location updates) and
 		// update the place list.
-		boolean followLocationChanges = prefs.getBoolean(Config.PlacesConstants.SP_KEY_FOLLOW_LOCATION_CHANGES, true);
+		boolean followLocationChanges = m_prefs.getBoolean(Config.PlacesConstants.SP_KEY_FOLLOW_LOCATION_CHANGES, true);
 		getLocationAndUpdatePlaces(followLocationChanges);
 		
 		// Register the broadcast receiver for location stored notifications
@@ -267,20 +214,9 @@ public class PlaceActivity extends FragmentActivity {
 		if(D)Log.d(TAG, "PlaceActivity.onPause");
 		
 		// Commit shared preference that says we're in the background.
-		prefsEditor.putBoolean(Config.PlacesConstants.EXTRA_KEY_IN_BACKGROUND, true);
-		sharedPreferenceSaver.savePreferences(prefsEditor, false);
+		m_prefsEditor.putBoolean(Config.PlacesConstants.EXTRA_KEY_IN_BACKGROUND, true);
+		m_sharedPreferenceSaver.savePreferences(m_prefsEditor, false);
 	    
-		// Enable the Manifest Checkin Receiver when the Activity isn't active.
-		// The Manifest Checkin Receiver is designed to run only when the Application
-		// isn't active to notify the user of pending checkins that have succeeded 
-		// (usually through a Notification). 
-		packageManager.setComponentEnabledSetting(newCheckinReceiverName,
-				PackageManager.COMPONENT_ENABLED_STATE_ENABLED, 
-				PackageManager.DONT_KILL_APP);
-    
-		// Unregister the checkinReceiver when the Activity is inactive.
-		unregisterReceiver(checkinReceiver);
-    
 		// Stop listening for location updates when the Activity is inactive.
 		disableLocationUpdates();
 		
@@ -307,7 +243,7 @@ public class PlaceActivity extends FragmentActivity {
 				
 				// Find the last known location, specifying a required accuracy of within the min distance between updates
 				// and a required latency of the minimum time required between updates.
-				Location lastKnownLocation = lastLocationFinder.getLastBestLocation(Config.PlacesConstants.MAX_DISTANCE, 
+				Location lastKnownLocation = m_lastLocationFinder.getLastBestLocation(Config.PlacesConstants.MAX_DISTANCE, 
 						System.currentTimeMillis()-Config.PlacesConstants.MAX_TIME);
         
 				// Update the place list based on the last known location within a defined radius.
@@ -334,8 +270,8 @@ public class PlaceActivity extends FragmentActivity {
 		if(D)Log.d(TAG, String.format("PlaceActivity.toggleUpdatesWhenLocationChanges: updateWhenLocationChanges=%b", updateWhenLocationChanges));
 		
 		// Save the location update status in shared preferences
-		prefsEditor.putBoolean(Config.PlacesConstants.SP_KEY_FOLLOW_LOCATION_CHANGES, updateWhenLocationChanges);
-		sharedPreferenceSaver.savePreferences(prefsEditor, true);
+		m_prefsEditor.putBoolean(Config.PlacesConstants.SP_KEY_FOLLOW_LOCATION_CHANGES, updateWhenLocationChanges);
+		m_sharedPreferenceSaver.savePreferences(m_prefsEditor, true);
 
 		// Start or stop listening for location changes
 		if (updateWhenLocationChanges)
@@ -351,20 +287,20 @@ public class PlaceActivity extends FragmentActivity {
 		if(D)Log.d(TAG, "PlaceActivity.requestLocationUpdates");
 		
 		// Normal updates while activity is visible.
-		locationUpdateRequester.requestLocationUpdates(Config.PlacesConstants.MAX_TIME, Config.PlacesConstants.MAX_DISTANCE, criteria, locationListenerPendingIntent);
+		m_locationUpdateRequester.requestLocationUpdates(Config.PlacesConstants.MAX_TIME, Config.PlacesConstants.MAX_DISTANCE, m_criteria, m_locationListenerPendingIntent);
 
 		// Passive location updates from 3rd party apps when the Activity isn't visible.
-		locationUpdateRequester.requestPassiveLocationUpdates(Config.PlacesConstants.PASSIVE_MAX_TIME, Config.PlacesConstants.PASSIVE_MAX_DISTANCE, locationListenerPassivePendingIntent);
+		m_locationUpdateRequester.requestPassiveLocationUpdates(Config.PlacesConstants.PASSIVE_MAX_TIME, Config.PlacesConstants.PASSIVE_MAX_DISTANCE, m_locationListenerPassivePendingIntent);
     
 		// Register a receiver that listens for when the provider I'm using has been disabled. 
 		IntentFilter intentFilter = new IntentFilter(Config.PlacesConstants.ACTIVE_LOCATION_UPDATE_PROVIDER_DISABLED);
 		registerReceiver(locProviderDisabledReceiver, intentFilter);
 
 		// Register a receiver that listens for when a better provider than I'm using becomes available.
-		String bestProvider = locationManager.getBestProvider(criteria, false);
-		String bestAvailableProvider = locationManager.getBestProvider(criteria, true);
+		String bestProvider = m_locationManager.getBestProvider(m_criteria, false);
+		String bestAvailableProvider = m_locationManager.getBestProvider(m_criteria, true);
 		if (bestProvider != null && !bestProvider.equals(bestAvailableProvider)) {
-			locationManager.requestLocationUpdates(bestProvider, 0, 0, bestInactiveLocationProviderListener, getMainLooper());
+			m_locationManager.requestLocationUpdates(bestProvider, 0, 0, bestInactiveLocationProviderListener, getMainLooper());
 		}
 	}
   
@@ -376,12 +312,12 @@ public class PlaceActivity extends FragmentActivity {
 		if(D)Log.d(TAG, "PlaceActivity.disableLocationUpdates");
 		
 		unregisterReceiver(locProviderDisabledReceiver);
-		locationManager.removeUpdates(locationListenerPendingIntent);
-		locationManager.removeUpdates(bestInactiveLocationProviderListener);
+		m_locationManager.removeUpdates(m_locationListenerPendingIntent);
+		m_locationManager.removeUpdates(bestInactiveLocationProviderListener);
 		if (isFinishing())
-			lastLocationFinder.cancel();
+			m_lastLocationFinder.cancel();
 		if (Config.PlacesConstants.DISABLE_PASSIVE_LOCATION_WHEN_USER_EXIT && isFinishing())
-			locationManager.removeUpdates(locationListenerPassivePendingIntent);
+			m_locationManager.removeUpdates(m_locationListenerPassivePendingIntent);
 	}
   
 	/**
@@ -470,17 +406,15 @@ public class PlaceActivity extends FragmentActivity {
 	protected void updateLocationMetricsUI() {
 		if(D)Log.d(TAG, String.format("PlaceActivity.updateLocationMetricsUI - m_numCallsText %s", m_numCallsText == null ? "is null" : "is not null"));
 		
-		if (m_numCallsText != null) { // And, subsequently, the availability of all text views...
-			m_numCallsText.setText(String.valueOf(((PlacesApplication)getApplication()).getNumUserLocationCalls() + 1));
-			m_longitudeText.setText(String.valueOf(m_currentLongitude));
-			m_latitudeText.setText(String.valueOf(m_currentLatitude));
-			m_altitudeText.setText(String.valueOf(m_currentAltitude));
-			m_accuracyText.setText(String.valueOf(m_currentAccuracy));
-			
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			String dateString = df.format(m_currentTime);
-			m_dateText.setText(dateString);
-		}
+		m_numCallsText.setText(String.valueOf(((PlacesApplication)getApplication()).getNumUserLocationCalls() + 1));
+		m_longitudeText.setText(String.valueOf(m_currentLongitude));
+		m_latitudeText.setText(String.valueOf(m_currentLatitude));
+		m_altitudeText.setText(String.valueOf(m_currentAltitude));
+		m_accuracyText.setText(String.valueOf(m_currentAccuracy));
+		
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String dateString = df.format(m_currentTime);
+		m_dateText.setText(dateString);
 	}
 	
 	public class LocationUpdateReceiver extends BroadcastReceiver {
@@ -498,112 +432,6 @@ public class PlaceActivity extends FragmentActivity {
 		}		
 	}
 	
-	/* NEVER
-	protected void storeUserLocation(Location location) {
-		if(D)Log.d(TAG, "PlaceActivity.storeUserLocation");
-		
-		if (m_userId == null) {
-			if(D)Log.d(TAG, "PlaceActivity.storeUserLocation - no userId yet, so bailing.");
-			return;			
-		}
-		
-		m_currentLongitude = location.getLongitude();
-		m_currentLatitude = location.getLatitude();
-		m_currentAltitude = location.getAltitude();
-		m_currentAccuracy = location.getAccuracy();
-		m_currentTime = location.getTime();
-		
-		updateLocationMetricsUI();
-		
-		UserLocationAPI.createLocation(
-				m_userId, m_currentLongitude, m_currentLatitude,m_currentAltitude, (double)m_currentAccuracy, m_currentTime, 
-				new RESTHelperListener() {
-					public void onRESTResponse(int httpResult, String responseString) {
-						PlacesApplication app = (PlacesApplication)getApplication();
-						int nCalls = app.getNumUserLocationCalls();
-						nCalls++;
-						app.setNumUserLocationCalls(nCalls);
-						if(D)Log.d(TAG, String.format(
-								"PlaceActivity.UserLocationAPI.createLocation: numCalls=%d, httpResult=%d, response=%s", nCalls, 
-								httpResult, responseString));
-					}					
-				});
-	}
-	*/	
-  
-	/**
-	 * Updates (or displays) the venue detail Fragment when a venue is selected
-	 * (normally by clicking a place on the Place List.
-	 * @param reference Place Reference
-	 * @param id Place Identifier
-	 */
-	public void selectDetail(String reference, String id) {
-		// If the layout includes a single "main fragment container" then
-		// we want to hide the List Fragment and display the Detail Fragment.
-		// A back-button click should reverse this operation.
-		// This is the phone-portrait mode.
-		if (findViewById(R.id.main_fragment_container) != null) {
-			if(D)Log.d(TAG, "PlaceActivity.selectDetail - main_fragment_container != null");
-			
-			placeDetailFragment = PlaceDetailFragment.newInstance(reference, id);
-			FragmentManager fragmentManager = getSupportFragmentManager();
-			FragmentTransaction ft = fragmentManager.beginTransaction();
-			ft.addToBackStack(null);
-			if (checkinFragment != null) {
-				ft.hide(checkinFragment);
-			}
-			ft.hide(placeListFragment);
-			ft.replace(R.id.main_fragment_container, placeDetailFragment);
-			ft.show(placeDetailFragment);
-			ft.commit();       
-			// Otherwise the Detail Fragment is already visible and we can
-			// Simply replace the previous Fragment with a new one for the
-			// selected Place.
-		} 
-		else {
-			if(D)Log.d(TAG, "PlaceActivity.selectDetail - main_fragment_container == null");
-			
-			placeDetailFragment = PlaceDetailFragment.newInstance(reference, id);
-			FragmentManager fragmentManager = getSupportFragmentManager();
-			FragmentTransaction ft = fragmentManager.beginTransaction();
-			ft.disallowAddToBackStack();
-			ft.replace(R.id.detail_fragment_container, placeDetailFragment);
-			ft.commit(); 
-		}
-	}
- 
-	/**
-	 * Receiver that listens for checkins when the Activity is visible.
-	 * It should update the Checkin Fragment with the details for the
-	 * last venue checked in to.
-	 */
-	protected BroadcastReceiver checkinReceiver = new BroadcastReceiver() {
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			if(D)Log.d(TAG, "PlacesActivity.checkinReceiver.onReceive");
-			
-			String id = intent.getStringExtra(Config.PlacesConstants.EXTRA_KEY_ID);
-			if (id != null)
-				updateCheckinFragment(id);
-		}
-	};
-  
-	/**
-	 * Request that the {@link CheckinFragment} UI be updated
-	 * with the details corresponding to the specified ID.
-	 * @param id Place Identifier
-	 */
-	public void updateCheckinFragment(String id) {
-		if(D)Log.d(TAG, "PlaceActivity.updateCheckinFragment");
-		
-		if (id != null) {
-			checkinFragment.setPlaceId(id);
-      
-			if (placeDetailFragment != null) 
-				placeDetailFragment.checkedIn(id);
-		}
-	}	
-  
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		if(D)Log.d(TAG, "PlaceActivity.onCreateOptionsMenu");
@@ -621,7 +449,7 @@ public class PlaceActivity extends FragmentActivity {
 		switch (item.getItemId()) {
 		case R.id.refresh:
 			// Request the last known location.
-			Location lastKnownLocation = lastLocationFinder.getLastBestLocation(Config.PlacesConstants.MAX_DISTANCE, 
+			Location lastKnownLocation = m_lastLocationFinder.getLastBestLocation(Config.PlacesConstants.MAX_DISTANCE, 
     	            System.currentTimeMillis()-Config.PlacesConstants.MAX_TIME);
 			// Force an update
 			updatePlaces(lastKnownLocation, Config.PlacesConstants.DEFAULT_RADIUS, true);

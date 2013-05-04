@@ -1,22 +1,7 @@
 package com.hyperfine.hfgame.services;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-
-import javax.net.ssl.HttpsURLConnection;
-
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
-
 import android.app.IntentService;
 import android.content.ComponentName;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -34,14 +19,12 @@ import com.hyperfine.hfgame.PlacesApplication;
 import com.hyperfine.hfgame.utils.Config;
 import com.hyperfine.hfgame.utils.RESTHelper.RESTHelperListener;
 import com.hyperfine.hfgame.SDK.UserLocationAPI;
-import com.hyperfine.hfgame.content_providers.PlaceDetailsContentProvider;
-import com.hyperfine.hfgame.content_providers.PlacesContentProvider;
 import com.hyperfine.hfgame.receivers.ConnectivityChangedReceiver;
 import com.hyperfine.hfgame.receivers.LocationChangedReceiver;
 import com.hyperfine.hfgame.receivers.PassiveLocationChangedReceiver;
 
 import static com.hyperfine.hfgame.utils.Config.D;
-import static com.hyperfine.hfgame.utils.Config.E;
+//import static com.hyperfine.hfgame.utils.Config.E;
 
 /**
  * Service that requests a list of nearby locations from the underlying web service.
@@ -53,7 +36,6 @@ public class PlacesUpdateService extends IntentService {
 	
 	public final static String LOCATION_STORED_BROADCAST = "com.hyperfine.hfgame.intent.action.LOCATION_STORED";
   
-	protected ContentResolver contentResolver;
 	protected SharedPreferences prefs;
 	protected Editor prefsEditor;
 	protected ConnectivityManager cm;
@@ -87,7 +69,6 @@ public class PlacesUpdateService extends IntentService {
 	public void onCreate() {
 		super.onCreate();
 		cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-		contentResolver = getContentResolver();
 		prefs = getSharedPreferences(Config.PlacesConstants.SHARED_PREFERENCE_FILE, Context.MODE_PRIVATE);
 		prefsEditor = prefs.edit();
 	}
@@ -117,12 +98,12 @@ public class PlacesUpdateService extends IntentService {
 	
 		// Extract the location and radius around which to conduct our search.
 		Location location = new Location(Config.PlacesConstants.CONSTRUCTED_LOCATION_PROVIDER);
-		int radius = Config.PlacesConstants.DEFAULT_RADIUS;
+		//int radius = Config.PlacesConstants.DEFAULT_RADIUS;
     
 		Bundle extras = intent.getExtras();
 		if (intent.hasExtra(Config.PlacesConstants.EXTRA_KEY_LOCATION)) {
 			location = (Location)(extras.get(Config.PlacesConstants.EXTRA_KEY_LOCATION));
-			radius = extras.getInt(Config.PlacesConstants.EXTRA_KEY_RADIUS, Config.PlacesConstants.DEFAULT_RADIUS);
+			//radius = extras.getInt(Config.PlacesConstants.EXTRA_KEY_RADIUS, Config.PlacesConstants.DEFAULT_RADIUS);
 		}
     
 		// Check if we're in a low battery situation.
@@ -190,28 +171,13 @@ public class PlacesUpdateService extends IntentService {
 			}
       
 			if (doUpdate) {
-				if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - refreshing places.");
+				if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - calling storeUserLocation.");
 				storeUserLocation(location);
-				
-				// Refresh the prefetch count for each new location.
-				prefetchCount = 0;
-				// Remove the old locations
-				removeOldLocations(location, radius);
-				// Hit the server for new venues for the current location.
-				// BUGBUG - Not making this call for now.
-				//refreshPlaces(location, radius);
-				if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - not calling refreshPlaces as this code is commented out for now.");
 			}
 			else {
-				if(D)Log.d(TAG, "Place List is fresh: Not refreshing");
+				if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - not calling storeUserLocation.");
 			}
-      
-			// Retry any queued checkins.
-			Intent checkinServiceIntent = new Intent(this, PlaceCheckinService.class);
-			startService(checkinServiceIntent);
 		}
-		
-		if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - Place List Download Service Complete");
 	}
 	
 	/**
@@ -258,235 +224,5 @@ public class PlacesUpdateService extends IntentService {
 						app.setNumUserLocationCalls(nCalls);
 					}					
 				});
-	}
-  
-	/**
-	 * Polls the underlying service to return a list of places within the specified
-	 * radius of the specified Location. 
-	 * @param location Location
-	 * @param radius Radius
-	 */
-	protected void refreshPlaces(Location location, int radius) {
-		if(D)Log.d(TAG, "PlacesUpdateService.refreshPlaces");
-		
-		// Log to see if we'll be prefetching the details page of each new place.
-		if (mobileData) {
-			if(D)Log.d(TAG, "--- Not prefetching due to being on mobile");
-		} 
-		else if (lowBattery) {
-			if(D)Log.d(TAG, "--- Not prefetching due to low battery");
-		}
-
-		long currentTime = System.currentTimeMillis();
-		URL url;
-    
-		try {
-			// BUGBUG - Try using JSON rather than XML
-			// TODO Replace this with a URI to your own service.
-			String locationStr = location.getLatitude() + "," + location.getLongitude();
-			String baseURI = Config.PlacesConstants.PLACES_LIST_BASE_URI;
-			String placesFeed = baseURI + "&location=" + locationStr + "&radius=" + radius + Config.PlacesConstants.PLACES_API_KEY;
-			url = new URL(placesFeed);
-			
-			if(D)Log.d(TAG, String.format("PlacesUpdateService.refreshPlaces: placesFeed=%s", placesFeed));
-           
-			// Open the connection
-			URLConnection connection = url.openConnection();
-			HttpsURLConnection httpConnection = (HttpsURLConnection)connection; 
-			int responseCode = httpConnection.getResponseCode();
-			
-			if(D)Log.d(TAG, String.format("PlacesUpdateService.refreshPlaces: responseCode=%d", responseCode));
-
-			if (responseCode == HttpURLConnection.HTTP_OK) {
-				
-				if(D)Log.d(TAG, "PlacesUpdateService.refreshPlaces - process response");
-				
-				// Use the XML Pull Parser to extract each nearby location.
-				// TODO Replace the XML parsing to extract your own place list.
-				InputStream in = httpConnection.getInputStream();
-				
-				// TEST code
-				/*
-				BufferedReader br = new BufferedReader(new InputStreamReader(in));
-				StringBuilder sb = new StringBuilder(in.available());
-				String line;
-				while ((line = br.readLine()) != null) {
-					sb.append(line);
-				}
-				if(D)Log.d(TAG, String.format("PlacesUpdateService.refreshPlaces: response=%s", sb.toString()));
-				return;
-				*/
-				
-				XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-				factory.setNamespaceAware(true);
-				XmlPullParser xpp = factory.newPullParser();
-
-				xpp.setInput(in, null);
-				int eventType = xpp.getEventType();
-				while (eventType != XmlPullParser.END_DOCUMENT) {
-					if(D)Log.d(TAG, String.format("... START_TAG=%d and eventType=%d and xpp.getName()=%s", XmlPullParser.START_TAG, eventType, xpp.getName()));
-					if (eventType == XmlPullParser.START_TAG && xpp.getName().equals("result")) {
-						eventType = xpp.next();
-						String id = "";
-						String name = "";
-						String vicinity = "";
-						String types = "";
-						String locationLat = "";
-						String locationLng = "";
-						String viewport = "";
-						String icon = "";
-						String reference = "";
-						
-						while (!(eventType == XmlPullParser.END_TAG && xpp.getName().equals("result"))) {
-							if (eventType == XmlPullParser.START_TAG && xpp.getName().equals("name"))
-								name = xpp.nextText();
-							else if (eventType == XmlPullParser.START_TAG && xpp.getName().equals("vicinity"))
-								vicinity = xpp.nextText();
-							else if (eventType == XmlPullParser.START_TAG && xpp.getName().equals("type"))
-								types = types == "" ? xpp.nextText() : types + " " + xpp.nextText();
-								else if (eventType == XmlPullParser.START_TAG && xpp.getName().equals("lat"))
-									locationLat = xpp.nextText();
-								else if (eventType == XmlPullParser.START_TAG && xpp.getName().equals("lng"))
-									locationLng = xpp.nextText();
-								else if (eventType == XmlPullParser.START_TAG && xpp.getName().equals("icon"))
-									icon = xpp.nextText();
-								else if (eventType == XmlPullParser.START_TAG && xpp.getName().equals("reference"))
-									reference = xpp.nextText();
-								else if (eventType == XmlPullParser.START_TAG && xpp.getName().equals("id"))
-									id = xpp.nextText();
-							eventType = xpp.next();
-						}
-						Location placeLocation = new Location(Config.PlacesConstants.CONSTRUCTED_LOCATION_PROVIDER);
-						placeLocation.setLatitude(Double.valueOf(locationLat));
-						placeLocation.setLongitude(Double.valueOf(locationLng));
-           
-						// Add each new place to the Places Content Provider
-						if(D)Log.d(TAG, String.format("PlacesUpdateService.refreshPlaces - calling addPlace for %s with long=%s and lat=%s", name, locationLng, locationLat));
-						addPlace(location, id, name, vicinity, types, placeLocation, viewport, icon, reference, currentTime);
-					}
-					eventType = xpp.next();
-				}
-        
-				// Remove places from the PlacesContentProviderlist that aren't from this updte.
-				String where = PlaceDetailsContentProvider.KEY_LAST_UPDATE_TIME + " < " + currentTime; 
-				contentResolver.delete(PlacesContentProvider.CONTENT_URI, where, null);
-       
-				// Save the last update time and place to the Shared Preferences.
-				prefsEditor.putLong(Config.PlacesConstants.SP_KEY_LAST_LIST_UPDATE_LAT, (long) location.getLatitude());
-				prefsEditor.putLong(Config.PlacesConstants.SP_KEY_LAST_LIST_UPDATE_LNG, (long) location.getLongitude());
-				prefsEditor.putLong(Config.PlacesConstants.SP_KEY_LAST_LIST_UPDATE_TIME, System.currentTimeMillis());      
-				prefsEditor.commit();
-			}
-		} 
-		catch (MalformedURLException e) {
-			if(E)Log.e(TAG, "PlacesUpdateService.refreshPlaces", e);
-			e.printStackTrace();
-		} 
-		catch (IOException e) {
-			if(E)Log.e(TAG, "PlacesUpdateService.refreshPlaces", e);
-			e.printStackTrace();
-		} 
-		catch (XmlPullParserException e) {
-			if(E)Log.e(TAG, "PlacesUpdateService.refreshPlaces", e);
-			e.printStackTrace();
-		}
-		finally {
-		}
-  }
-  
-	/**
-	 * Adds the new place to the {@link PlacesContentProvider} using the values passed in.
-	 * TODO Update this method to accept and persist the place information your service provides.
-	 * @param currentLocation Current location
-	 * @param id Unique identifier
-	 * @param name Name
-	 * @param vicinity Vicinity
-	 * @param types Types
-	 * @param location Location
-	 * @param viewport Viewport
-	 * @param icon Icon
-	 * @param reference Reference
-	 * @param currentTime Current time
-	 * @return Successfully added
-	 */
-	protected boolean addPlace(Location currentLocation, String id, String name, String vicinity, String types, Location location, String viewport, String icon, String reference, long currentTime) {
-		
-		if(D)Log.d(TAG, "PlacesUpdateService.addPlace");
-		
-		// Contruct the Content Values
-		ContentValues values = new ContentValues();
-		values.put(PlacesContentProvider.KEY_ID, id);  
-		values.put(PlacesContentProvider.KEY_NAME, name);
-		double lat = location.getLatitude();
-		double lng = location.getLongitude();
-		values.put(PlacesContentProvider.KEY_LOCATION_LAT, lat);
-		values.put(PlacesContentProvider.KEY_LOCATION_LNG, lng);
-		values.put(PlacesContentProvider.KEY_VICINITY, vicinity);
-		values.put(PlacesContentProvider.KEY_TYPES, types);
-		values.put(PlacesContentProvider.KEY_VIEWPORT, viewport);
-		values.put(PlacesContentProvider.KEY_ICON, icon);
-		values.put(PlacesContentProvider.KEY_REFERENCE, reference);
-		values.put(PlacesContentProvider.KEY_LAST_UPDATE_TIME, currentTime);
-
-		// Calculate the distance between the current location and the venue's location
-		float distance = 0;
-		if (currentLocation != null && location != null)
-			distance = currentLocation.distanceTo(location);
-		values.put(PlacesContentProvider.KEY_DISTANCE, distance);  
-    
-		// Update or add the new place to the PlacesContentProvider
-		String where = PlacesContentProvider.KEY_ID + " = '" + id + "'";
-		boolean result = false;
-		try {
-			if (contentResolver.update(PlacesContentProvider.CONTENT_URI, values, where, null) == 0) {
-				if (contentResolver.insert(PlacesContentProvider.CONTENT_URI, values) != null) {
-					result = true;
-				}
-			}
-			else
-			{
-				result = true;
-			}
-		}
-		catch (Exception ex) { 
-			if(E)Log.e(TAG, String.format("PlacesUpdateService.addPlaces - Adding %s failed.", name), ex);
-			ex.printStackTrace();
-		}
-    
-		// If we haven't yet reached our prefetching limit, and we're either
-		// on WiFi or don't have a WiFi-only prefetching restriction, and we
-		// either don't have low batter or don't have a low battery prefetching 
-		// restriction, then prefetch the details for this newly added place.
-		if ((prefetchCount < Config.PlacesConstants.PREFETCH_LIMIT) &&
-				(!Config.PlacesConstants.PREFETCH_ON_WIFI_ONLY || !mobileData) &&
-				(!Config.PlacesConstants.DISABLE_PREFETCH_ON_LOW_BATTERY || !lowBattery)) {
-			prefetchCount++;
-      
-			// Start the PlaceDetailsUpdateService to prefetch the details for this place.
-			// As we're prefetching, don't force the refresh if we already have data.
-			Intent updateServiceIntent = new Intent(this, PlaceDetailsUpdateService.class);
-			updateServiceIntent.putExtra(Config.PlacesConstants.EXTRA_KEY_REFERENCE, reference);
-			updateServiceIntent.putExtra(Config.PlacesConstants.EXTRA_KEY_ID, id);
-			updateServiceIntent.putExtra(Config.PlacesConstants.EXTRA_KEY_FORCEREFRESH, false);
-			startService(updateServiceIntent);
-		}
-    
-		return result;
-	}
-  
-	/**
-	 * Remove stale place detail records unless we've set the persistent cache flag to true.
-	 * 	This is typically the case where a place has actually been viewed rather than prefetched. 
-   	 * @param location Location
-   	 * @param radius Radius
-   	 */
-	protected void removeOldLocations(Location location, int radius) {
-		if(D)Log.d(TAG, "PlacesUpdateService.removeOldLocations");
-		
-		// Stale Detail Pages
-		long minTime = System.currentTimeMillis()-Config.PlacesConstants.MAX_DETAILS_UPDATE_LATENCY;
-		String where = PlaceDetailsContentProvider.KEY_LAST_UPDATE_TIME + " < " + minTime + " AND " +
-                   PlaceDetailsContentProvider.KEY_FORCE_CACHE + " = 0";
-		contentResolver.delete(PlaceDetailsContentProvider.CONTENT_URI, where, null);
 	}
 }

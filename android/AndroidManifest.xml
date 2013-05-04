@@ -30,16 +30,12 @@
 	        <action android:name="com.hyperfine.places.placesupdateservice" />
 	      </intent-filter>
 	    </service>
-	    <service android:name=".services.PlaceDetailsUpdateService"/>
-	    <service android:name=".services.CheckinNotificationService"/>
-	    <service android:name=".services.PlaceCheckinService"/>
 	    
 	    <receiver android:name=".receivers.LocationChangedReceiver"/>
 	    <receiver android:name=".receivers.PassiveLocationChangedReceiver"/>
 	    <receiver android:name=".receivers.ConnectivityChangedReceiver">
 	      <intent-filter>
 	        <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
-	        <action android:name="com.hyperfine.places.retry_queued_checkins" />
 	      </intent-filter>
 	    </receiver>
 	    <receiver android:name=".receivers.PowerStateChangedReceiver">
@@ -48,21 +44,12 @@
 			<action android:name="android.intent.action.ACTION_BATTERY_OKAY"/>
 	     </intent-filter>
 	    </receiver>
-	    <receiver android:name=".receivers.NewCheckinReceiver">
-	      <intent-filter>
-	        <action android:name="com.hyperfine.places.NEW_CHECKIN_ACTION"/>
-	      </intent-filter>
-	    </receiver>
 	    <receiver android:name=".receivers.BootReceiver">
 	      <intent-filter>
 	        <action android:name="android.intent.action.BOOT_COMPLETED"/>
 	      </intent-filter>
 	    </receiver>
-	    
-	    <provider android:authorities="com.hyperfine.provider.places" android:name=".content_providers.PlacesContentProvider"/>
-	    <provider android:authorities="com.hyperfine.provider.placedetails" android:name=".content_providers.PlaceDetailsContentProvider"/>
-	    <provider android:authorities="com.hyperfine.provider.checkins" android:name=".content_providers.QueuedCheckinsContentProvider"/>
-	    
+	        
 		<meta-data android:name="com.google.android.backup.api_key" android:value="AEdPqrEAAAAIxPVJuXqPRsdY-_3PwHgyeXg8KB1nDAua36SUbg" />        
     </application>
     
