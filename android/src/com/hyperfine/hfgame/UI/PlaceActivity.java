@@ -192,9 +192,6 @@ public class PlaceActivity extends FragmentActivity {
 		if(D)Log.d(TAG, "PlaceActivity.onResume");
 		
 		super.onResume();
-		// Commit shared preference that says we're in the foreground.
-		m_prefsEditor.putBoolean(Config.PlacesConstants.EXTRA_KEY_IN_BACKGROUND, false);
-		m_sharedPreferenceSaver.savePreferences(m_prefsEditor, false);
     		
 		updateLocationMetricsUI();
     
@@ -213,10 +210,6 @@ public class PlaceActivity extends FragmentActivity {
 	protected void onPause() {
 		if(D)Log.d(TAG, "PlaceActivity.onPause");
 		
-		// Commit shared preference that says we're in the background.
-		m_prefsEditor.putBoolean(Config.PlacesConstants.EXTRA_KEY_IN_BACKGROUND, true);
-		m_sharedPreferenceSaver.savePreferences(m_prefsEditor, false);
-	    
 		// Stop listening for location updates when the Activity is inactive.
 		disableLocationUpdates();
 		
@@ -404,7 +397,7 @@ public class PlaceActivity extends FragmentActivity {
 	
 	@SuppressLint("SimpleDateFormat") 
 	protected void updateLocationMetricsUI() {
-		if(D)Log.d(TAG, String.format("PlaceActivity.updateLocationMetricsUI - m_numCallsText %s", m_numCallsText == null ? "is null" : "is not null"));
+		if(D)Log.d(TAG, "PlaceActivity.updateLocationMetricsUI");
 		
 		m_numCallsText.setText(String.valueOf(((PlacesApplication)getApplication()).getNumUserLocationCalls() + 1));
 		m_longitudeText.setText(String.valueOf(m_currentLongitude));
@@ -420,13 +413,18 @@ public class PlaceActivity extends FragmentActivity {
 	public class LocationUpdateReceiver extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			if(D)Log.d(TAG, "PlaceActivity.LocationUpdateReceiver.onReceive");
-			
 			m_currentLongitude = intent.getDoubleExtra("longitude", 0.0);
 			m_currentLatitude = intent.getDoubleExtra("latitude", 0.0);
 			m_currentAltitude = intent.getDoubleExtra("altitude", 0.0);
 			m_currentAccuracy = intent.getFloatExtra("accuracy", 0);
 			m_currentTime = intent.getLongExtra("date", 0);
+			
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String dateString = df.format(m_currentTime);
+			
+			if(D)Log.d(TAG, String.format(
+					"PlaceActivity.LocationUpdateReceiver.onReceive: lng=%f, lat=%f, alt=%f, acc=%f, time=%s",
+					m_currentLongitude, m_currentLatitude, m_currentAltitude, m_currentAccuracy, dateString));
 			
 			updateLocationMetricsUI();
 		}		

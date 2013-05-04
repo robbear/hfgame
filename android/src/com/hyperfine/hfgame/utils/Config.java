@@ -91,7 +91,6 @@ public class Config
     	public static final String EXTRA_KEY_RADIUS = "radius";
     	public static final String EXTRA_KEY_TIME_STAMP = "time_stamp";
     	public static final String EXTRA_KEY_FORCEREFRESH = "force_refresh";
-    	public static final String EXTRA_KEY_IN_BACKGROUND = "EXTRA_KEY_IN_BACKGROUND";
     	 
     	public static final String ARGUMENTS_KEY_REFERENCE = "reference";
     	public static final String ARGUMENTS_KEY_ID = "id";

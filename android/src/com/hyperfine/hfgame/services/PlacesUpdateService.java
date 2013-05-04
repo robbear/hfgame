@@ -36,12 +36,11 @@ public class PlacesUpdateService extends IntentService {
 	
 	public final static String LOCATION_STORED_BROADCAST = "com.hyperfine.hfgame.intent.action.LOCATION_STORED";
   
-	protected SharedPreferences prefs;
-	protected Editor prefsEditor;
-	protected ConnectivityManager cm;
-	protected boolean lowBattery = false;
-	protected boolean mobileData = false;
-	protected int prefetchCount = 0;
+	protected SharedPreferences m_prefs;
+	protected Editor m_prefsEditor;
+	protected ConnectivityManager m_connectivityManager;
+	protected boolean m_lowBattery = false;
+	protected boolean m_mobileData = false;
  
 	public PlacesUpdateService() {
 		super(TAG);
@@ -68,9 +67,9 @@ public class PlacesUpdateService extends IntentService {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-		prefs = getSharedPreferences(Config.PlacesConstants.SHARED_PREFERENCE_FILE, Context.MODE_PRIVATE);
-		prefsEditor = prefs.edit();
+		m_connectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+		m_prefs = getSharedPreferences(Config.PlacesConstants.SHARED_PREFERENCE_FILE, Context.MODE_PRIVATE);
+		m_prefsEditor = m_prefs.edit();
 	}
 	
 	@Override
@@ -88,13 +87,6 @@ public class PlacesUpdateService extends IntentService {
 	 */
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		// Check if we're running in the foreground, if not, check if
-		// we have permission to do background updates.
-		// BUGBUG!!
-		boolean backgroundAllowed = cm.getBackgroundDataSetting();
-		boolean inBackground = prefs.getBoolean(Config.PlacesConstants.EXTRA_KEY_IN_BACKGROUND, true);
-  	
-		if (!backgroundAllowed && inBackground) return;
 	
 		// Extract the location and radius around which to conduct our search.
 		Location location = new Location(Config.PlacesConstants.CONSTRUCTED_LOCATION_PROVIDER);
@@ -109,12 +101,12 @@ public class PlacesUpdateService extends IntentService {
 		// Check if we're in a low battery situation.
 		IntentFilter batIntentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
 		Intent battery = registerReceiver(null, batIntentFilter);
-		lowBattery = getIsLowBattery(battery);
+		m_lowBattery = getIsLowBattery(battery);
     
 		// Check if we're connected to a data network, and if so - if it's a mobile network.
-		NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+		NetworkInfo activeNetwork = m_connectivityManager.getActiveNetworkInfo();
 		boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-		mobileData = activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE;
+		m_mobileData = activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE;
 
 		// If we're not connected, enable the connectivity receiver and disable the location receiver.
 		// There's no point trying to poll the server for updates if we're not connected, and the 
@@ -157,9 +149,9 @@ public class PlacesUpdateService extends IntentService {
 				if(D)Log.d(TAG, "PlacesUpdateService.onHandleIntent - not a forced update");
 				
 				// Retrieve the last update time and place.
-				long lastTime = prefs.getLong(Config.PlacesConstants.SP_KEY_LAST_LIST_UPDATE_TIME, Long.MIN_VALUE);
-				long lastLat = prefs.getLong(Config.PlacesConstants.SP_KEY_LAST_LIST_UPDATE_LAT, Long.MIN_VALUE);
-				long lastLng = prefs.getLong(Config.PlacesConstants.SP_KEY_LAST_LIST_UPDATE_LNG, Long.MIN_VALUE);
+				long lastTime = m_prefs.getLong(Config.PlacesConstants.SP_KEY_LAST_LIST_UPDATE_TIME, Long.MIN_VALUE);
+				long lastLat = m_prefs.getLong(Config.PlacesConstants.SP_KEY_LAST_LIST_UPDATE_LAT, Long.MIN_VALUE);
+				long lastLng = m_prefs.getLong(Config.PlacesConstants.SP_KEY_LAST_LIST_UPDATE_LNG, Long.MIN_VALUE);
 				Location lastLocation = new Location(Config.PlacesConstants.CONSTRUCTED_LOCATION_PROVIDER);
 				lastLocation.setLatitude(lastLat);
 				lastLocation.setLongitude(lastLng);
