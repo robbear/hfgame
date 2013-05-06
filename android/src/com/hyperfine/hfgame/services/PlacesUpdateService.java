@@ -34,6 +34,7 @@ public class PlacesUpdateService extends IntentService {
 
 	public final static String TAG =  Config.unifiedLogs ? "HFGame" : "HFGame_Services";
 	
+	public final static String LOCATION_RETRIEVED_BROADCAST = "com.hyperfine.hfgame.intent.action.LOCATION_RETRIEVED";
 	public final static String LOCATION_STORED_BROADCAST = "com.hyperfine.hfgame.intent.action.LOCATION_STORED";
   
 	protected SharedPreferences m_prefs;
@@ -194,7 +195,7 @@ public class PlacesUpdateService extends IntentService {
 		
 		// Broadcast the result
 		Intent broadcastIntent = new Intent();
-		broadcastIntent.setAction(PlacesUpdateService.LOCATION_STORED_BROADCAST);
+		broadcastIntent.setAction(PlacesUpdateService.LOCATION_RETRIEVED_BROADCAST);
 		broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
 		broadcastIntent.putExtra("longitude", longitude);
 		broadcastIntent.putExtra("latitude", latitude);
@@ -202,7 +203,7 @@ public class PlacesUpdateService extends IntentService {
 		broadcastIntent.putExtra("accuracy", accuracy);
 		broadcastIntent.putExtra("date", timeVal);
 		
-		if(D)Log.d(TAG, "PlacesUpdateService.storeUserLocation - broadcasting LOCATION_STORED notification");
+		if(D)Log.d(TAG, "PlacesUpdateService.storeUserLocation - broadcasting LOCATION_RETRIEVED notification");
 		sendBroadcast(broadcastIntent);
 		
 		UserLocationAPI.createLocation(
@@ -210,10 +211,19 @@ public class PlacesUpdateService extends IntentService {
 				new RESTHelperListener() {
 					public void onRESTResponse(int httpResult, String responseString) {
 						if(D)Log.d(TAG, String.format("PlacesUpdateService.UserLocationAPI.createLocation: httpResult=%d, response=%s", httpResult, responseString));
-						PlacesApplication app = (PlacesApplication)getApplication();
-						int nCalls = app.getNumUserLocationCalls();
-						nCalls++;
-						app.setNumUserLocationCalls(nCalls);
+
+						if (httpResult == 200) {
+							// Broadcast the result
+							Intent broadcastIntent = new Intent();
+							broadcastIntent.setAction(PlacesUpdateService.LOCATION_STORED_BROADCAST);
+							broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
+
+							if(D)Log.d(TAG, "PlacesUpdateService.storeUserLocation - broadcasting LOCATION_STORED notification");
+							sendBroadcast(broadcastIntent);
+						}
+						else {
+							if(D)Log.d(TAG, String.format("PlacesUpdateService.storeUserLocation - *****failed to store location: httpResult=%d", httpResult));
+						}
 					}					
 				});
 	}

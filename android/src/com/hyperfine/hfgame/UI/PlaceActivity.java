@@ -77,6 +77,7 @@ public class PlaceActivity extends FragmentActivity {
 	protected PendingIntent m_locationListenerPassivePendingIntent;
  
 	protected TextView m_numCallsText;
+	protected TextView m_numSavedText;
 	protected TextView m_longitudeText;
 	protected TextView m_latitudeText;
 	protected TextView m_altitudeText;
@@ -90,6 +91,7 @@ public class PlaceActivity extends FragmentActivity {
 	protected long m_currentTime = 0;
 	
 	protected LocationUpdateReceiver m_locationUpdateReceiver;
+	protected LocationSavedReceiver m_locationSavedReceiver;
 	
 	// For API testing...
 	private String m_userId = null;
@@ -107,6 +109,7 @@ public class PlaceActivity extends FragmentActivity {
 		setContentView(R.layout.main);
 		
 		m_numCallsText = (TextView)findViewById(R.id.main_numcalls_text);
+		m_numSavedText = (TextView)findViewById(R.id.main_saved_text);
 		m_longitudeText = (TextView)findViewById(R.id.main_longitude_text);
 		m_latitudeText = (TextView)findViewById(R.id.main_latitude_text);
 		m_altitudeText = (TextView)findViewById(R.id.main_altitude_text);
@@ -185,6 +188,7 @@ public class PlaceActivity extends FragmentActivity {
 		}
 
 		m_locationUpdateReceiver = new LocationUpdateReceiver();
+		m_locationSavedReceiver = new LocationSavedReceiver();
 	}
 
 	@Override
@@ -200,10 +204,11 @@ public class PlaceActivity extends FragmentActivity {
 		boolean followLocationChanges = m_prefs.getBoolean(Config.PlacesConstants.SP_KEY_FOLLOW_LOCATION_CHANGES, true);
 		getLocationAndUpdatePlaces(followLocationChanges);
 		
-		// Register the broadcast receiver for location stored notifications
-		IntentFilter filter = new IntentFilter(PlacesUpdateService.LOCATION_STORED_BROADCAST);
+		// Register the broadcast receiver for location retrieved and stored notifications
+		IntentFilter filter = new IntentFilter(PlacesUpdateService.LOCATION_RETRIEVED_BROADCAST);
 		filter.addCategory(Intent.CATEGORY_DEFAULT);
-		registerReceiver(m_locationUpdateReceiver, filter);		
+		registerReceiver(m_locationUpdateReceiver, filter);
+		registerReceiver(m_locationSavedReceiver, filter);
 	}
   
 	@Override
@@ -214,6 +219,7 @@ public class PlaceActivity extends FragmentActivity {
 		disableLocationUpdates();
 		
 		unregisterReceiver(m_locationUpdateReceiver);
+		unregisterReceiver(m_locationSavedReceiver);
     
 		super.onPause();
 	}
@@ -399,7 +405,8 @@ public class PlaceActivity extends FragmentActivity {
 	protected void updateLocationMetricsUI() {
 		if(D)Log.d(TAG, "PlaceActivity.updateLocationMetricsUI");
 		
-		m_numCallsText.setText(String.valueOf(((PlacesApplication)getApplication()).getNumUserLocationCalls() + 1));
+		m_numCallsText.setText(String.valueOf(((PlacesApplication)getApplication()).getNumUserLocationCalls()));
+		m_numSavedText.setText(String.valueOf(((PlacesApplication)getApplication()).getNumUserLocationSaved()));
 		m_longitudeText.setText(String.valueOf(m_currentLongitude));
 		m_latitudeText.setText(String.valueOf(m_currentLatitude));
 		m_altitudeText.setText(String.valueOf(m_currentAltitude));
@@ -411,7 +418,8 @@ public class PlaceActivity extends FragmentActivity {
 	}
 	
 	public class LocationUpdateReceiver extends BroadcastReceiver {
-		@Override
+		
+		@SuppressLint("SimpleDateFormat") @Override
 		public void onReceive(Context context, Intent intent) {
 			m_currentLongitude = intent.getDoubleExtra("longitude", 0.0);
 			m_currentLatitude = intent.getDoubleExtra("latitude", 0.0);
@@ -426,8 +434,27 @@ public class PlaceActivity extends FragmentActivity {
 					"PlaceActivity.LocationUpdateReceiver.onReceive: lng=%f, lat=%f, alt=%f, acc=%f, time=%s",
 					m_currentLongitude, m_currentLatitude, m_currentAltitude, m_currentAccuracy, dateString));
 			
+			PlacesApplication app = (PlacesApplication)getApplication();
+			int nCalls = app.getNumUserLocationCalls();
+			nCalls++;
+			app.setNumUserLocationCalls(nCalls);
+
 			updateLocationMetricsUI();
 		}		
+	}
+	
+	public class LocationSavedReceiver extends BroadcastReceiver {
+		
+		public void onReceive(Context context, Intent intent) {
+			PlacesApplication app = (PlacesApplication)getApplication();
+			int nCalls = app.getNumUserLocationSaved();
+			nCalls++;
+			app.setNumUserLocationSaved(nCalls);
+			
+			if(D)Log.d(TAG, String.format("PlaceActivity.LocationSavedReceiver.onReceive - numSaved = %d", nCalls));
+			
+			m_numSavedText.setText(String.valueOf(((PlacesApplication)getApplication()).getNumUserLocationSaved()));
+		}
 	}
 	
 	@Override

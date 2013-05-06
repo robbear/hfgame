@@ -14,6 +14,7 @@ public class PlacesApplication extends Application {
 	
 	private String m_userId = null;
 	private int m_numUserLocationCalls = 0;
+	private int m_numUserLocationSaved = 0;
   
 	// TODO Insert your Google Places API into MY_API_KEY in PlacesConstants.java
 	// TODO Insert your Backup Manager API into res/values/strings.xml : backup_manager_key
@@ -47,5 +48,13 @@ public class PlacesApplication extends Application {
 	
 	public void setNumUserLocationCalls(int numCalls) {
 		m_numUserLocationCalls = numCalls;
+	}
+	
+	public int getNumUserLocationSaved() {
+		return m_numUserLocationSaved;
+	}
+	
+	public void setNumUserLocationSaved(int numSaved) {
+		m_numUserLocationSaved = numSaved;
 	}
 }
