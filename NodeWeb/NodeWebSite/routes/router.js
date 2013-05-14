@@ -1,33 +1,46 @@
-
-// Includes
 var cons = require('consolidate'),
     express = require('express'),
     connect = require('connect'),
+    logger = require('../logger/logger'),
+    hfConfig = require('../config/config'),
     hogan = require('hogan.js'),
     fs = require('fs'),
     engineName = 'hogan';
 
-var appTemplates = {};
+var timestampString = "uninitialized",
+    appTemplates = {};
 
 // Pre-compile templates
 initTemplates();
 
+// Read in Timestamp file used in cache busting
+fs.readFile('timestamp.txt', 'utf-8', function (err, ts) {
+    if (ts) {
+        timestampString = ts.trim();
+    }
+});
 
 // This function sends the actual http response and makes sure it gets logged by Bunyan
 function sendResponse(res, data) {
     res.send(data);
+    logger.bunyanLogger().info({res: res}, "RESPONSE");
 }
+
+// Cache targeted pages for 15 minutes
+exports.cacheSeconds = 60 * 15;
 
 //
 // Initialize the routeMap which will be built up in the code below
 //
 exports.routeMap = [];
 
-
+//
+// Route exports expected by server.js
+//
 exports.handle404 = function(req, res) {
     res.status(404);
     if (req.accepts('html')) {
-        sendOutputHtml(req, res, 'views/404_header.html', 'views/404_body.html',
+        sendOutputHtml("root", "handle404", null, req, res, 'views/404_header.html', 'views/404_body.html',
             {
                 "PageTitle": "Not found"
             });
@@ -35,18 +48,18 @@ exports.handle404 = function(req, res) {
     }
 
     if (req.accepts('json')) {
-        sendResponse(res, {error: 'Not found'});
+        res.send({ error: 'Not found' });
         return;
     }
 
     res.type('txt');
-    sendResponse(res, 'Not found');
+    sendResponse(res, "Not found");
 };
 
 exports.handleError = function (req, res) {
     res.status(500);
     if (req.accepts('html')) {
-        sendOutputHtml(req, res, 'views/500_header.html', 'views/500_body.html',
+        sendOutputHtml("root", "handleError", null, req, res, 'views/500_header.html', 'views/500_body.html',
             {
                 "PageTitle": "Error"
             });
@@ -54,14 +67,40 @@ exports.handleError = function (req, res) {
     }
 
     if (req.accepts('json')) {
-        sendResponse(res, {error: 'Error'});
+        res.send({ error: 'Error' });
         return;
     }
 
     res.type('txt');
-    sendResponse(res, 'Error');
+    sendResponse(res, "Error");
 };
 
+//
+// Customized, non-standard route functions
+//
+var versionRoute = function (req, res) {
+    var appVersion = "Unspecified";
+    var angularVersion = "";
+    fs.readFile('public/lib/angular/version.txt', 'utf-8', function (err, versionString) {
+        if (versionString) {
+            angularVersion = versionString.trim();
+        }
+        fs.readFile('version.txt', 'utf-8', function (err, versionString) {
+            if (versionString) {
+                appVersion = versionString.trim();
+            }
+
+            sendResponse(res, {
+                app: appVersion,
+                buildstring: timestampString,
+                nodejs: process.version,
+                connect: connect.version,
+                express: express.version,
+                angular: angularVersion
+            });
+        });
+    });
+};
 
 //
 // Define the routes and exports for all URLs.
@@ -71,37 +110,49 @@ exports.handleError = function (req, res) {
 // The routeFn specifies what route function export to use. If null, it will use the standard route function
 // defined in AddRouteExport.
 //
+// The routeMap subobject defines the URL mapping and a clientObj object for defining the corresponding
+// Angular controller for SPA client views on the route. From the routeMap, we build both the server-side
+// exports.routeMap array, and the client-side routeMap array.
 //
 var routeExports = [
     {
+        master: "root",
         exportName: "index",
-
-        // path to template file to be included inside <head> element
         header: "views/index_header.html",
-
-        // path to template to be included inside <body>. This template will contain page content.
         body: "views/index_body.html",
-
-        // Page title displayed in browser header
-        pageTitle: "HF Game",
-
-        // Optional custom route function
+        pageTitle: "Hyperfine Software",
         routeFn: null,
         routeMap: {
-            route: '/'
+            route: '/',
+            clientObj: {templateUrl: 'generic.html', controller: 'HomeCtrl'}
         }
     },
     {
-        exportName: "test",
-        header: "views/teste_header.html",
-        body: "views/test_body.html",
-        pageTitle: "HF Game Test Page",
+        master: "root",
+        exportName: "contact",
+        header: "views/contact_header.html",
+        body: "views/contact_body.html",
+        pageTitle: "Hyperfine Software - Contact",
         routeFn: null,
         routeMap: {
-            route: '/test'
+            route: '/contact',
+            clientObj: {templateUrl: 'generic.html', controller: 'ContactCtrl'}
+        }
+    },
+    {
+        master: null,
+        exportName: "version",
+        header: null,
+        body: null,
+        pageTitle: null,
+        routeFn: versionRoute,
+        routeMap: {
+            route: '/version',
+            clientObj: null
         }
     }
 ];
+
 
 //
 // We instantiate the exports in this loop. Since the standard route exports definitions involve anonymous (lambda) functions,
@@ -110,11 +161,11 @@ var routeExports = [
 // the subsequent lambda through Javascript closure.
 //
 for (var i = 0; i < routeExports.length; i++) {
-    addRouteExport(routeExports[i].exportName, routeExports[i].header, routeExports[i].body, routeExports[i].pageTitle,
-        routeExports[i].routeFn, routeExports[i].routeMap, routeExports[i].footerContent, routeExports[i].navigationCategory);
+    addRouteExport(routeExports[i].master, routeExports[i].exportName, routeExports[i].templateCallback, routeExports[i].header, routeExports[i].body, routeExports[i].pageTitle,
+        routeExports[i].routeFn, routeExports[i].routeMap);
 }
 
-function addRouteExport(exportName, header, body, pageTitle, routeFn, routeMap) {
+function addRouteExport(masterFile, exportName, templateCallback, header, body, pageTitle, routeFn, routeMap) {
     if (routeFn) {
         // Use the custom route handler specified
         exports[exportName] = routeFn;
@@ -122,26 +173,23 @@ function addRouteExport(exportName, header, body, pageTitle, routeFn, routeMap) 
     else {
         // Default route handler function
         exports[exportName] = function (req, res) {
+            var propertyBag = { "PageTitle": pageTitle };
 
-            var propertyBag = {
-                "PageTitle": pageTitle
-            };
-
-            sendOutputHtml(req, res, header, body, propertyBag);
-        };
+            sendOutputHtml(masterFile, exportName, templateCallback, req, res, header, body, propertyBag);
+        }
     }
 
     // Build a route map item to add to the exports.routeMap array
     var routeMapItem = {};
     routeMapItem.route = routeMap.route;
     routeMapItem.serverHandler = exports[exportName];
+    routeMapItem.clientObj = routeMap.clientObj;
 
     // Extend the exports.routeMap array with the new item
     exports.routeMap.push(routeMapItem);
 }
 
-
-// Pre-compiles hogan templates and makes them accessible within the appTemplates global.
+// Pre-compiles hogan templates and makes them accessible within the appTemplates global
 function initTemplates() {
     fs.readFile('views/layout.html', 'utf-8', function(err, layoutString) {
         appTemplates.wrapper = hogan.compile(layoutString.toString('utf-8'));
@@ -152,22 +200,41 @@ function initTemplates() {
 // Helpers
 //
 
-function sendOutputHtml(req, res, headerContentPath, bodyContentPath, propertyBag) {
+function sendOutputHtml(master, exportName, callback, req, res, headerContentPath, bodyContentPath, propertyBag) {
+    var clientRouteMap = 'hfdotcomApp.clientRouteMap=' + JSON.stringify(createClientRouteMap()) + ';';
+    propertyBag.ClientRouteMap = ""; /*clientRouteMap;*/ // BUGBUG - stub out for now
+    propertyBag.EnableClientLogging = hfConfig.isClientLoggingEnabled();
+    propertyBag.TimeStamp = timestampString;
+
+    if (callback) {
+        callback(master, exportName, req, res, propertyBag);
+    }
+
+    var templateWrapper;
+    if (!master || master == "root") {
+        templateWrapper = appTemplates.wrapper;
+    }
+    else if (master == "rfi") {
+        templateWrapper = appTemplates.rfi_wrapper;
+    }
+    else if (master == "ct") {
+        templateWrapper = appTemplates.ct_wrapper;
+    }
+
+    res.setHeader('Cache-Control', 'public,max-age=' + exports.cacheSeconds);
+    res.setHeader('ETag', timestampString);
 
     var fnReadBody = function (bodyContentPath, headerContentString) {
-        fs.readFile(bodyContentPath, 'utf-8', function (err, bodyContentString) {
-            var partials = {
-                "HeaderContent": headerContentString,
-                "BodyContent": bodyContentString
-            };
-            var outputHtml = appTemplates.wrapper.render(propertyBag, partials);
+        fs.readFile(bodyContentPath, 'utf-8', function(err, bodyContentString) {
+                var partials = { "HeaderContent": headerContentString, "BodyContent": bodyContentString };
+                var outputHtml = templateWrapper.render(propertyBag, partials);
 
-            sendResponse(res, outputHtml);
+                res.send(outputHtml);
         });
     };
 
     var fnReadHeader = function (headerContentPath, bodyContentPath) {
-        fs.readFile(headerContentPath, 'utf-8', function (err, headerContentString) {
+        fs.readFile(headerContentPath, 'utf-8', function(err, headerContentString) {
             fnReadBody(bodyContentPath, headerContentString);
         });
     };
@@ -179,4 +246,24 @@ function sendOutputHtml(req, res, headerContentPath, bodyContentPath, propertyBa
     };
 
     fnSendOutput(headerContentPath, bodyContentPath);
+}
+
+function createClientRouteMap() {
+    var clientRouteMap = [];
+
+    for (var i = 0; i < exports.routeMap.length; i++) {
+        var route = exports.routeMap[i];
+        if (!route.clientObj) {
+            // No clientObj defined? Skip this item.
+            continue;
+        }
+
+        var item = {};
+        item.route = route.route;
+        item.clientObj = route.clientObj;
+
+        clientRouteMap.push(item);
+    }
+
+    return clientRouteMap;
 }
