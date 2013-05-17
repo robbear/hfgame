@@ -22,6 +22,7 @@ app.configure(function() {
     app.set('view engine', 'html');
     app.use(express.bodyParser());
     app.use(express.methodOverride());
+    app.use(express.favicon(__dirname + '/public/favicon.ico'));
     if (hfConfig.logStaticResources()) {
         app.use(logRequest);
     }
@@ -31,7 +32,6 @@ app.configure(function() {
         app.use(logRequest);
     }
     app.use(app.router);
-    app.use(express.favicon(__dirname + '/public/favicon.ico'));
     app.use(logError);
  });
 
