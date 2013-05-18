@@ -3,8 +3,7 @@ var restify = require('restify'),
     testController = require('./controllers/TestController.js'),
     usersController = require('./controllers/UsersController.js'),
     userLocationsController = require('./controllers/UserLocationsController.js'),
-    logger = require('../logger/logger'),
-    hfConfig = require('../config/config.js');
+    logger = require('../logger/logger');
 
 //
 // Initialize the routeMap which will be built up in the code below

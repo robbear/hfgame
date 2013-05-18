@@ -1,11 +1,9 @@
-var cons = require('consolidate'),
-    express = require('express'),
+var express = require('express'),
     connect = require('connect'),
     logger = require('../logger/logger'),
     hfConfig = require('../config/config'),
     hogan = require('hogan.js'),
-    fs = require('fs'),
-    engineName = 'hogan';
+    fs = require('fs');
 
 var timestampString = "uninitialized",
     appTemplates = {};
@@ -203,7 +201,7 @@ function initTemplates() {
 function sendOutputHtml(master, exportName, callback, req, res, headerContentPath, bodyContentPath, propertyBag) {
     var clientRouteMap = 'hfdotcomApp.clientRouteMap=' + JSON.stringify(createClientRouteMap()) + ';';
     propertyBag.ClientRouteMap = ""; /*clientRouteMap;*/ // BUGBUG - stub out for now
-    propertyBag.EnableClientLogging = hfConfig.isClientLoggingEnabled();
+    propertyBag.EnableClientLogging = hfConfig.isClientLoggingEnabled;
     propertyBag.TimeStamp = timestampString;
 
     if (callback) {

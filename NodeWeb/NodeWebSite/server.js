@@ -2,7 +2,6 @@
 // Module dependencies
 //
 var express = require('express'),
-    cons = require('consolidate'),
     connect = require('connect'),
     router = require('./routes/router'),
     uuid = require('node-uuid'),
@@ -23,12 +22,12 @@ app.configure(function() {
     app.use(express.bodyParser());
     app.use(express.methodOverride());
     app.use(express.favicon(__dirname + '/public/favicon.ico'));
-    if (hfConfig.logStaticResources()) {
+    if (hfConfig.logStaticResources) {
         app.use(logRequest);
     }
     app.use(express.logger({ format: ':response-time ms - :date - :req[x-real-ip] - :method :url :user-agent / :referrer' }));
     app.use(express.static(__dirname + '/public'));
-    if (!hfConfig.logStaticResources()) {
+    if (!hfConfig.logStaticResources) {
         app.use(logRequest);
     }
     app.use(app.router);
@@ -96,7 +95,7 @@ app.get('/error', router.handleError);
 app.get('*', router.handle404);
 
 app.listen(process.env.PORT || 1337);
-console.log("NodeWebSite server listening on port %s in %s mode", process.env.PORT || 1337, app.settings.env);
+console.log("NodeWebSite server listening on port %s in %s mode", process.env.PORT || 1337, hfConfig.environment);
 console.log("Using node.js %s, connect %s, Express %s", process.version, connect.version, express.version);
-logger.bunyanLogger().info("NodeWebSite server listening on port %s in %s mode", process.env.PORT || 1337, app.settings.env);
+logger.bunyanLogger().info("NodeWebSite server listening on port %s in %s mode", process.env.PORT || 1337, hfConfig.environment);
 logger.bunyanLogger().info("Using node.js %s, connect %s, Express %s", process.version, connect.version, express.version);
