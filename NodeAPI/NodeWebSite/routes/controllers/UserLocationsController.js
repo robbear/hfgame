@@ -4,7 +4,7 @@ var restify = require('restify'),
     utilities = require('../../utilities/utilities'),
     hfConfig = require('../../config/config.js');
 
-var UserLocation = hfConfig.userLocationModel();
+var UserLocation = hfConfig.userLocationModel;
 
 exports.createUserLocation = function(req, res, next) {
     var userId = req.params.userId;
@@ -15,7 +15,7 @@ exports.createUserLocation = function(req, res, next) {
 
     logger.bunyanLogger().info(
         "%sREST API userlocations/createlocation: userId=%s, coordinates=%s, date=%s",
-        hfConfig.tag(), userId, coordinates, date);
+        hfConfig.TAG, userId, coordinates, date);
 
     //
     // Validate the data
@@ -38,7 +38,7 @@ exports.createUserLocation = function(req, res, next) {
 
     UserLocation.createUserLocation(userId, coordinates, altitude, accuracy, date, function(err, userLocation) {
         if (err) {
-            logger.bunyanLogger().error("%s... userlocations/createlocation: err=%s", hfConfig.tag(), err.message);
+            logger.bunyanLogger().error("%s... userlocations/createlocation: err=%s", hfConfig.TAG, err.message);
             if (utilities.isErrorDatabaseDisconnect(err)) {
                 return next(new restify.InternalError("unexpected database error"));
             }
@@ -48,11 +48,11 @@ exports.createUserLocation = function(req, res, next) {
         }
 
         if (!userLocation) {
-            logger.bunyanLogger().info("%s... userlocations/createlocation: No userLocation found for %s", hfConfig.tag, userId);
+            logger.bunyanLogger().info("%s... userlocations/createlocation: No userLocation found for %s", hfConfig.TAG, userId);
             return next(new restify.RestError("Unable to add location for userId: " + userId));
         }
 
-        logger.bunyanLogger().info("%s... userlocations/createlocation: Successfully created location for user %s", hfConfig.tag(), userId);
+        logger.bunyanLogger().info("%s... userlocations/createlocation: Successfully created location for user %s", hfConfig.TAG, userId);
         res.send({});
         next();
     });
@@ -63,7 +63,7 @@ exports.insertUserLocations = function(req, res, next) {
     var userLocations = req.params.locations;
 
     var count = userLocations ? (userLocations.length ? userLocations.length : 0) : 0;
-    logger.bunyanLogger().info("%sREST API userlocations/createlocations: userId=%s, count=%d", hfConfig.tag(), userId, count);
+    logger.bunyanLogger().info("%sREST API userlocations/createlocations: userId=%s, count=%d", hfConfig.TAG, userId, count);
 
     //
     // Validate the data
@@ -101,7 +101,7 @@ exports.insertUserLocations = function(req, res, next) {
 
     UserLocation.insertUserLocations(userId, userLocations, function(err, docs) {
         if (err) {
-            logger.bunyanLogger().error("%s... userlocations/createlocations error: %s", hfConfig.tag(), err.message);
+            logger.bunyanLogger().error("%s... userlocations/createlocations error: %s", hfConfig.TAG, err.message);
             if (utilities.isErrorDatabaseDisconnect(err)) {
                 return next(new restify.InternalError("unexpected database error"));
             }
@@ -111,11 +111,11 @@ exports.insertUserLocations = function(req, res, next) {
         }
 
         if (!docs) {
-            logger.bunyanLogger().info("%s... userlocations/createlocations - Unable to add locations for userId: %s", hfConfig.tag(), userId);
+            logger.bunyanLogger().info("%s... userlocations/createlocations - Unable to add locations for userId: %s", hfConfig.TAG, userId);
             return next(new restify.RestError("Unable to add locations for userId: " + userId));
         }
 
-        logger.bunyanLogger().info("%s... userlocations/createLocations success", hfConfig.tag());
+        logger.bunyanLogger().info("%s... userlocations/createLocations success", hfConfig.TAG);
         res.send({});
         next();
     });
@@ -130,7 +130,7 @@ exports.getUserLocationsByDate = function(req, res, next) {
     var MAX_LIMIT = 1000000;
 
     logger.bunyanLogger().info("%sREST API userlocations/bydate: userId=%s, limit=%d, start=%s, end=%s",
-        hfConfig.tag(), userId, limit, startDate, endDate);
+        hfConfig.TAG, userId, limit, startDate, endDate);
 
     //
     // Validate the data
@@ -158,7 +158,7 @@ exports.getUserLocationsByDate = function(req, res, next) {
         // BUGBUG
         // TODO: Need to document return data format
         if (err) {
-            logger.bunyanLogger().error("%s... userlocations/bydate error: %s", hfConfig.tag(), err.message);
+            logger.bunyanLogger().error("%s... userlocations/bydate error: %s", hfConfig.TAG, err.message);
             if (utilities.isErrorDatabaseDisconnect(err)) {
                 return next(new restify.InternalError("unexpected database error"));
             }
@@ -173,7 +173,7 @@ exports.getUserLocationsByDate = function(req, res, next) {
             locations[i] = { coordinates: doc.location.coordinates, altitude: doc.altitude, accuracy: doc.accuracy, date: doc.date };
         }
 
-        logger.bunyanLogger().info("%s... userlocations/bydate success", hfConfig.tag());
+        logger.bunyanLogger().info("%s... userlocations/bydate success", hfConfig.TAG);
         res.send(locations);
         next();
     });

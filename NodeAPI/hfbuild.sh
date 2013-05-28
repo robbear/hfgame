@@ -122,5 +122,3 @@ deleteLocalBranch
 
 echo "---"
 echo "Now use the Azure Portal to upload deployments/$BUILD_TARGET/$PACKAGE_NAME.cspkg"
-echo "Done!"
-exit 0

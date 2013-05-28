@@ -88,16 +88,6 @@ runStylesCacheBuster()
   done
 }
 
-editConfigFile()
-{
-  echo "---"
-  echo "Running sed to modify the config.js file for Cloud deployment"
-
-  sed -e "s/..\/..\/..\/models\//..\/models\//g" -e "s/localhost:27017/hfmongo:D0ntBl1nk@ds053497.mongolab.com:53497/g" <./build/NodeWebSite/config/config.js >./build/temp.js
-  rm ./build/NodeWebSite/config/config.js
-  mv ./build/temp.js ./build/NodeWebSite/config/config.js
-}
-
 fixPackageJsonForDeployment()
 {
   echo "---"
@@ -144,7 +134,6 @@ removeOldBuildTree
 createBuildDirectory
 runTimeStamper
 #runStylesCacheBuster
-editConfigFile
 fixPackageJsonForDeployment
 echo "Done!"
 exit 0
