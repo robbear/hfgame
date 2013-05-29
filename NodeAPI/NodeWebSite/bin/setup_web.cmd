@@ -24,10 +24,20 @@ curl -O http://hfapi.blob.core.windows.net/deployment-files/gitinstall.exe
 if %ERRORLEVEL% neq 0 goto error
 curl -O http://hfapi.blob.core.windows.net/deployment-files/iisnode.msi
 if %ERRORLEVEL% neq 0 goto error
-curl -O http://hfapi.blob.core.windows.net/deployment-files/node-v0.10.8-x64.msi
-if %ERRORLEVEL% neq 0 goto error
 curl -O http://hfapi.blob.core.windows.net/deployment-files/vcredist_x64.exe
 if %ERRORLEVEL% neq 0 goto error
+
+REM - we'll use the following when Joyent fixes the msi installer for LocalSystem installation.
+REM - See issue 4012 (https://github.com/joyent/node/issues/4021)
+REM curl -O http://hfapi.blob.core.windows.net/deployment-files/node-v0.10.8-x64.msi
+REM if %ERRORLEVEL% neq 0 goto error
+REM Instead, we'll just unzip our packaged version
+curl -O http://hfapi.blob.core.windows.net/deployment-files/nodejs.zip
+if %ERRORLEVEL% neq 0 goto error
+echo Unpacking nodejs to the "%programfiles%\nodejs" directory
+7z x -y nodejs.zip -o"%programfiles%"
+if %ERRORLEVEL% neq 0 goto error
+
 echo OK
 
 echo Installing Visual Studio 2010 C++ Redistributable Package...
@@ -35,14 +45,15 @@ vcredist_x64.exe /q
 if %ERRORLEVEL% neq 0 goto error
 echo OK
 
-echo Installing Node.js
-msiexec.exe /quiet /i node-v0.10.8-x64.msi
+REM - we'll use the following when Joyent fixes the msi installer for LocalSystem installation.
+REM - See issue 4012 (https://github.com/joyent/node/issues/4021)
+REM echo Installing Node.js
+REM start /wait msiexec.exe /quiet /i node-v0.10.8-x64.msi ADDDEFAULT=NodeRunTime,npm
 REM if %ERRORLEVEL% neq 0 goto error
-echo OK
+REM echo OK
 
 echo Installing Git
-gitinstall.exe /verysilent /nocancel /suppressmsgboxes
-timeout 10
+start /wait gitinstall.exe /verysilent /nocancel /suppressmsgboxes
 if %ERRORLEVEL% neq 0 goto error
 echo OK
 
@@ -85,7 +96,7 @@ cd bin
 echo OK
 
 echo Installing iisnode...
-msiexec.exe /quiet /i iisnode.msi
+start /wait msiexec.exe /quiet /i iisnode.msi
 if %ERRORLEVEL% neq 0 goto error
 echo OK
 
