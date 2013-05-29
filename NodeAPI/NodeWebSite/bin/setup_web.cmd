@@ -66,16 +66,18 @@ echo %date:~-4,4%%date:~-10,2%%date:~-7,2%%time:~0,2%%time:~3,2%%time:~6,2%| "%P
 set /p timestamp=<hfgame\NodeAPI\NodeWebSite\timestamp.txt
 if %ERRORLEVEL% neq 0 goto error
 
-echo Replacing staticfiles path string with versionstring
-"%ProgramFiles(x86)%\Git\bin\find.exe" ./hfgame/NodeAPI/NodeWebSite/views -name "*.html" -exec "%ProgramFiles(x86)%\Git\bin\sed.exe" -i "s/staticfiles/%versionstring%/g" '{}' ;
-if %ERRORLEVEL% neq 0 goto error
+REM echo Replacing staticfiles path string with versionstring
+REM "%ProgramFiles(x86)%\Git\bin\find.exe" ./hfgame/NodeAPI/NodeWebSite/views -name "*.html" -exec "%ProgramFiles(x86)%\Git\bin\sed.exe" -i "s/staticfiles/%versionstring%/g" '{}' ;
+REM if %ERRORLEVEL% neq 0 goto error
 
-echo Renaming staticfiles directory to %versionstring%
-ren hfgame\NodeAPI\NodeWebSite\public\staticfiles %versionstring%
+REM echo Renaming staticfiles directory to %versionstring%
+REM ren hfgame\NodeAPI\NodeWebSite\public\staticfiles %versionstring%
 REM if %ERRORLEVEL% neq 0 goto error
 
 echo Copying NodeWebSite to approot
 xcopy hfgame\NodeAPI\NodeWebSite ..\ /c /e /y /EXCLUDE:exclude.txt
+md ..\models
+xcopy hfgame\models ..\models /c /e
 copy /y ..\Web.cloud.config ..\Web.config
 
 echo Running npm install
