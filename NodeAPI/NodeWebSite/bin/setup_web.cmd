@@ -24,22 +24,19 @@ curl -O http://hfapi.blob.core.windows.net/deployment-files/gitinstall.exe
 if %ERRORLEVEL% neq 0 goto error
 curl -O http://hfapi.blob.core.windows.net/deployment-files/iisnode.msi
 if %ERRORLEVEL% neq 0 goto error
-curl -O http://hfapi.blob.core.windows.net/deployment-files/nodejs.zip
+curl -O http://hfapi.blob.core.windows.net/deployment-files/node-v0.10.8-x64.msi
 if %ERRORLEVEL% neq 0 goto error
 curl -O http://hfapi.blob.core.windows.net/deployment-files/vcredist_x64.exe
 if %ERRORLEVEL% neq 0 goto error
 echo OK
 
-echo Unpacking nodejs to the "%programfiles%\nodejs" directory
-7z x -y nodejs.zip -o"%programfiles%"
-if %ERRORLEVEL% neq 0 goto error
-echo Unpacking nodejs to the "%programfiles(x86)%\nodejs" directory
-7z x -y nodejs.zip -o"%programfiles(x86)%"
+echo Installing Visual Studio 2010 C++ Redistributable Package...
+vcredist_x64.exe /q
 if %ERRORLEVEL% neq 0 goto error
 echo OK
 
-echo Installing Visual Studio 2010 C++ Redistributable Package...
-vcredist_x64.exe /q
+echo Installing Node.js
+msiexec.exe /quiet /i node-v0.10.8-x64.msi
 if %ERRORLEVEL% neq 0 goto error
 echo OK
 
@@ -83,7 +80,7 @@ copy /y ..\Web.cloud.config ..\Web.config
 echo Running npm install
 cd ..
 echo npm LOG > npmlog.txt
-call "%programfiles%\nodejs\npm.cmd" install 1>> npmlog.txt 2>> npmlog_error.txt
+call npm.cmd install 1>> npmlog.txt 2>> npmlog_error.txt
 cd bin
 echo OK
 
