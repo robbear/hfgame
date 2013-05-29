@@ -37,7 +37,7 @@ echo OK
 
 echo Installing Node.js
 msiexec.exe /quiet /i node-v0.10.8-x64.msi
-if %ERRORLEVEL% neq 0 goto error
+REM if %ERRORLEVEL% neq 0 goto error
 echo OK
 
 echo Installing Git
@@ -80,7 +80,7 @@ copy /y ..\Web.cloud.config ..\Web.config
 echo Running npm install
 cd ..
 echo npm LOG > npmlog.txt
-call npm.cmd install 1>> npmlog.txt 2>> npmlog_error.txt
+call "%ProgramFiles%\nodejs\npm.cmd" install 1>> npmlog.txt 2>> npmlog_error.txt
 cd bin
 echo OK
 
