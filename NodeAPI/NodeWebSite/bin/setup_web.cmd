@@ -81,10 +81,11 @@ xcopy hfgame\models ..\models /c /e
 copy /y ..\Web.cloud.config ..\Web.config
 
 echo Running npm install
-start npminstall.cmd
+cd ..
+echo npm LOG > npmlog.txt
+call "%programfiles%\nodejs\npm.cmd" install 1>> npmlog.txt 2>> npmlog_error.txt
+cd bin
 echo OK
-
-timeout 30
 
 echo Installing iisnode...
 msiexec.exe /quiet /i iisnode.msi
