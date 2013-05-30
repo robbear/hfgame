@@ -15,6 +15,7 @@ echo OK
 echo Downloading tools from http://hfapi.blob.core.windows.net/deployment-files
 curl -O http://hfapi.blob.core.windows.net/deployment-files/gitinstall.exe
 if %ERRORLEVEL% neq 0 goto error
+echo OK
 
 echo Installing Git
 start /wait gitinstall.exe /verysilent /nocancel /suppressmsgboxes
