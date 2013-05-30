@@ -1,15 +1,12 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/html">
 <head>
-    <meta name="youmob_image" content="http://hyperfine.com/images/h.gif" />
     <meta name='viewport' content='width=device-width; initial-scale=1.0; maximum-scale=1.0;' />
-    <link media="screen and (min-width:600px)" href="/styles/styles_large.css" rel="stylesheet" type="text/css" />
-    <link media='handheld, screen and (max-width:600px), screen and (max-device-width:600px)' href='/styles/styles_small.css' rel='stylesheet' type='text/css' />
-    <!--[if lt IE 9]> <link href="/styles/styles_large.css" rel="stylesheet" type="text/css" /> <![endif]-->
+    <link media="screen and (min-width:600px)" href="/staticfiles/styles/styles.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="/staticfiles/scripts/hflog.js"></script>
 
     <title>{{PageTitle}}</title>
 
-    <script type="text/javascript" src="/scripts/hflog.js?{{TimeStamp}}"></script>
     <script type="text/javascript">
         hFLog.enableLogging({{EnableClientLogging}});
         {{{ClientRouteMap}}}
@@ -25,24 +22,6 @@
         <div id="ContentDiv">
             {{> BodyContent}}
         </div>
-        <div class="footer">
-            <a href="/rob">about rob</a>
-            <a href="http://blog.hyperfine.com">blog</a>
-            <a href="/contact">contact</a>
-            <a href="http://www.linkedin.com/in/robbearman/" target="_blank">linked in</a>
-        </div>
     </div>
-
-    <script type="text/javascript">
-        var _gaq = _gaq || [];
-        _gaq.push(['_setAccount', 'UA-1383268-1']);
-        _gaq.push(['_trackPageview']);
-
-        (function() {
-            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-        })();
-    </script>
 </body>
 </html>

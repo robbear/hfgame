@@ -1,8 +1,8 @@
 {
-    "name": "hfdotcom",
+    "name": "hfgamedotcom",
     "version": "1.0.0",
     "author": "Hyperfine Software <info@hyperfine.com>",
-    "description": "Hyperfine web site",
+    "description": "HFGame web site",
     "dependencies": {
 	"bunyan": "0.20.0",
 	"connect": "2.7.0",
@@ -18,8 +18,7 @@
 	"start": "node server.js"
     },
     "domains": [
-	"hyperfine.com",
-	"www.hyperfine.com"
+	"hfgame.hyperfine.com"
     ],
-    "subdomain": "hfdotcom"
+    "subdomain": "hfgamedotcom"
 }
