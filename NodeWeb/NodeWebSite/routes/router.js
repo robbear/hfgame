@@ -6,6 +6,7 @@ var express = require('express'),
     fs = require('fs');
 
 var timestampString = "uninitialized",
+    versionString = "staticfiles",
     appTemplates = {};
 
 // Pre-compile templates
@@ -15,6 +16,13 @@ initTemplates();
 fs.readFile('timestamp.txt', 'utf-8', function (err, ts) {
     if (ts) {
         timestampString = ts.trim();
+    }
+});
+
+// Read in version string in version.txt
+fs.readFile('version.txt', 'utf-8', function(err, vs) {
+    if (vs) {
+        versionString = vs.trim();
     }
 });
 
@@ -77,25 +85,20 @@ exports.handleError = function (req, res) {
 // Customized, non-standard route functions
 //
 var versionRoute = function (req, res) {
-    var appVersion = "Unspecified";
     var angularVersion = "";
-    fs.readFile('public/lib/angular/version.txt', 'utf-8', function (err, versionString) {
-        if (versionString) {
-            angularVersion = versionString.trim();
+    fs.readFile('public/lib/angular/version.txt', 'utf-8', function (err, ngVersionString) {
+        if (ngVersionString) {
+            angularVersion = ngVersionString.trim();
         }
-        fs.readFile('version.txt', 'utf-8', function (err, versionString) {
-            if (versionString) {
-                appVersion = versionString.trim();
-            }
 
-            sendResponse(res, {
-                app: appVersion,
-                buildstring: timestampString,
-                nodejs: process.version,
-                connect: connect.version,
-                express: express.version,
-                angular: angularVersion
-            });
+        var appVersion = (versionString === "staticfiles") ? "Unspecified" : versionString;
+        sendResponse(res, {
+            app: appVersion,
+            buildstring: timestampString,
+            nodejs: process.version,
+            connect: connect.version,
+            express: express.version,
+            angular: angularVersion
         });
     });
 };
@@ -202,7 +205,6 @@ function sendOutputHtml(master, exportName, callback, req, res, headerContentPat
     var clientRouteMap = 'hfdotcomApp.clientRouteMap=' + JSON.stringify(createClientRouteMap()) + ';';
     propertyBag.ClientRouteMap = ""; /*clientRouteMap;*/ // BUGBUG - stub out for now
     propertyBag.EnableClientLogging = hfConfig.isClientLoggingEnabled;
-    propertyBag.TimeStamp = timestampString;
 
     if (callback) {
         callback(master, exportName, req, res, propertyBag);
@@ -220,7 +222,7 @@ function sendOutputHtml(master, exportName, callback, req, res, headerContentPat
     }
 
     res.setHeader('Cache-Control', 'public,max-age=' + exports.cacheSeconds);
-    res.setHeader('ETag', timestampString);
+    res.setHeader('ETag', versionString);
 
     var fnReadBody = function (bodyContentPath, headerContentString) {
         fs.readFile(bodyContentPath, 'utf-8', function(err, bodyContentString) {
