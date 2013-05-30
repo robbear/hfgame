@@ -5,23 +5,14 @@ var express = require('express'),
     connect = require('connect'),
     router = require('./routes/router'),
     uuid = require('node-uuid'),
-    fs = require('fs'),
     logger = require('./logger/logger'),
     locale = require('locale'),
     supportedLanguages = ["en", "en-US"],
     hfConfig = require('./config/config');
 
 var app = module.exports = express(locale(supportedLanguages));
-var versionString = "staticfiles";
 
 logger.bunyanLogger().info("***** Starting hfgame.com web application *****");
-
-// Read in version string in version.txt
-fs.readFile('version.txt', 'utf-8', function(err, vs) {
-    if (vs) {
-        versionString = vs.trim();
-    }
-});
 
 //
 // Configuration
@@ -30,7 +21,7 @@ app.configure(function() {
     app.set('view engine', 'html');
     app.use(express.bodyParser());
     app.use(express.methodOverride());
-    app.use(express.favicon(__dirname + '/public/' + versionString + '/favicon.ico'));
+    app.use(express.favicon(__dirname + '/public/favicon.ico'));
     if (hfConfig.logStaticResources) {
         app.use(logRequest);
     }
