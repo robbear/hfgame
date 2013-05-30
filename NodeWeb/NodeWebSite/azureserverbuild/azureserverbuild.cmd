@@ -3,23 +3,23 @@
 REM - This file gets copied to the bin directory by setup_web.cmd as part of server set up.
 REM - Note that the working directory becomes the bin directory.
 
-echo Downloading tools from http://hfdotcom.blob.core.windows.net/deployment-files
-curl -O http://hfdotcom.blob.core.windows.net/deployment-files/7z.exe
+echo Downloading tools from http://hfgamedotcom.blob.core.windows.net/deployment-files
+curl -O http://hfgamedotcom.blob.core.windows.net/deployment-files/7z.exe
 if %ERRORLEVEL% neq 0 goto error
-curl -O http://hfdotcom.blob.core.windows.net/deployment-files/7z.dll
+curl -O http://hfgamedotcom.blob.core.windows.net/deployment-files/7z.dll
 if %ERRORLEVEL% neq 0 goto error
-curl -O http://hfdotcom.blob.core.windows.net/deployment-files/iisnode.msi
+curl -O http://hfgamedotcom.blob.core.windows.net/deployment-files/iisnode.msi
 if %ERRORLEVEL% neq 0 goto error
-curl -O http://hfdotcom.blob.core.windows.net/deployment-files/vcredist_x64.exe
+curl -O http://hfgamedotcom.blob.core.windows.net/deployment-files/vcredist_x64.exe
 if %ERRORLEVEL% neq 0 goto error
 echo OK
 
 REM - we'll use the following when Joyent fixes the msi installer for LocalSystem installation.
 REM - See issue 4012 (https://github.com/joyent/node/issues/4021)
-REM curl -O http://hfdotcom.blob.core.windows.net/deployment-files/node-v0.10.8-x64.msi
+REM curl -O http://hfgamedotcom.blob.core.windows.net/deployment-files/node-v0.10.8-x64.msi
 REM if %ERRORLEVEL% neq 0 goto error
 REM Instead, we'll just unzip our packaged version
-curl -O http://hfdotcom.blob.core.windows.net/deployment-files/nodejs.zip
+curl -O http://hfgamedotcom.blob.core.windows.net/deployment-files/nodejs.zip
 if %ERRORLEVEL% neq 0 goto error
 echo Unpacking nodejs to the "%programfiles%\nodejs" directory
 7z x -y nodejs.zip -o"%programfiles%"
