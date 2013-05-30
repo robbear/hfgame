@@ -1,42 +1,43 @@
 @echo on
 
-cd /d "%~dp0"
+if exist "success.txt" (
+  echo Application installation was already successful. No need to rerun. Exiting.
+  exit /b 0
+)
 
-if "%EMULATED%"=="true" if DEFINED APPCMD goto emulator_setup
-if "%EMULATED%"== "true" exit /b 0
+cd /d "%~dp0"
 
 echo Granting permissions for Network Service to the web root directory...
 icacls ..\ /grant "Network Service":(OI)(CI)W
 if %ERRORLEVEL% neq 0 goto error
 echo OK
 
-echo Unpacking nodejs to the "%programfiles%\nodejs" directory
-7z x -y nodejs.zip -o"%programfiles%"
-if %ERRORLEVEL% neq 0 goto error
-echo Unpacking nodejs to the "%programfiles(x86)%\nodejs" directory
-7z x -y nodejs.zip -o"%programfiles(x86)%"
+echo Downloading tools from http://hfgamedotcom.blob.core.windows.net/deployment-files
+curl -O http://hfgamedotcom.blob.core.windows.net/deployment-files/gitinstall.exe
 if %ERRORLEVEL% neq 0 goto error
 echo OK
 
-echo Copying web.cloud.config to web.config...
-copy /y ..\Web.cloud.config ..\Web.config
+echo Installing Git
+start /wait gitinstall.exe /verysilent /nocancel /suppressmsgboxes
 if %ERRORLEVEL% neq 0 goto error
 echo OK
 
-echo Installing Visual Studio 2010 C++ Redistributable Package...
-vcredist_x64.exe /q
+echo Cloning hfgame
+"%ProgramFiles(x86)%\Git\bin\git.exe" clone https://{{GITUSER}}:{{GITPASSWORD}}@github.com/robbear/hfgame.git -b {{GITBRANCH}}
 if %ERRORLEVEL% neq 0 goto error
 echo OK
 
-echo Running npm install
-start npminstall.cmd
+echo Copying azureserverbuild.cmd to this directory
+copy /y hfgame\NodeWeb\NodeWebSite\azureserverbuild\azureserverbuild.cmd .\
+if %ERRORLEVEL% neq 0 goto error
 echo OK
 
-echo Installing iisnode...
-msiexec.exe /quiet /i iisnode.msi
-if %ERRORLEVEL neq 0 goto error
+echo Running azureserverbuild.cmd
+call azureserverbuild.cmd
+if %ERRORLEVEL% neq 0 goto error
 echo OK
 
+echo Application installation successful > "success.txt"
 echo SUCCESS
 exit /b 0
 
@@ -44,28 +45,3 @@ exit /b 0
 
 echo FAILED
 exit /b -1
-
-:emulator_setup
-echo Running in emulator adding iisnode to application host config
-FOR /F "tokens=1,2 delims=/" %%a in ("%APPCMD%") DO set FN=%%a&set OPN=%%b
-if "%OPN%"=="%OPN:apphostconfig:=%" (
-    echo "Could not parse appcmd '%appcmd% for configuration file, exiting"
-    goto error
-)
-
-set IISNODE_BINARY_DIRECTORY=%programfiles%\Microsoft SDKs\Windows Azure\PowerShell\Azure\x86
-if "%PROCESSOR_ARCHITECTURE%"=="AMD64" set IISNODE_BINARY_DIRECTORY=%programfiles(x86)%\Microsoft SDKs\Windows Azure\PowerShell\Azure\x64
-
-echo "Using iisnode binaries location '%IISNODE_BINARY_DIRECTORY%'"
-echo installing iisnode module using AppCMD alias %appcmd%
-%appcmd% install module /name:"iisnode" /image:"%IISNODE_BINARY_DIRECTORY%\iisnode.dll"
-
-set apphostconfigfile=%OPN:apphostconfig:=%
-powershell -c "set-executionpolicy unrestricted"
-powershell .\ChangeConfig.ps1 %apphostconfigfile%
-if %ERRORLEVEL% neq 0 goto error
-
-if "%PROCESSOR_ARCHITECTURE%"=="AMD64" set
-copy /y "%IISNODE_BINARY_DIRECTORY%\iisnode_schema.xml" "%programfiles%\IIS Express\config\schema\iisnode_schema.xml"
-if %ERRORLEVEL% neq 0 goto error
-exit /b 0
