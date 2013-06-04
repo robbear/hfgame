@@ -25,30 +25,6 @@ var app = module.exports = express();
 
 logger.bunyanLogger().info("***** Starting hfgame.com web application *****");
 
-//
-// Initialize templates
-//
-utilities.initTemplates();
-
-//
-// Configuration
-//
-app.configure(function() {
-    app.set('view engine', 'html');
-    app.use(express.bodyParser());
-    app.use(express.methodOverride());
-    app.use(express.favicon(__dirname + '/public/favicon.ico'));
-    if (hfConfig.logStaticResources) {
-        app.use(logRequest);
-    }
-    app.use(express.logger({ format: ':response-time ms - :date - :req[x-real-ip] - :method :url :user-agent / :referrer' }));
-    app.use(express.static(__dirname + '/public'));
-    if (!hfConfig.logStaticResources) {
-        app.use(logRequest);
-    }
-    app.use(logError);
-});
-
 function logRequest(req, res, next) {
     req.req_id = uuid.v4();
 
@@ -62,6 +38,24 @@ function logError(err, req, res, next) {
 
     // Route to error handler page
     errorController.handler(req, res);
+}
+
+//
+// Initialize templates
+//
+utilities.initTemplates();
+
+app.set('view engine', 'html');
+app.use(express.bodyParser());
+app.use(express.methodOverride());
+app.use(express.favicon(__dirname + '/public/favicon.ico'));
+if (hfConfig.logStaticResources) {
+    app.use(logRequest);
+}
+app.use(express.logger({ format: ':response-time ms - :date - :req[x-real-ip] - :method :url :user-agent / :referrer' }));
+app.use(express.static(__dirname + '/public'));
+if (!hfConfig.logStaticResources) {
+    app.use(logRequest);
 }
 
 //
@@ -90,6 +84,9 @@ app.get('*', function(req, res, next) {
 for (var i = 0; i < routes.length; i++) {
     app.use(require(routes[i]));
 }
+
+// Error handling
+app.use(logError);
 
 // 404 handling
 app.use(function(req, res, next) {

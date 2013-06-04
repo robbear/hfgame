@@ -49,10 +49,6 @@ echo %date:~-4,4%%date:~-10,2%%date:~-7,2%%time:~0,2%%time:~3,2%%time:~6,2%| "%P
 set /p timestamp=<hfgame\NodeWeb\NodeWebSite\timestamp.txt
 if %ERRORLEVEL% neq 0 goto error
 
-echo Replacing staticfiles path string with versionstring
-"%ProgramFiles(x86)%\Git\bin\find.exe" ./hfgame/NodeWeb/NodeWebSite/views -name "*.html" -exec "%ProgramFiles(x86)%\Git\bin\sed.exe" -i "s/staticfiles/%versionstring%/g" '{}' ;
-if %ERRORLEVEL% neq 0 goto error
-
 echo Renaming staticfiles directory to %versionstring%
 ren hfgame\NodeWeb\NodeWebSite\public\staticfiles %versionstring%
 if %ERRORLEVEL% neq 0 goto error
