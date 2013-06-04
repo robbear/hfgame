@@ -2,14 +2,13 @@
 <html xmlns="http://www.w3.org/1999/html">
 <head>
     <meta name='viewport' content='width=device-width; initial-scale=1.0; maximum-scale=1.0;' />
-    <link media="screen and (min-width:600px)" href="/staticfiles/styles/styles.css" rel="stylesheet" type="text/css" />
-    <script type="text/javascript" src="/staticfiles/scripts/hflog.js"></script>
+    <link media="screen and (min-width:600px)" href="/{{StaticFiles}}/styles/styles.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="/{{StaticFiles}}/scripts/hflog.js"></script>
 
     <title>{{PageTitle}}</title>
 
     <script type="text/javascript">
         hFLog.enableLogging({{EnableClientLogging}});
-        {{{ClientRouteMap}}}
     </script>
 
     {{> HeaderContent}}

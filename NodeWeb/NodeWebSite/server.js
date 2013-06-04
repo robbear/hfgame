@@ -3,16 +3,32 @@
 //
 var express = require('express'),
     connect = require('connect'),
-    router = require('./routes/router'),
     uuid = require('node-uuid'),
     logger = require('./logger/logger'),
-    locale = require('locale'),
-    supportedLanguages = ["en", "en-US"],
-    hfConfig = require('./config/config');
+    utilities = require('./utilities/utilities'),
+    hfConfig = require('./utilities/config');
 
-var app = module.exports = express(locale(supportedLanguages));
+// Routes
+var routes = [
+    './controllers/index',
+    './controllers/contact',
+    './controllers/version',
+    './controllers/notfound',
+    './controllers/error'
+];
+
+// We need the 404 and err routes specifically, so reference it here
+var notfoundController = require('./controllers/notfound');
+var errorController = require('./controllers/error');
+
+var app = module.exports = express();
 
 logger.bunyanLogger().info("***** Starting hfgame.com web application *****");
+
+//
+// Initialize templates
+//
+utilities.initTemplates();
 
 //
 // Configuration
@@ -30,9 +46,8 @@ app.configure(function() {
     if (!hfConfig.logStaticResources) {
         app.use(logRequest);
     }
-    app.use(app.router);
     app.use(logError);
- });
+});
 
 function logRequest(req, res, next) {
     req.req_id = uuid.v4();
@@ -41,26 +56,16 @@ function logRequest(req, res, next) {
     next();
 }
 
-function logError(req, res, next) {
+function logError(err, req, res, next) {
     logger.bunyanLogger().error({err: err, req: req});
     console.log(err.stack);
 
     // Route to error handler page
-    router.handleError(req, res);
+    errorController.handler(req, res);
 }
 
-/*
-app.configure('development', function() {
-    app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
-});
-
-app.configure('production', function() {
-    app.use(express.errorHandler());
-});
-*/
-
 //
-// Entry point for all router requests
+// Entry point for all requests - Map www
 //
 app.get('*', function(req, res, next) {
     //
@@ -80,19 +85,16 @@ app.get('*', function(req, res, next) {
 });
 
 //
-// Routes - see routes/router.js
+// Build the routes from the array of routes above
 //
-for (var i = 0; i < router.routeMap.length; i++) {
-    var route = router.routeMap[i];
-    if (route.serverHandler) {
-        app.get(route.route, route.serverHandler);
-    }
+for (var i = 0; i < routes.length; i++) {
+    app.use(require(routes[i]));
 }
 
-// 404 and other errors
-app.get('/notfound', router.handle404);
-app.get('/error', router.handleError);
-app.get('*', router.handle404);
+// 404 handling
+app.use(function(req, res, next) {
+    notfoundController.handler(req, res, next);
+});
 
 app.listen(process.env.PORT || 1337);
 console.log("NodeWebSite server listening on port %s in %s mode", process.env.PORT || 1337, hfConfig.environment);
