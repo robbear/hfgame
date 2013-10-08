@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 
 import com.hyperfine.slideshare.R;
 
@@ -15,6 +16,10 @@ import static com.hyperfine.slideshare.Config.E;
 
 public class RecordFragment extends Fragment {
     public final static String TAG = "RecordFragment";
+
+    private boolean m_isRecording = false;
+
+    private ImageButton m_recordButton;
 
     public static RecordFragment newInstance() {
         if(D)Log.d(TAG, "RecordFragment.newInstance");
@@ -83,9 +88,17 @@ public class RecordFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if(D)Log.d(TAG, "RecordFragment.onCreateView");
 
-        View v = inflater.inflate(R.layout.fragment_record, container, false);
+        View view = inflater.inflate(R.layout.fragment_record, container, false);
 
-        return v;
+        m_recordButton = (ImageButton)view.findViewById(R.id.control_record);
+        m_recordButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(D)Log.d(TAG, "RecordFragment.onRecordButtonClicked");
+            }
+        });
+
+        return view;
     }
 
     @Override
