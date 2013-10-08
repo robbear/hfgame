@@ -17,4 +17,10 @@
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
     </style>
 
+    <style name="button_transport">
+        <item name="android:layout_width">66dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">@drawable/button_flash</item>
+    </style>
+
 </resources>
