@@ -1,13 +1,22 @@
 package com.hyperfine.slideshare;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.app.Activity;
+import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
+
+import static com.hyperfine.slideshare.Config.D;
+import static com.hyperfine.slideshare.Config.E;
 
 public class MainActivity extends Activity {
 
+    public final static String TAG = "MainActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if(D)Log.d(TAG, "MainActivity.onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
     }
@@ -15,9 +24,21 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
+        if(D)Log.d(TAG, "MainActivity.onCreateOptionsMenu");
+
+        super.onCreateOptionsMenu(menu);
+
+        // BUGBUG - test menu item
+        MenuItem trp = menu.add("TestRecordPlay");
+        trp.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent intent = new Intent(MainActivity.this, TestRecordPlayActivity.class);
+                MainActivity.this.startActivity(intent);
+                return true;
+            }
+        });
+
         return true;
     }
-    
 }
