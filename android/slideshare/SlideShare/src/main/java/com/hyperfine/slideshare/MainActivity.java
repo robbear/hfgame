@@ -39,6 +39,17 @@ public class MainActivity extends Activity {
             }
         });
 
+        // BUGBUG - test menu item
+        MenuItem tip = menu.add("TestImagePicker");
+        tip.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent intent = new Intent(MainActivity.this, TestImagePickerActivity.class);
+                MainActivity.this.startActivity(intent);
+                return true;
+            }
+        });
+
         return true;
     }
 }
