@@ -2,23 +2,37 @@ package com.hyperfine.slideshare.fragments;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageSwitcher;
+import android.widget.ViewSwitcher;
 
 import com.hyperfine.slideshare.R;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 
 import static com.hyperfine.slideshare.Config.D;
 import static com.hyperfine.slideshare.Config.E;
 
 public class ImagePickerFragment extends Fragment {
     public final static String TAG = "ImagePickerFragment";
+    public final static int REQUEST_IMAGE = 1;
 
     private Activity m_activityParent;
     private Button m_pickButton;
+    private ImageSwitcher m_imageSwitcher;
+    private Drawable m_drawableImage = null;
 
     public static ImagePickerFragment newInstance() {
         if(D)Log.d(TAG, "ImagePickerFragment.newInstance");
@@ -96,8 +110,16 @@ public class ImagePickerFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if(D)Log.d(TAG, "ImagePickerFragment.onPickButtonClicked");
+
+                Intent intent = new Intent();
+                intent.setType("image/*");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                startActivityForResult(intent, REQUEST_IMAGE);
             }
         });
+
+        m_imageSwitcher = (ImageSwitcher)view.findViewById(R.id.picked_image);
 
         return view;
     }
@@ -107,5 +129,43 @@ public class ImagePickerFragment extends Fragment {
         if(D)Log.d(TAG, "ImagePickerFragment.onActivityCreated");
 
         super.onActivityCreated(savedInstanceState);
+
+        m_imageSwitcher.setFactory((ViewSwitcher.ViewFactory)m_activityParent);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        if(D)Log.d(TAG, String.format("ImagePickerFragment.onActivityResult: requestCode=%d, resultCode=%d", requestCode, resultCode));
+
+        if (requestCode == REQUEST_IMAGE && resultCode == Activity.RESULT_OK) {
+            try {
+                if(D)Log.d(TAG, String.format("ImagePickerFragment.onActivityResult: intent data = %s", intent.getData().toString()));
+
+                InputStream stream = m_activityParent.getContentResolver().openInputStream(intent.getData());
+                m_drawableImage = new BitmapDrawable(m_activityParent.getResources(), stream);
+                stream.close();
+
+                m_imageSwitcher.setImageDrawable(m_drawableImage);
+            }
+            catch (FileNotFoundException e) {
+                if(E)Log.e(TAG, "ImagePickerFragment.onActivityResult", e);
+                e.printStackTrace();
+            }
+            catch (IOException e) {
+                if(E)Log.e(TAG, "ImagePickerFragment.onActivityResult", e);
+                e.printStackTrace();
+            }
+            catch (Exception e) {
+                if(E)Log.e(TAG, "ImagePickerFragment.onActivityResult", e);
+                e.printStackTrace();
+            }
+            catch (OutOfMemoryError e) {
+                if(E)Log.e(TAG, "ImagePickerFragment.onActivityResult", e);
+                e.printStackTrace();
+            }
+        }
+        else {
+            super.onActivityResult(requestCode, resultCode, intent);
+        }
     }
 }
