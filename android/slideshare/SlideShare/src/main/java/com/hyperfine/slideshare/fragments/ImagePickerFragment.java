@@ -2,6 +2,7 @@ package com.hyperfine.slideshare.fragments;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -17,10 +18,16 @@ import android.widget.ImageSwitcher;
 import android.widget.ViewSwitcher;
 
 import com.hyperfine.slideshare.R;
+import com.hyperfine.slideshare.SlideShowApplication;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
 
 import static com.hyperfine.slideshare.Config.D;
 import static com.hyperfine.slideshare.Config.E;
@@ -33,6 +40,7 @@ public class ImagePickerFragment extends Fragment {
     private Button m_pickButton;
     private ImageSwitcher m_imageSwitcher;
     private Drawable m_drawableImage = null;
+    private File m_slideShowDirectory = null;
 
     public static ImagePickerFragment newInstance() {
         if(D)Log.d(TAG, "ImagePickerFragment.newInstance");
@@ -85,6 +93,17 @@ public class ImagePickerFragment extends Fragment {
         super.onAttach(activity);
 
         m_activityParent = activity;
+
+        SlideShowApplication ssa = (SlideShowApplication)activity.getApplicationContext();
+        String slideShowName =  ssa.getCurrentSlideShowName();
+
+        File rootDir = activity.getFilesDir();
+        m_slideShowDirectory = new File(rootDir.getAbsolutePath() + "/" + slideShowName);
+        m_slideShowDirectory.mkdir();
+        if(D)Log.d(TAG, String.format("ImagePickerFragment.onAttach - m_slideShowDirectory=%s", m_slideShowDirectory));
+
+        // BUGBUG - test
+        listAllFilesAndDirectories(activity, rootDir);
 
         // if (activity instanceof SomeActivityInterface) {
         // }
@@ -141,15 +160,11 @@ public class ImagePickerFragment extends Fragment {
             try {
                 if(D)Log.d(TAG, String.format("ImagePickerFragment.onActivityResult: intent data = %s", intent.getData().toString()));
 
+                copyGalleryImageToJPG("TestImage.jpg", intent);
+
                 InputStream stream = m_activityParent.getContentResolver().openInputStream(intent.getData());
                 m_drawableImage = new BitmapDrawable(m_activityParent.getResources(), stream);
-                stream.close();
-
                 m_imageSwitcher.setImageDrawable(m_drawableImage);
-            }
-            catch (FileNotFoundException e) {
-                if(E)Log.e(TAG, "ImagePickerFragment.onActivityResult", e);
-                e.printStackTrace();
             }
             catch (IOException e) {
                 if(E)Log.e(TAG, "ImagePickerFragment.onActivityResult", e);
@@ -166,6 +181,75 @@ public class ImagePickerFragment extends Fragment {
         }
         else {
             super.onActivityResult(requestCode, resultCode, intent);
+        }
+    }
+
+    private void listAllFilesAndDirectories(Context context, File dir) {
+        if(D)Log.d(TAG, String.format("ImagePickerFragment.listAllFilesAndDirectories for %s", dir == null ? "null" : dir));
+
+        ArrayList<File> directories = new ArrayList<File>();
+
+        if (dir == null) {
+            dir = context.getFilesDir();
+        }
+
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (int i = 0; i < files.length; i++) {
+                String file = files[i].getAbsolutePath();
+                if(D)Log.d(TAG, String.format("ImagePickerFragment.listAllFilesAndDirectories - file: %s, isDirectory=%b, size=%d", file, files[i].isDirectory(), files[i].length()));
+
+                if (files[i].isDirectory()) {
+                    directories.add(files[i]);
+                }
+            }
+        }
+
+        for (int i = 0; i < directories.size(); i++) {
+            listAllFilesAndDirectories(context, directories.get(i));
+        }
+    }
+
+    private void copyGalleryImageToJPG(String fileName, Intent intent) {
+        if(D)Log.d(TAG, "ImagePickerFragment.copyGalleryImageToJPG");
+
+        OutputStream outStream = null;
+
+        try {
+            ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
+
+            Bitmap bitmapImage = BitmapFactory.decodeStream(m_activityParent.getContentResolver().openInputStream(intent.getData()));
+            if (bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, outputBuffer)) {
+                File file = new File(m_slideShowDirectory + "/" + fileName);
+                file.createNewFile();
+                outStream = new FileOutputStream(file);
+
+                outputBuffer.writeTo(outStream);
+            }
+            else {
+                if(D)Log.d(TAG, "ImagePickerFragment.copyGalleryImageToJPG failed");
+            }
+        }
+        catch (IOException e) {
+            if(E)Log.e(TAG, "ImagePickerFragment.copyGalleryImageToJPG", e);
+            e.printStackTrace();
+        }
+        catch (Exception e) {
+            if(E)Log.e(TAG, "ImagePickerFragment.copyGalleryImageToJPG", e);
+            e.printStackTrace();
+        }
+        catch (OutOfMemoryError e) {
+            if(E)Log.e(TAG, "ImagePickerFragment.copyGalleryImageToJPG", e);
+            e.printStackTrace();
+        }
+        finally {
+            if (outStream != null) {
+                try {
+                    outStream.close();
+                }
+                catch (Exception e) {
+                }
+            }
         }
     }
 }
