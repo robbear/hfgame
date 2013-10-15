@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -18,7 +20,7 @@ import android.widget.ImageSwitcher;
 import android.widget.ViewSwitcher;
 
 import com.hyperfine.slideshare.R;
-import com.hyperfine.slideshare.SlideShowApplication;
+import com.hyperfine.slideshare.SSPreferences;
 import com.hyperfine.slideshare.SlideShowJSON;
 
 import java.io.ByteArrayOutputStream;
@@ -28,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import static com.hyperfine.slideshare.Config.D;
 import static com.hyperfine.slideshare.Config.E;
@@ -41,6 +44,7 @@ public class ImagePickerFragment extends Fragment {
     private ImageSwitcher m_imageSwitcher;
     private Drawable m_drawableImage = null;
     private File m_slideShowDirectory = null;
+    private SharedPreferences m_prefs;
 
     public static ImagePickerFragment newInstance() {
         if(D)Log.d(TAG, "ImagePickerFragment.newInstance");
@@ -94,8 +98,9 @@ public class ImagePickerFragment extends Fragment {
 
         m_activityParent = activity;
 
-        SlideShowApplication ssa = (SlideShowApplication)activity.getApplicationContext();
-        String slideShowName =  ssa.getCurrentSlideShowName();
+        m_prefs = activity.getSharedPreferences(SSPreferences.PREFS, Context.MODE_PRIVATE);
+
+        String slideShowName = m_prefs.getString(SSPreferences.PREFS_SSNAME, SSPreferences.DEFAULT_SSNAME);
 
         File rootDir = activity.getFilesDir();
         m_slideShowDirectory = new File(rootDir.getAbsolutePath() + "/" + slideShowName);
@@ -112,7 +117,8 @@ public class ImagePickerFragment extends Fragment {
         //
         SlideShowJSON ssj;
         try {
-            ssj = ssa.getCurrentSlideShowJSON();
+            ssj = new SlideShowJSON();
+            if(D)Log.d(TAG, String.format("ImagePickerFragment.onAttach - ssj=%s", ssj.toString()));
         }
         catch (Exception e) {
             if(E)Log.e(TAG, "ImagePickerFragment.onAttach", e);
@@ -122,6 +128,25 @@ public class ImagePickerFragment extends Fragment {
             if(E)Log.e(TAG, "ImagePickerFragment.onAttach", e);
             e.printStackTrace();
         }
+
+        //
+        // BUGBUG - TEST
+        //
+        UUID userUuid;
+        String userUuidString = m_prefs.getString(SSPreferences.PREFS_USERUUID, null);
+        if (userUuidString == null) {
+            UUID uuid = UUID.randomUUID();
+            if(D)Log.d(TAG, String.format("ImagePickerFragment.onAttach - generated uuid=%s", uuid.toString()));
+            userUuid = uuid;
+        }
+        else {
+            userUuid = UUID.fromString(userUuidString);
+        }
+        if(D)Log.d(TAG, String.format("ImagePickerFragment.onAttach - userUuid=%s", userUuid.toString()));
+        SharedPreferences.Editor editor = m_prefs.edit();
+        editor.putString(SSPreferences.PREFS_USERUUID, userUuid.toString());
+        editor.commit();
+
 
         // if (activity instanceof SomeActivityInterface) {
         // }
