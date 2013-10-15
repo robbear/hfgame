@@ -19,10 +19,10 @@ import android.widget.ViewSwitcher;
 
 import com.hyperfine.slideshare.R;
 import com.hyperfine.slideshare.SlideShowApplication;
+import com.hyperfine.slideshare.SlideShowJSON;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -102,8 +102,26 @@ public class ImagePickerFragment extends Fragment {
         m_slideShowDirectory.mkdir();
         if(D)Log.d(TAG, String.format("ImagePickerFragment.onAttach - m_slideShowDirectory=%s", m_slideShowDirectory));
 
+        //
         // BUGBUG - test
+        //
         listAllFilesAndDirectories(activity, rootDir);
+
+        //
+        // BUGBUG - TEST
+        //
+        SlideShowJSON ssj;
+        try {
+            ssj = ssa.getCurrentSlideShowJSON();
+        }
+        catch (Exception e) {
+            if(E)Log.e(TAG, "ImagePickerFragment.onAttach", e);
+            e.printStackTrace();
+        }
+        catch (OutOfMemoryError e) {
+            if(E)Log.e(TAG, "ImagePickerFragment.onAttach", e);
+            e.printStackTrace();
+        }
 
         // if (activity instanceof SomeActivityInterface) {
         // }
