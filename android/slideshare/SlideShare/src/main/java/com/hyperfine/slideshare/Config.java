@@ -22,6 +22,9 @@ public class Config
     // Default setting for notifications
     public static final boolean NOTIFICATIONS_ON_BY_DEFAULT = true;
 
+    // Default base url
+    public static final String baseSlideShareUrl = "http://hyperfine.com/slideshare/";
+
 	// Error logs - ship with this set to false
 	public static final boolean E = true;
 	

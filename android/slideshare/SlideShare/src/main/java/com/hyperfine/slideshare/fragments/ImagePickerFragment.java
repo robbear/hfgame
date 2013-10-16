@@ -19,9 +19,12 @@ import android.widget.Button;
 import android.widget.ImageSwitcher;
 import android.widget.ViewSwitcher;
 
+import com.hyperfine.slideshare.Config;
 import com.hyperfine.slideshare.R;
 import com.hyperfine.slideshare.SSPreferences;
 import com.hyperfine.slideshare.SlideShowJSON;
+
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -115,23 +118,6 @@ public class ImagePickerFragment extends Fragment {
         //
         // BUGBUG - TEST
         //
-        SlideShowJSON ssj;
-        try {
-            ssj = new SlideShowJSON();
-            if(D)Log.d(TAG, String.format("ImagePickerFragment.onAttach - ssj=%s", ssj.toString()));
-        }
-        catch (Exception e) {
-            if(E)Log.e(TAG, "ImagePickerFragment.onAttach", e);
-            e.printStackTrace();
-        }
-        catch (OutOfMemoryError e) {
-            if(E)Log.e(TAG, "ImagePickerFragment.onAttach", e);
-            e.printStackTrace();
-        }
-
-        //
-        // BUGBUG - TEST
-        //
         UUID userUuid;
         String userUuidString = m_prefs.getString(SSPreferences.PREFS_USERUUID, null);
         if (userUuidString == null) {
@@ -147,6 +133,36 @@ public class ImagePickerFragment extends Fragment {
         editor.putString(SSPreferences.PREFS_USERUUID, userUuid.toString());
         editor.commit();
 
+        //
+        // BUGBUG - TEST
+        //
+        SlideShowJSON ssj;
+        try {
+            ssj = new SlideShowJSON();
+            if(D)Log.d(TAG, String.format("Default SlideShowJSON: %s", ssj.toString()));
+            String urlBase = Config.baseSlideShareUrl + userUuid.toString() + "/" + slideShowName + "/";
+
+            String lastSlideUuid = "";
+            for (int i = 0; i < 5; i++) {
+                lastSlideUuid = UUID.randomUUID().toString();
+                ssj.upsertSlide(lastSlideUuid, String.format("%s%d.jpg", urlBase, i), String.format("%s%d.3gp", urlBase, i));
+            }
+            if(D)Log.d(TAG, String.format("SlideShowJSON after upsert (add) %d slides: %s", ssj.getSlides().length(), ssj.toString()));
+            ssj.upsertSlide(lastSlideUuid, String.format("%slastslide.jpg", urlBase), String.format("%slastslide.3gp", urlBase));
+            if(D)Log.d(TAG, String.format("SlideShowJSON after upsert (update) %d slides: %s", ssj.getSlides().length(), ssj.toString()));
+            JSONObject slide = ssj.getSlide(lastSlideUuid);
+            if(D)Log.d(TAG, String.format("SlideShowJSON getSlide(%s) returns %s", lastSlideUuid, slide.toString()));
+            ssj.removeSlide(lastSlideUuid);
+            if(D)Log.d(TAG, String.format("SlideShowJSON after remove. %d slides: %s", ssj.getSlides().length(), ssj.toString()));
+        }
+        catch (Exception e) {
+            if(E)Log.e(TAG, "ImagePickerFragment.onAttach", e);
+            e.printStackTrace();
+        }
+        catch (OutOfMemoryError e) {
+            if(E)Log.e(TAG, "ImagePickerFragment.onAttach", e);
+            e.printStackTrace();
+        }
 
         // if (activity instanceof SomeActivityInterface) {
         // }

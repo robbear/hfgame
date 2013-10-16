@@ -17,9 +17,9 @@ import static com.hyperfine.slideshare.Config.E;
 //      description: "Description text",
 //      transitionEffect: 0,
 //      slides: {
-//          { guidval1: { image: "http://foo.com/1.jpg", audio: "http://foo.com/1.3gp" },
-//          { guidval2: { image: "http://foo.com/2.jpg", audio: "http://foo.com/2.3gp" },
-//          { guidval3: { image: "http://foo.com/3.jpg", audio: "http://foo.com/3.3gp" }
+//          guidval1: { image: "http://foo.com/1.jpg", audio: "http://foo.com/1.3gp" },
+//          guidval2: { image: "http://foo.com/2.jpg", audio: "http://foo.com/2.3gp" },
+//          guidval3: { image: "http://foo.com/3.jpg", audio: "http://foo.com/3.3gp" }
 //      },
 //      order: [ guidval2, guidval3, guidval1 ]
 //  }
@@ -27,6 +27,14 @@ import static com.hyperfine.slideshare.Config.E;
 
 public class SlideShowJSON extends JSONObject {
     public final static String TAG = "SlideShowJSON";
+
+    public final static String KEY_TITLE = "title";
+    public final static String KEY_DESCRIPTION = "description";
+    public final static String KEY_TRANSITIONEFFECT = "transitionEffect";
+    public final static String KEY_SLIDES = "slides";
+    public final static String KEY_IMAGE = "image";
+    public final static String KEY_AUDIO = "audio";
+    public final static String KEY_ORDER = "order";
 
     public enum TransitionEffects {
         None;
@@ -37,59 +45,136 @@ public class SlideShowJSON extends JSONObject {
     public SlideShowJSON() throws JSONException {
         if(D)Log.d(TAG, "SlideShowJSON.SlideShowJSON");
 
-        // BUGBUG - TODO: need resource strings
-        put("title", "Untitled");
-        put("description", "No description");
-        put("transitionEffect", TransitionEffects.None.ordinal());
+        put(KEY_TITLE, "Untitled");
+        put(KEY_DESCRIPTION, "No description");
+        put(KEY_TRANSITIONEFFECT, TransitionEffects.None.ordinal());
 
         JSONObject slides = new JSONObject();
-        put("slides", slides);
+        put(KEY_SLIDES, slides);
 
         JSONArray orderArray = new JSONArray();
-        put("order", orderArray);
+        put(KEY_ORDER, orderArray);
 
         if(D)Log.d(TAG, String.format("SlideShowJSON: initial JSON = %s", this.toString()));
     }
 
     public void setTitle(String title) throws JSONException {
-        put("title", title);
+        put(KEY_TITLE, title);
     }
 
     public String getTitle() throws JSONException {
-        return getString("title");
+        return getString(KEY_TITLE);
     }
 
     public void setDescription(String description) throws JSONException {
-        put("description", description);
+        put(KEY_DESCRIPTION, description);
     }
 
     public String getDescription() throws JSONException {
-        return getString("description");
+        return getString(KEY_DESCRIPTION);
     }
 
     public void setTransitionEffect(TransitionEffects effect) throws JSONException {
-        put("transitionEffect", effect.ordinal());
+        put(KEY_TRANSITIONEFFECT, effect.ordinal());
     }
 
     public TransitionEffects getTransitionEffect() throws JSONException {
-        int effectOrdinal = getInt("transitionEffect");
+        int effectOrdinal = getInt(KEY_TRANSITIONEFFECT);
 
         return TransitionEffectsValues[effectOrdinal];
     }
 
     public JSONObject getSlides() throws JSONException {
-        return getJSONObject("slides");
+        return getJSONObject(KEY_SLIDES);
     }
 
     public void setSlides(JSONObject slides) throws JSONException {
-        put("slides", slides);
+        put(KEY_SLIDES, slides);
     }
 
     public JSONArray getOrder() throws JSONException {
-        return getJSONArray("order");
+        return getJSONArray(KEY_ORDER);
     }
 
     public void setOrder(JSONArray order) throws JSONException {
-        put("order", order);
+        put(KEY_ORDER, order);
+    }
+
+    public void upsertSlide(String uuidString, String imageUrl, String audioUrl) throws JSONException {
+        if(D)Log.d(TAG, String.format("SlideShowJSON.upsertSlide: uuid=%s, imageUrl=%s, audioUrl=%s", uuidString, imageUrl, audioUrl));
+
+        JSONObject slides = getSlides();
+        JSONObject slide = null;
+
+        if (slides.has(uuidString)) {
+            slide = slides.getJSONObject(uuidString);
+        }
+
+        if (slide != null) {
+            if(D)Log.d(TAG, String.format("SlideShowJSON.upsertSlide - found slide and updating for uuid=%s", uuidString));
+
+            if (imageUrl != null) {
+                slide.put(KEY_IMAGE, imageUrl);
+            }
+
+            if (audioUrl != null) {
+                slide.put(KEY_AUDIO, audioUrl);
+            }
+        }
+        else {
+            if(D)Log.d(TAG, String.format("SlideShowJSON.upsertSlide - no slide found for %s, so creating new slide", uuidString));
+
+            JSONArray orderArray = getOrder();
+
+            JSONObject paths = new JSONObject();
+            paths.put(KEY_IMAGE, imageUrl);
+            paths.put(KEY_AUDIO, audioUrl);
+
+            slides.put(uuidString, paths);
+            orderArray.put(uuidString);
+        }
+    }
+
+    public void removeSlide(String uuidString) throws JSONException {
+        if(D)Log.d(TAG, String.format("SlideShowJSON.removeSlide: uuid=%s", uuidString));
+
+        JSONObject slides = getSlides();
+        JSONObject slide = null;
+
+        if (slides.has(uuidString)) {
+            if(D)Log.d(TAG, "SlideShowJSON.removeSlide - removing slide and order entry");
+
+            JSONArray orderArray = getOrder();
+            JSONArray newOrderArray = new JSONArray();
+
+            // Remove the item from the "order" array by rebuilding the array
+            // without the item.
+            for (int i = 0; i < orderArray.length(); i++) {
+                String item = orderArray.getString(i);
+                if (!uuidString.equals(item)) {
+                    newOrderArray.put(item);
+                }
+            }
+
+            setOrder(newOrderArray);
+            slides.remove(uuidString);
+        }
+        else {
+            if(D)Log.d(TAG, "SlideShowJSON.removeSlide - no slide found. Bailing");
+        }
+    }
+
+    public JSONObject getSlide(String uuidSlide) throws JSONException {
+        if(D)Log.d(TAG, String.format("SlideShowJSON.getSlide: uuid=%s", uuidSlide));
+
+        JSONObject slides = getSlides();
+        JSONObject slide = null;
+
+        if (slides.has(uuidSlide)) {
+            return slides.getJSONObject(uuidSlide);
+        }
+        else {
+            return null;
+        }
     }
 }
