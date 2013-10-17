@@ -1,10 +1,15 @@
 package com.hyperfine.slideshare;
 
+import android.content.Context;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 import static com.hyperfine.slideshare.Config.D;
 import static com.hyperfine.slideshare.Config.E;
@@ -56,6 +61,12 @@ public class SlideShowJSON extends JSONObject {
         put(KEY_ORDER, orderArray);
 
         if(D)Log.d(TAG, String.format("SlideShowJSON: initial JSON = %s", this.toString()));
+    }
+
+    public SlideShowJSON(String json) throws JSONException {
+        super(json);
+
+        if(D)Log.d(TAG, String.format("SlideShowJSON.SlideShowJSON constructed from string: %s", json));
     }
 
     public void setTitle(String title) throws JSONException {
@@ -176,5 +187,90 @@ public class SlideShowJSON extends JSONObject {
         else {
             return null;
         }
+    }
+
+    public boolean save(Context context, String folder, String fileName) {
+        if(D)Log.d(TAG, String.format("SlideShowJSON.save: folder=%s, fileName=%s", folder, fileName));
+
+        boolean retVal = false;
+        String json = this.toString();
+
+        File dirRoot = context.getFilesDir();
+        File directory = new File(dirRoot.getAbsolutePath() + "/" + folder);
+        File file = new File(directory, fileName);
+
+        FileOutputStream fos = null;
+
+        try {
+            file.createNewFile();
+            fos = new FileOutputStream(file);
+            fos.write(json.getBytes());
+            retVal = true;
+        }
+        catch (Exception e) {
+            if(E)Log.e(TAG, "SlideShowJSON.save", e);
+            e.printStackTrace();
+        }
+        catch (OutOfMemoryError e) {
+            if(E)Log.e(TAG, "SlideShowJSON.save", e);
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                if (fos != null) {
+                    fos.close();
+                }
+            }
+            catch (Exception e) {}
+        }
+
+        return retVal;
+    }
+
+    public static SlideShowJSON load(Context context, String folder, String fileName) {
+        if(D)Log.d(TAG, String.format("SlideShowJSON.load: folder=%s, fileName=%s", folder, fileName));
+
+        SlideShowJSON ssj = null;
+        FileInputStream fis = null;
+
+        File dirRoot = context.getFilesDir();
+        File directory = new File(dirRoot.getAbsolutePath() + "/" + folder);
+        if (directory.exists() && directory.isDirectory()) {
+            File file = new File(directory, fileName);
+            if (file.exists()) {
+                try {
+                    byte[] buffer = new byte[(int)file.length()];
+                    fis = new FileInputStream(file);
+                    fis.read(buffer);
+
+                    String json = new String(buffer, "UTF-8");
+                    ssj = new SlideShowJSON(json);
+                }
+                catch (Exception e) {
+                    if(E)Log.e(TAG, "SlideShowJSON.load", e);
+                    e.printStackTrace();
+                }
+                catch (OutOfMemoryError e) {
+                    if(E)Log.e(TAG, "SlideShowJSON.load", e);
+                    e.printStackTrace();
+                }
+                finally {
+                    try {
+                        if (fis != null) {
+                            fis.close();
+                        }
+                    }
+                    catch (Exception e) {}
+                }
+            }
+            else {
+                if(D)Log.d(TAG, "SlideShowJSON.load - file doesn't exist. Bailing.");
+            }
+        }
+        else {
+            if(D)Log.d(TAG, "SlideShowJSON.load - folder doesn't exist. Bailing.");
+        }
+
+        return ssj;
     }
 }

@@ -42,7 +42,7 @@ public class RecordFragment extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        if(D) Log.d(TAG, "RecordFragment.onCreate");
+        if(D)Log.d(TAG, "RecordFragment.onCreate");
 
         super.onCreate(savedInstanceState);
 
