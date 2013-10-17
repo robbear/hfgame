@@ -15,7 +15,7 @@ import static com.hyperfine.slideshare.Config.D;
 import static com.hyperfine.slideshare.Config.E;
 
 //
-// SlideShowJSON example:
+// SlideShareJSON example:
 //
 //  {
 //      title: "Title text",
@@ -30,8 +30,8 @@ import static com.hyperfine.slideshare.Config.E;
 //  }
 //
 
-public class SlideShowJSON extends JSONObject {
-    public final static String TAG = "SlideShowJSON";
+public class SlideShareJSON extends JSONObject {
+    public final static String TAG = "SlideShareJSON";
 
     public final static String KEY_TITLE = "title";
     public final static String KEY_DESCRIPTION = "description";
@@ -47,8 +47,8 @@ public class SlideShowJSON extends JSONObject {
     // Cache TransitionEffects.values() for doing enum-to-int conversions
     public TransitionEffects[] TransitionEffectsValues = TransitionEffects.values();
 
-    public SlideShowJSON() throws JSONException {
-        if(D)Log.d(TAG, "SlideShowJSON.SlideShowJSON");
+    public SlideShareJSON() throws JSONException {
+        if(D)Log.d(TAG, "SlideShareJSON.SlideShareJSON");
 
         put(KEY_TITLE, "Untitled");
         put(KEY_DESCRIPTION, "No description");
@@ -60,13 +60,13 @@ public class SlideShowJSON extends JSONObject {
         JSONArray orderArray = new JSONArray();
         put(KEY_ORDER, orderArray);
 
-        if(D)Log.d(TAG, String.format("SlideShowJSON: initial JSON = %s", this.toString()));
+        if(D)Log.d(TAG, String.format("SlideShareJSON: initial JSON = %s", this.toString()));
     }
 
-    public SlideShowJSON(String json) throws JSONException {
+    public SlideShareJSON(String json) throws JSONException {
         super(json);
 
-        if(D)Log.d(TAG, String.format("SlideShowJSON.SlideShowJSON constructed from string: %s", json));
+        if(D)Log.d(TAG, String.format("SlideShareJSON.SlideShareJSON constructed from string: %s", json));
     }
 
     public void setTitle(String title) throws JSONException {
@@ -112,7 +112,7 @@ public class SlideShowJSON extends JSONObject {
     }
 
     public void upsertSlide(String uuidString, String imageUrl, String audioUrl) throws JSONException {
-        if(D)Log.d(TAG, String.format("SlideShowJSON.upsertSlide: uuid=%s, imageUrl=%s, audioUrl=%s", uuidString, imageUrl, audioUrl));
+        if(D)Log.d(TAG, String.format("SlideShareJSON.upsertSlide: uuid=%s, imageUrl=%s, audioUrl=%s", uuidString, imageUrl, audioUrl));
 
         JSONObject slides = getSlides();
         JSONObject slide = null;
@@ -122,7 +122,7 @@ public class SlideShowJSON extends JSONObject {
         }
 
         if (slide != null) {
-            if(D)Log.d(TAG, String.format("SlideShowJSON.upsertSlide - found slide and updating for uuid=%s", uuidString));
+            if(D)Log.d(TAG, String.format("SlideShareJSON.upsertSlide - found slide and updating for uuid=%s", uuidString));
 
             if (imageUrl != null) {
                 slide.put(KEY_IMAGE, imageUrl);
@@ -133,7 +133,7 @@ public class SlideShowJSON extends JSONObject {
             }
         }
         else {
-            if(D)Log.d(TAG, String.format("SlideShowJSON.upsertSlide - no slide found for %s, so creating new slide", uuidString));
+            if(D)Log.d(TAG, String.format("SlideShareJSON.upsertSlide - no slide found for %s, so creating new slide", uuidString));
 
             JSONArray orderArray = getOrder();
 
@@ -147,13 +147,13 @@ public class SlideShowJSON extends JSONObject {
     }
 
     public void removeSlide(String uuidString) throws JSONException {
-        if(D)Log.d(TAG, String.format("SlideShowJSON.removeSlide: uuid=%s", uuidString));
+        if(D)Log.d(TAG, String.format("SlideShareJSON.removeSlide: uuid=%s", uuidString));
 
         JSONObject slides = getSlides();
         JSONObject slide = null;
 
         if (slides.has(uuidString)) {
-            if(D)Log.d(TAG, "SlideShowJSON.removeSlide - removing slide and order entry");
+            if(D)Log.d(TAG, "SlideShareJSON.removeSlide - removing slide and order entry");
 
             JSONArray orderArray = getOrder();
             JSONArray newOrderArray = new JSONArray();
@@ -171,12 +171,12 @@ public class SlideShowJSON extends JSONObject {
             slides.remove(uuidString);
         }
         else {
-            if(D)Log.d(TAG, "SlideShowJSON.removeSlide - no slide found. Bailing");
+            if(D)Log.d(TAG, "SlideShareJSON.removeSlide - no slide found. Bailing");
         }
     }
 
     public JSONObject getSlide(String uuidSlide) throws JSONException {
-        if(D)Log.d(TAG, String.format("SlideShowJSON.getSlide: uuid=%s", uuidSlide));
+        if(D)Log.d(TAG, String.format("SlideShareJSON.getSlide: uuid=%s", uuidSlide));
 
         JSONObject slides = getSlides();
         JSONObject slide = null;
@@ -190,7 +190,7 @@ public class SlideShowJSON extends JSONObject {
     }
 
     public boolean save(Context context, String folder, String fileName) {
-        if(D)Log.d(TAG, String.format("SlideShowJSON.save: folder=%s, fileName=%s", folder, fileName));
+        if(D)Log.d(TAG, String.format("SlideShareJSON.save: folder=%s, fileName=%s", folder, fileName));
 
         boolean retVal = false;
         String json = this.toString();
@@ -208,11 +208,11 @@ public class SlideShowJSON extends JSONObject {
             retVal = true;
         }
         catch (Exception e) {
-            if(E)Log.e(TAG, "SlideShowJSON.save", e);
+            if(E)Log.e(TAG, "SlideShareJSON.save", e);
             e.printStackTrace();
         }
         catch (OutOfMemoryError e) {
-            if(E)Log.e(TAG, "SlideShowJSON.save", e);
+            if(E)Log.e(TAG, "SlideShareJSON.save", e);
             e.printStackTrace();
         }
         finally {
@@ -227,10 +227,10 @@ public class SlideShowJSON extends JSONObject {
         return retVal;
     }
 
-    public static SlideShowJSON load(Context context, String folder, String fileName) {
-        if(D)Log.d(TAG, String.format("SlideShowJSON.load: folder=%s, fileName=%s", folder, fileName));
+    public static SlideShareJSON load(Context context, String folder, String fileName) {
+        if(D)Log.d(TAG, String.format("SlideShareJSON.load: folder=%s, fileName=%s", folder, fileName));
 
-        SlideShowJSON ssj = null;
+        SlideShareJSON ssj = null;
         FileInputStream fis = null;
 
         File dirRoot = context.getFilesDir();
@@ -244,14 +244,14 @@ public class SlideShowJSON extends JSONObject {
                     fis.read(buffer);
 
                     String json = new String(buffer, "UTF-8");
-                    ssj = new SlideShowJSON(json);
+                    ssj = new SlideShareJSON(json);
                 }
                 catch (Exception e) {
-                    if(E)Log.e(TAG, "SlideShowJSON.load", e);
+                    if(E)Log.e(TAG, "SlideShareJSON.load", e);
                     e.printStackTrace();
                 }
                 catch (OutOfMemoryError e) {
-                    if(E)Log.e(TAG, "SlideShowJSON.load", e);
+                    if(E)Log.e(TAG, "SlideShareJSON.load", e);
                     e.printStackTrace();
                 }
                 finally {
@@ -264,11 +264,11 @@ public class SlideShowJSON extends JSONObject {
                 }
             }
             else {
-                if(D)Log.d(TAG, "SlideShowJSON.load - file doesn't exist. Bailing.");
+                if(D)Log.d(TAG, "SlideShareJSON.load - file doesn't exist. Bailing.");
             }
         }
         else {
-            if(D)Log.d(TAG, "SlideShowJSON.load - folder doesn't exist. Bailing.");
+            if(D)Log.d(TAG, "SlideShareJSON.load - folder doesn't exist. Bailing.");
         }
 
         return ssj;

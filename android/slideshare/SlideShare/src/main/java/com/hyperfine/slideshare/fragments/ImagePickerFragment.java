@@ -39,7 +39,7 @@ public class ImagePickerFragment extends Fragment {
     private Button m_pickButton;
     private ImageSwitcher m_imageSwitcher;
     private Drawable m_drawableImage = null;
-    private File m_slideShowDirectory = null;
+    private File m_slideShareDirectory = null;
     private SharedPreferences m_prefs;
 
     public static ImagePickerFragment newInstance() {
@@ -96,12 +96,12 @@ public class ImagePickerFragment extends Fragment {
 
         m_prefs = activity.getSharedPreferences(SSPreferences.PREFS, Context.MODE_PRIVATE);
 
-        String slideShowName = m_prefs.getString(SSPreferences.PREFS_SSNAME, SSPreferences.DEFAULT_SSNAME);
+        String slideShareName = m_prefs.getString(SSPreferences.PREFS_SSNAME, SSPreferences.DEFAULT_SSNAME);
 
         File rootDir = activity.getFilesDir();
-        m_slideShowDirectory = new File(rootDir.getAbsolutePath() + "/" + slideShowName);
-        m_slideShowDirectory.mkdir();
-        if(D)Log.d(TAG, String.format("ImagePickerFragment.onAttach - m_slideShowDirectory=%s", m_slideShowDirectory));
+        m_slideShareDirectory = new File(rootDir.getAbsolutePath() + "/" + slideShareName);
+        m_slideShareDirectory.mkdir();
+        if(D)Log.d(TAG, String.format("ImagePickerFragment.onAttach - m_slideShareDirectory=%s", m_slideShareDirectory));
 
         // if (activity instanceof SomeActivityInterface) {
         // }
@@ -192,7 +192,7 @@ public class ImagePickerFragment extends Fragment {
 
             Bitmap bitmapImage = BitmapFactory.decodeStream(m_activityParent.getContentResolver().openInputStream(intent.getData()));
             if (bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, outputBuffer)) {
-                File file = new File(m_slideShowDirectory + "/" + fileName);
+                File file = new File(m_slideShareDirectory + "/" + fileName);
                 file.createNewFile();
                 outStream = new FileOutputStream(file);
 

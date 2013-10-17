@@ -55,11 +55,11 @@ public class TestImagePickerActivity extends Activity implements ViewSwitcher.Vi
         if(D)Log.d(TAG, "TestImagePickerActivity.runTests");
 
         File rootDir = getFilesDir();
-        String slideShowName = m_prefs.getString(SSPreferences.PREFS_SSNAME, SSPreferences.DEFAULT_SSNAME);
+        String slideShareName = m_prefs.getString(SSPreferences.PREFS_SSNAME, SSPreferences.DEFAULT_SSNAME);
 
-        File slideShowDirectory = new File(rootDir.getAbsolutePath() + "/" + slideShowName);
-        slideShowDirectory.mkdir();
-        if(D)Log.d(TAG, String.format("TestImagePickerActivity.runTests - slideShowDirectory=%s", slideShowDirectory));
+        File slideShareDirectory = new File(rootDir.getAbsolutePath() + "/" + slideShareName);
+        slideShareDirectory.mkdir();
+        if(D)Log.d(TAG, String.format("TestImagePickerActivity.runTests - slideShareDirectory=%s", slideShareDirectory));
 
         //
         // BUGBUG - TEST to list all files and directories
@@ -85,33 +85,33 @@ public class TestImagePickerActivity extends Activity implements ViewSwitcher.Vi
         editor.commit();
 
         //
-        // BUGBUG - TEST for SlideShowJSON methods
+        // BUGBUG - TEST for SlideShareJSON methods
         //
-        SlideShowJSON ssj;
+        SlideShareJSON ssj;
         try {
-            ssj = new SlideShowJSON();
-            if(D)Log.d(TAG, String.format("Default SlideShowJSON: %s", ssj.toString()));
-            String urlBase = Config.baseSlideShareUrl + userUuid.toString() + "/" + slideShowName + "/";
+            ssj = new SlideShareJSON();
+            if(D)Log.d(TAG, String.format("Default SlideShareJSON: %s", ssj.toString()));
+            String urlBase = Config.baseSlideShareUrl + userUuid.toString() + "/" + slideShareName + "/";
 
             String lastSlideUuid = "";
             for (int i = 0; i < 5; i++) {
                 lastSlideUuid = UUID.randomUUID().toString();
                 ssj.upsertSlide(lastSlideUuid, String.format("%s%d.jpg", urlBase, i), String.format("%s%d.3gp", urlBase, i));
             }
-            if(D)Log.d(TAG, String.format("SlideShowJSON after upsert (add) %d slides: %s", ssj.getSlides().length(), ssj.toString()));
+            if(D)Log.d(TAG, String.format("SlideShareJSON after upsert (add) %d slides: %s", ssj.getSlides().length(), ssj.toString()));
             ssj.upsertSlide(lastSlideUuid, String.format("%slastslide.jpg", urlBase), String.format("%slastslide.3gp", urlBase));
-            if(D)Log.d(TAG, String.format("SlideShowJSON after upsert (update) %d slides: %s", ssj.getSlides().length(), ssj.toString()));
+            if(D)Log.d(TAG, String.format("SlideShareJSON after upsert (update) %d slides: %s", ssj.getSlides().length(), ssj.toString()));
             JSONObject slide = ssj.getSlide(lastSlideUuid);
-            if(D)Log.d(TAG, String.format("SlideShowJSON getSlide(%s) returns %s", lastSlideUuid, slide.toString()));
+            if(D)Log.d(TAG, String.format("SlideShareJSON getSlide(%s) returns %s", lastSlideUuid, slide.toString()));
             ssj.removeSlide(lastSlideUuid);
-            if(D)Log.d(TAG, String.format("SlideShowJSON after remove. %d slides: %s", ssj.getSlides().length(), ssj.toString()));
+            if(D)Log.d(TAG, String.format("SlideShareJSON after remove. %d slides: %s", ssj.getSlides().length(), ssj.toString()));
 
             // Save and load tests
-            boolean retVal = ssj.save(this, slideShowName, "test.json");
-            if(D)Log.d(TAG, String.format("Saved SlideShowJSON with retVal=%b", retVal));
+            boolean retVal = ssj.save(this, slideShareName, "test.json");
+            if(D)Log.d(TAG, String.format("Saved SlideShareJSON with retVal=%b", retVal));
             listAllFilesAndDirectories(rootDir);
-            ssj = SlideShowJSON.load(this, slideShowName, "test.json");
-            if(D)Log.d(TAG, String.format("SlideShowJSON after load: %s", ssj == null ? "null" : ssj.toString()));
+            ssj = SlideShareJSON.load(this, slideShareName, "test.json");
+            if(D)Log.d(TAG, String.format("SlideShareJSON after load: %s", ssj == null ? "null" : ssj.toString()));
         }
         catch (Exception e) {
             if(E)Log.e(TAG, "TestImagePickerActivity.onAttach", e);
