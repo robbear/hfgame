@@ -1,5 +1,7 @@
 package com.hyperfine.slideshare;
 
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -10,6 +12,8 @@ import android.view.ViewGroup;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.ViewSwitcher;
+
+import com.hyperfine.slideshare.fragments.ImagePickerFragment;
 
 import org.json.JSONObject;
 
@@ -25,20 +29,48 @@ public class TestImagePickerActivity extends Activity implements ViewSwitcher.Vi
     public final static String TAG = "TestImagePickerActivity";
 
     private SharedPreferences m_prefs;
+    private ImagePickerFragment m_imagePickerFragment;
+    private File m_slideShareDirectory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         if(D)Log.d(TAG, "TestImagePickerActivity.onCreate");
 
         super.onCreate(savedInstanceState);
+        m_prefs = getSharedPreferences(SSPreferences.PREFS, Context.MODE_PRIVATE);
+
         setContentView(R.layout.activity_testimagepicker);
 
-        m_prefs = getSharedPreferences(SSPreferences.PREFS, Context.MODE_PRIVATE);
+        String slideShareName = m_prefs.getString(SSPreferences.PREFS_SSNAME, SSPreferences.DEFAULT_SSNAME);
+
+        // BUGBUG TODO: Replace with dialog to create/fetch SlideShare name
+        m_slideShareDirectory = Utilities.createOrGetSlideShareDirectory(this, slideShareName);
+        if (m_slideShareDirectory == null) {
+            if(D)Log.d(TAG, "TestImagePickerActivity.onCreate - m_slideShareDirectory is null. Bad!!!");
+        }
+
+        FragmentManager fm = getFragmentManager();
+        m_imagePickerFragment = (ImagePickerFragment)fm.findFragmentByTag(ImagePickerFragment.class.toString());
+        if (m_imagePickerFragment != null) {
+            m_imagePickerFragment.setSlideShareName(slideShareName);
+        }
 
         //
         // BUGBUG
         //
         runTests();
+    }
+
+    @Override
+    public void onAttachFragment(Fragment fragment) {
+        if(D)Log.d(TAG, "TestImagePickerActivity.onAttachFragment");
+
+        if (fragment instanceof ImagePickerFragment) {
+            if(D)Log.d(TAG, "TestImagePickerActivity.onAttachFragment - found our ImagePickerFragment");
+            String slideShareName = m_prefs.getString(SSPreferences.PREFS_SSNAME, SSPreferences.DEFAULT_SSNAME);
+            m_imagePickerFragment = (ImagePickerFragment)fragment;
+            m_imagePickerFragment.setSlideShareName(slideShareName);
+        }
     }
 
     @Override
@@ -56,10 +88,6 @@ public class TestImagePickerActivity extends Activity implements ViewSwitcher.Vi
 
         File rootDir = getFilesDir();
         String slideShareName = m_prefs.getString(SSPreferences.PREFS_SSNAME, SSPreferences.DEFAULT_SSNAME);
-
-        File slideShareDirectory = new File(rootDir.getAbsolutePath() + "/" + slideShareName);
-        slideShareDirectory.mkdir();
-        if(D)Log.d(TAG, String.format("TestImagePickerActivity.runTests - slideShareDirectory=%s", slideShareDirectory));
 
         //
         // BUGBUG - TEST to list all files and directories

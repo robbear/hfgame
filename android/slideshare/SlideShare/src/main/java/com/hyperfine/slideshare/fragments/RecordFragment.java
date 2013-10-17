@@ -12,7 +12,9 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 
 import com.hyperfine.slideshare.R;
+import com.hyperfine.slideshare.Utilities;
 
+import java.io.File;
 import java.io.IOException;
 
 import static com.hyperfine.slideshare.Config.D;
@@ -26,18 +28,24 @@ public class RecordFragment extends Fragment {
     private MediaRecorder m_recorder;
     private MediaPlayer m_player;
     private Activity m_activityParent;
+    private String m_slideShareName;
 
     private ImageButton m_recordButton;
 
-    public static RecordFragment newInstance() {
+    public static RecordFragment newInstance(String slideShareName) {
         if(D)Log.d(TAG, "RecordFragment.newInstance");
 
         RecordFragment f = new RecordFragment();
 
-        // f.setPropertyX();
-        // f.setPropertyY();
+        f.setSlideShareName(slideShareName);
 
         return f;
+    }
+
+    public void setSlideShareName(String name) {
+        if(D)Log.d(TAG, String.format("RecordFragment.setSlideShareName: %s", name));
+
+        m_slideShareName = name;
     }
 
     @Override
@@ -129,8 +137,9 @@ public class RecordFragment extends Fragment {
     }
 
     private String getFilePath() {
-        //String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/test.3gp";
-        String filePath = m_activityParent.getFilesDir().getAbsolutePath() + "/test.3gp";
+        File directory = Utilities.createOrGetSlideShareDirectory(m_activityParent, m_slideShareName);
+
+        String filePath = directory.getAbsolutePath() + "/test.3gp";
 
         if(D)Log.d(TAG, String.format("RecordFragment.getFilePath returns %s", filePath));
 

@@ -2,9 +2,7 @@ package com.hyperfine.slideshare.fragments;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -19,7 +17,7 @@ import android.widget.ImageSwitcher;
 import android.widget.ViewSwitcher;
 
 import com.hyperfine.slideshare.R;
-import com.hyperfine.slideshare.SSPreferences;
+import com.hyperfine.slideshare.Utilities;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -39,18 +37,22 @@ public class ImagePickerFragment extends Fragment {
     private Button m_pickButton;
     private ImageSwitcher m_imageSwitcher;
     private Drawable m_drawableImage = null;
-    private File m_slideShareDirectory = null;
-    private SharedPreferences m_prefs;
+    private String m_slideShareName = null;
 
-    public static ImagePickerFragment newInstance() {
+    public static ImagePickerFragment newInstance(String slideShareName) {
         if(D)Log.d(TAG, "ImagePickerFragment.newInstance");
 
         ImagePickerFragment f = new ImagePickerFragment();
 
-        // f.setPropertyX();
-        // f.setPropertyY();
+        f.setSlideShareName(slideShareName);
 
         return f;
+    }
+
+    public void setSlideShareName(String name) {
+        if(D)Log.d(TAG, String.format("ImagePickerFragment.setSlideShareName: %s", name));
+
+        m_slideShareName = name;
     }
 
     @Override
@@ -93,15 +95,6 @@ public class ImagePickerFragment extends Fragment {
         super.onAttach(activity);
 
         m_activityParent = activity;
-
-        m_prefs = activity.getSharedPreferences(SSPreferences.PREFS, Context.MODE_PRIVATE);
-
-        String slideShareName = m_prefs.getString(SSPreferences.PREFS_SSNAME, SSPreferences.DEFAULT_SSNAME);
-
-        File rootDir = activity.getFilesDir();
-        m_slideShareDirectory = new File(rootDir.getAbsolutePath() + "/" + slideShareName);
-        m_slideShareDirectory.mkdir();
-        if(D)Log.d(TAG, String.format("ImagePickerFragment.onAttach - m_slideShareDirectory=%s", m_slideShareDirectory));
 
         // if (activity instanceof SomeActivityInterface) {
         // }
@@ -183,17 +176,22 @@ public class ImagePickerFragment extends Fragment {
     }
 
     private void copyGalleryImageToJPG(String fileName, Intent intent) {
-        if(D)Log.d(TAG, "ImagePickerFragment.copyGalleryImageToJPG");
+        if(D)Log.d(TAG, String.format("ImagePickerFragment.copyGalleryImageToJPG: fileName=%s", fileName));
 
         OutputStream outStream = null;
+        File slideShareDirectory = Utilities.createOrGetSlideShareDirectory(m_activityParent, m_slideShareName);
+
+        if (slideShareDirectory == null) {
+            if(D)Log.d(TAG, "ImagePickerFragment.copyGalleryImageToJPG - failed to retrieve slideShareDirectory. Bailing");
+            return;
+        }
 
         try {
             ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
 
             Bitmap bitmapImage = BitmapFactory.decodeStream(m_activityParent.getContentResolver().openInputStream(intent.getData()));
             if (bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, outputBuffer)) {
-                File file = new File(m_slideShareDirectory + "/" + fileName);
-                file.createNewFile();
+                File file = Utilities.createFile(m_activityParent, m_slideShareName, fileName);
                 outStream = new FileOutputStream(file);
 
                 outputBuffer.writeTo(outStream);
@@ -219,8 +217,7 @@ public class ImagePickerFragment extends Fragment {
                 try {
                     outStream.close();
                 }
-                catch (Exception e) {
-                }
+                catch (Exception e) {}
             }
         }
     }
