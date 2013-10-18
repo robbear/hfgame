@@ -6,6 +6,9 @@ import android.content.SharedPreferences.Editor;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
 
 import static com.hyperfine.slideshare.Config.D;
 import static com.hyperfine.slideshare.Config.E;
@@ -22,7 +25,7 @@ public class Utilities {
 
         SharedPreferences prefs = context.getSharedPreferences(SSPreferences.PREFS, Context.MODE_PRIVATE);
 
-        File rootDir = context.getFilesDir();
+        File rootDir = getRootFilesDirectory(context);
 
         File slideShareDirectory = new File(rootDir.getAbsolutePath() + "/" + slideShareName);
         slideShareDirectory.mkdir();
@@ -65,5 +68,124 @@ public class Utilities {
         }
 
         return createFile(directory, fileName);
+    }
+
+    public static boolean saveStringToFile(Context context, String data, String folder, String fileName) {
+        if(D)Log.d(TAG, String.format("Utilities.saveStringToFile: folder=%s, fileName=%s", folder, fileName));
+
+        boolean retVal = false;
+
+        File dirRoot = getRootFilesDirectory(context);
+        File directory = new File(dirRoot.getAbsolutePath() + "/" + folder);
+        File file = new File(directory, fileName);
+
+        FileOutputStream fos = null;
+
+        try {
+            file.createNewFile();
+            fos = new FileOutputStream(file);
+            fos.write(data.getBytes());
+            retVal = true;
+        }
+        catch (Exception e) {
+            if(E)Log.e(TAG, "Utilities.saveStringToFile", e);
+            e.printStackTrace();
+        }
+        catch (OutOfMemoryError e) {
+            if(E)Log.e(TAG, "Utilities.saveStringToFile", e);
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                if (fos != null) {
+                    fos.close();
+                }
+            }
+            catch (Exception e) {}
+        }
+
+        return retVal;
+    }
+
+    public static String loadStringFromFile(Context context, String folder, String fileName) {
+        if(D)Log.d(TAG, String.format("Utilities.loadStringFromFile: folder=%s, fileName=%s", folder, fileName));
+
+        FileInputStream fis = null;
+        String data = null;
+
+        File dirRoot = getRootFilesDirectory(context);
+        File directory = new File(dirRoot.getAbsolutePath() + "/" + folder);
+        if (directory.exists() && directory.isDirectory()) {
+            File file = new File(directory, fileName);
+            if (file.exists()) {
+                try {
+                    byte[] buffer = new byte[(int)file.length()];
+                    fis = new FileInputStream(file);
+                    fis.read(buffer);
+
+                    data = new String(buffer, "UTF-8");
+                }
+                catch (Exception e) {
+                    if(E)Log.e(TAG, "Utilities.loadStringFromFile", e);
+                    e.printStackTrace();
+                }
+                catch (OutOfMemoryError e) {
+                    if(E)Log.e(TAG, "Utilities.loadStringFromFile", e);
+                    e.printStackTrace();
+                }
+                finally {
+                    try {
+                        if (fis != null) {
+                            fis.close();
+                        }
+                    }
+                    catch (Exception e) {}
+                }
+            }
+            else {
+                if(D)Log.d(TAG, "Utilities.loadStringFromFile - file doesn't exist. Bailing.");
+            }
+        }
+        else {
+            if(D)Log.d(TAG, "Utilities.loadStringFromFile - folder doesn't exist. Bailing.");
+        }
+
+        return data;
+    }
+
+    public static File getRootFilesDirectory(Context context) {
+        if(D)Log.d(TAG, "Utilities.getRootFilesDirectory");
+
+        File dir = context.getFilesDir();
+
+        if(D)Log.d(TAG, String.format("Utilities.getRootFilesDirectory - returning %s", dir.getAbsolutePath()));
+
+        return dir;
+    }
+
+    public static void listAllFilesAndDirectories(Context context, File dir) {
+        if(D)Log.d(TAG, String.format("Utilities.listAllFilesAndDirectories for %s", dir == null ? "null" : dir));
+
+        ArrayList<File> directories = new ArrayList<File>();
+
+        if (dir == null) {
+            dir = getRootFilesDirectory(context);
+        }
+
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (int i = 0; i < files.length; i++) {
+                String file = files[i].getAbsolutePath();
+                if(D)Log.d(TAG, String.format("Utilities.listAllFilesAndDirectories - file: %s, isDirectory=%b, size=%d", file, files[i].isDirectory(), files[i].length()));
+
+                if (files[i].isDirectory()) {
+                    directories.add(files[i]);
+                }
+            }
+        }
+
+        for (int i = 0; i < directories.size(); i++) {
+            listAllFilesAndDirectories(context, directories.get(i));
+        }
     }
 }

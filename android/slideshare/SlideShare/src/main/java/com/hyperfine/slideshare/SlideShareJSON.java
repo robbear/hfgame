@@ -7,10 +7,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-
 import static com.hyperfine.slideshare.Config.D;
 import static com.hyperfine.slideshare.Config.E;
 
@@ -192,83 +188,29 @@ public class SlideShareJSON extends JSONObject {
     public boolean save(Context context, String folder, String fileName) {
         if(D)Log.d(TAG, String.format("SlideShareJSON.save: folder=%s, fileName=%s", folder, fileName));
 
-        boolean retVal = false;
-        String json = this.toString();
-
-        File dirRoot = context.getFilesDir();
-        File directory = new File(dirRoot.getAbsolutePath() + "/" + folder);
-        File file = new File(directory, fileName);
-
-        FileOutputStream fos = null;
-
-        try {
-            file.createNewFile();
-            fos = new FileOutputStream(file);
-            fos.write(json.getBytes());
-            retVal = true;
-        }
-        catch (Exception e) {
-            if(E)Log.e(TAG, "SlideShareJSON.save", e);
-            e.printStackTrace();
-        }
-        catch (OutOfMemoryError e) {
-            if(E)Log.e(TAG, "SlideShareJSON.save", e);
-            e.printStackTrace();
-        }
-        finally {
-            try {
-                if (fos != null) {
-                    fos.close();
-                }
-            }
-            catch (Exception e) {}
-        }
-
-        return retVal;
+        return Utilities.saveStringToFile(context, this.toString(), folder, fileName);
     }
 
     public static SlideShareJSON load(Context context, String folder, String fileName) {
         if(D)Log.d(TAG, String.format("SlideShareJSON.load: folder=%s, fileName=%s", folder, fileName));
 
         SlideShareJSON ssj = null;
-        FileInputStream fis = null;
+        String json = Utilities.loadStringFromFile(context, folder, fileName);
 
-        File dirRoot = context.getFilesDir();
-        File directory = new File(dirRoot.getAbsolutePath() + "/" + folder);
-        if (directory.exists() && directory.isDirectory()) {
-            File file = new File(directory, fileName);
-            if (file.exists()) {
-                try {
-                    byte[] buffer = new byte[(int)file.length()];
-                    fis = new FileInputStream(file);
-                    fis.read(buffer);
-
-                    String json = new String(buffer, "UTF-8");
-                    ssj = new SlideShareJSON(json);
-                }
-                catch (Exception e) {
-                    if(E)Log.e(TAG, "SlideShareJSON.load", e);
-                    e.printStackTrace();
-                }
-                catch (OutOfMemoryError e) {
-                    if(E)Log.e(TAG, "SlideShareJSON.load", e);
-                    e.printStackTrace();
-                }
-                finally {
-                    try {
-                        if (fis != null) {
-                            fis.close();
-                        }
-                    }
-                    catch (Exception e) {}
-                }
-            }
-            else {
-                if(D)Log.d(TAG, "SlideShareJSON.load - file doesn't exist. Bailing.");
-            }
+        if (json == null) {
+            return null;
         }
-        else {
-            if(D)Log.d(TAG, "SlideShareJSON.load - folder doesn't exist. Bailing.");
+
+        try {
+            ssj = new SlideShareJSON(json);
+        }
+        catch (Exception e) {
+            if(E)Log.e(TAG, "SlideShareJSON.load", e);
+            e.printStackTrace();
+        }
+        catch (OutOfMemoryError e) {
+            if(E)Log.e(TAG, "SlideShareJSON.load", e);
+            e.printStackTrace();
         }
 
         return ssj;

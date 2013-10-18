@@ -18,7 +18,6 @@ import com.hyperfine.slideshare.fragments.ImagePickerFragment;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.UUID;
 
 import static com.hyperfine.slideshare.Config.D;
@@ -86,13 +85,13 @@ public class TestImagePickerActivity extends Activity implements ViewSwitcher.Vi
     private void runTests() {
         if(D)Log.d(TAG, "TestImagePickerActivity.runTests");
 
-        File rootDir = getFilesDir();
+        File rootDir = Utilities.getRootFilesDirectory(this);
         String slideShareName = m_prefs.getString(SSPreferences.PREFS_SSNAME, SSPreferences.DEFAULT_SSNAME);
 
         //
         // BUGBUG - TEST to list all files and directories
         //
-        listAllFilesAndDirectories(rootDir);
+        Utilities.listAllFilesAndDirectories(this, rootDir);
 
         //
         // BUGBUG - TEST to generate or load user UUID from preferences
@@ -137,7 +136,7 @@ public class TestImagePickerActivity extends Activity implements ViewSwitcher.Vi
             // Save and load tests
             boolean retVal = ssj.save(this, slideShareName, "test.json");
             if(D)Log.d(TAG, String.format("Saved SlideShareJSON with retVal=%b", retVal));
-            listAllFilesAndDirectories(rootDir);
+            Utilities.listAllFilesAndDirectories(this, rootDir);
             ssj = SlideShareJSON.load(this, slideShareName, "test.json");
             if(D)Log.d(TAG, String.format("SlideShareJSON after load: %s", ssj == null ? "null" : ssj.toString()));
         }
@@ -148,32 +147,6 @@ public class TestImagePickerActivity extends Activity implements ViewSwitcher.Vi
         catch (OutOfMemoryError e) {
             if(E)Log.e(TAG, "TestImagePickerActivity.onAttach", e);
             e.printStackTrace();
-        }
-    }
-
-    private void listAllFilesAndDirectories(File dir) {
-        if(D)Log.d(TAG, String.format("TestImagePickerActivity.listAllFilesAndDirectories for %s", dir == null ? "null" : dir));
-
-        ArrayList<File> directories = new ArrayList<File>();
-
-        if (dir == null) {
-            dir = getFilesDir();
-        }
-
-        File[] files = dir.listFiles();
-        if (files != null) {
-            for (int i = 0; i < files.length; i++) {
-                String file = files[i].getAbsolutePath();
-                if(D)Log.d(TAG, String.format("TestImagePickerActivity.listAllFilesAndDirectories - file: %s, isDirectory=%b, size=%d", file, files[i].isDirectory(), files[i].length()));
-
-                if (files[i].isDirectory()) {
-                    directories.add(files[i]);
-                }
-            }
-        }
-
-        for (int i = 0; i < directories.size(); i++) {
-            listAllFilesAndDirectories(directories.get(i));
         }
     }
 }
