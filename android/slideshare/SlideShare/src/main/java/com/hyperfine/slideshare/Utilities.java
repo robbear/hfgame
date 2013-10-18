@@ -156,7 +156,13 @@ public class Utilities {
     public static File getRootFilesDirectory(Context context) {
         if(D)Log.d(TAG, "Utilities.getRootFilesDirectory");
 
-        File dir = context.getFilesDir();
+        File dir = null;
+        if (Config.USE_CACHE) {
+            dir = context.getCacheDir();
+        }
+        else {
+            dir = context.getFilesDir();
+        }
 
         if(D)Log.d(TAG, String.format("Utilities.getRootFilesDirectory - returning %s", dir.getAbsolutePath()));
 

@@ -22,6 +22,9 @@ public class Config
     // Default setting for notifications
     public static final boolean NOTIFICATIONS_ON_BY_DEFAULT = true;
 
+    // Use cache space rather than files space
+    public static final boolean USE_CACHE = true;
+
     // Default base url
     public static final String baseSlideShareUrl = "http://hyperfine.com/slideshare/";
 
