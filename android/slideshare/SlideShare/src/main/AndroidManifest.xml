@@ -22,6 +22,8 @@
         </activity>
         <activity android:name=".TestRecordPlayActivity" android:configChanges="keyboardHidden|orientation" android:theme="@android:style/Theme.Holo" />
         <activity android:name=".TestImagePickerActivity" android:configChanges="keyboardHidden|orientation" android:theme="@android:style/Theme.Holo" />
+        <activity android:name=".CreateSlidesActivity" android:configChanges="keyboardHidden|orientation" android:theme="@android:style/Theme.Holo" />
+        <activity android:name=".PlaySlidesActivity" android:configChanges="keyboardHidden|orientation" android:theme="@android:style/Theme.Holo" />
     </application>
 
     <uses-sdk android:minSdkVersion="15" android:targetSdkVersion="18" />

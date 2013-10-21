@@ -28,6 +28,28 @@ public class MainActivity extends Activity {
 
         super.onCreateOptionsMenu(menu);
 
+        // BUGBUG
+        MenuItem csa = menu.add("Create slides");
+        csa.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent intent = new Intent(MainActivity.this, CreateSlidesActivity.class);
+                MainActivity.this.startActivity(intent);
+                return true;
+            }
+        });
+
+        // BUGBUG
+        MenuItem psa = menu.add("Play slides");
+        psa.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent intent = new Intent(MainActivity.this, PlaySlidesActivity.class);
+                MainActivity.this.startActivity(intent);
+                return true;
+            }
+        });
+
         // BUGBUG - test menu item
         MenuItem trp = menu.add("TestRecordPlay");
         trp.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
