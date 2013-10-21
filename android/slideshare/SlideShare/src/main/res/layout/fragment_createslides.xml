@@ -53,12 +53,34 @@
             android:text="Play"
             style="@style/button_transport" />
     </RelativeLayout>
-    <Button
-        android:id="@+id/control_saveslide"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/createslides_button_panel"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:text="Save"
-        style="@style/button_transport"/>
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/control_prev"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+            android:text="Prev"
+            style="@style/button_transport"/>
+        <Button
+            android:id="@+id/control_saveslide"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+            android:layout_gravity="center_horizontal"
+            android:text="Save"
+            style="@style/button_transport"/>
+        <Button
+            android:id="@+id/control_next"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+            android:layout_gravity="center_horizontal"
+            android:text="Next"
+            style="@style/button_transport"/>
+    </LinearLayout>
 
 </LinearLayout>
