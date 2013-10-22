@@ -3,8 +3,6 @@ package com.hyperfine.slideshare.fragments;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -19,12 +17,9 @@ import android.widget.ViewSwitcher;
 import com.hyperfine.slideshare.R;
 import com.hyperfine.slideshare.Utilities;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.UUID;
 
 import static com.hyperfine.slideshare.Config.D;
 import static com.hyperfine.slideshare.Config.E;
@@ -151,7 +146,9 @@ public class ImagePickerFragment extends Fragment {
             try {
                 if(D)Log.d(TAG, String.format("ImagePickerFragment.onActivityResult: intent data = %s", intent.getData().toString()));
 
-                copyGalleryImageToJPG("TestImage.jpg", intent);
+                String fileName = UUID.randomUUID().toString() + ".jpg";
+                boolean success = Utilities.copyGalleryImageToJPG(m_activityParent, m_slideShareName, fileName, intent);
+                if(D)Log.d(TAG, String.format("ImagePickerFragment.onActivityResult - call to copyGalleryImageToJPG: success=%b, fileName=%s", success, fileName));
 
                 InputStream stream = m_activityParent.getContentResolver().openInputStream(intent.getData());
                 m_drawableImage = new BitmapDrawable(m_activityParent.getResources(), stream);
@@ -172,53 +169,6 @@ public class ImagePickerFragment extends Fragment {
         }
         else {
             super.onActivityResult(requestCode, resultCode, intent);
-        }
-    }
-
-    private void copyGalleryImageToJPG(String fileName, Intent intent) {
-        if(D)Log.d(TAG, String.format("ImagePickerFragment.copyGalleryImageToJPG: fileName=%s", fileName));
-
-        OutputStream outStream = null;
-        File slideShareDirectory = Utilities.createOrGetSlideShareDirectory(m_activityParent, m_slideShareName);
-
-        if (slideShareDirectory == null) {
-            if(D)Log.d(TAG, "ImagePickerFragment.copyGalleryImageToJPG - failed to retrieve slideShareDirectory. Bailing");
-            return;
-        }
-
-        try {
-            ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
-
-            Bitmap bitmapImage = BitmapFactory.decodeStream(m_activityParent.getContentResolver().openInputStream(intent.getData()));
-            if (bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, outputBuffer)) {
-                File file = Utilities.createFile(m_activityParent, m_slideShareName, fileName);
-                outStream = new FileOutputStream(file);
-
-                outputBuffer.writeTo(outStream);
-            }
-            else {
-                if(D)Log.d(TAG, "ImagePickerFragment.copyGalleryImageToJPG failed");
-            }
-        }
-        catch (IOException e) {
-            if(E)Log.e(TAG, "ImagePickerFragment.copyGalleryImageToJPG", e);
-            e.printStackTrace();
-        }
-        catch (Exception e) {
-            if(E)Log.e(TAG, "ImagePickerFragment.copyGalleryImageToJPG", e);
-            e.printStackTrace();
-        }
-        catch (OutOfMemoryError e) {
-            if(E)Log.e(TAG, "ImagePickerFragment.copyGalleryImageToJPG", e);
-            e.printStackTrace();
-        }
-        finally {
-            if (outStream != null) {
-                try {
-                    outStream.close();
-                }
-                catch (Exception e) {}
-            }
         }
     }
 }

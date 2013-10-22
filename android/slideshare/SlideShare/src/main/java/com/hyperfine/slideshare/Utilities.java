@@ -1,13 +1,19 @@
 package com.hyperfine.slideshare;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 
 import static com.hyperfine.slideshare.Config.D;
@@ -44,6 +50,10 @@ public class Utilities {
 
         try {
             file = new File(directory.getAbsolutePath() + "/" + fileName);
+            if (file.exists()) {
+                if(D)Log.d(TAG, "Utilities.createFile - file exists, so deleting it first");
+                file.delete();
+            }
             file.createNewFile();
         }
         catch (Exception e) {
@@ -68,6 +78,24 @@ public class Utilities {
         }
 
         return createFile(directory, fileName);
+    }
+
+    public static boolean deleteFile(Context context, String folder, String fileName) {
+        if(D)Log.d(TAG, String.format("Utilities.deleteFile: folder=%s, fileName=%s", folder, fileName));
+
+        boolean success = true;
+
+        File dirRoot = getRootFilesDirectory(context);
+        File directory = new File(dirRoot.getAbsolutePath() + "/" + folder);
+        if (directory.exists() && directory.isDirectory()) {
+            File file = new File(directory, fileName);
+            if (file.exists()) {
+                success = file.delete();
+            }
+        }
+
+        if(D)Log.d(TAG, String.format("Utilities.deleteFile returns: %b", success));
+        return success;
     }
 
     public static boolean saveStringToFile(Context context, String data, String folder, String fileName) {
@@ -153,6 +181,13 @@ public class Utilities {
         return data;
     }
 
+    public static String getAbsoluteFilePath(Context context, String folder, String fileName) {
+        if(D)Log.d(TAG, String.format("Utilities.getAbsoluteFilePath: folder=%s, fileName=%s", folder, fileName));
+
+        File dir = getRootFilesDirectory(context);
+        return dir.getAbsolutePath() + "/" + folder + "/" + fileName;
+    }
+
     public static File getRootFilesDirectory(Context context) {
         if(D)Log.d(TAG, "Utilities.getRootFilesDirectory");
 
@@ -193,5 +228,56 @@ public class Utilities {
         for (int i = 0; i < directories.size(); i++) {
             listAllFilesAndDirectories(context, directories.get(i));
         }
+    }
+
+    public static boolean copyGalleryImageToJPG(Context context, String slideShareName, String fileName, Intent intent) {
+        if(D)Log.d(TAG, String.format("Utilities.copyGalleryImageToJPG: slideShareName=%s, fileName=%s", slideShareName, fileName));
+
+        boolean success = false;
+        OutputStream outStream = null;
+        File slideShareDirectory = createOrGetSlideShareDirectory(context, slideShareName);
+
+        if (slideShareDirectory == null) {
+            if(D)Log.d(TAG, "Utilities.copyGalleryImageToJPG - failed to retrieve slideShareDirectory. Bailing");
+            return false;
+        }
+
+        try {
+            ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
+
+            Bitmap bitmapImage = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(intent.getData()));
+            if (bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, outputBuffer)) {
+                File file = createFile(context, slideShareName, fileName);
+                outStream = new FileOutputStream(file);
+
+                outputBuffer.writeTo(outStream);
+                success = true;
+            }
+            else {
+                if(D)Log.d(TAG, "Utilities.copyGalleryImageToJPG failed");
+            }
+        }
+        catch (IOException e) {
+            if(E)Log.e(TAG, "Utilities.copyGalleryImageToJPG", e);
+            e.printStackTrace();
+        }
+        catch (Exception e) {
+            if(E)Log.e(TAG, "Utilities.copyGalleryImageToJPG", e);
+            e.printStackTrace();
+        }
+        catch (OutOfMemoryError e) {
+            if(E)Log.e(TAG, "Utilities.copyGalleryImageToJPG", e);
+            e.printStackTrace();
+        }
+        finally {
+            if (outStream != null) {
+                try {
+                    outStream.close();
+                }
+                catch (Exception e) {}
+            }
+        }
+
+        return success;
     }
 }
