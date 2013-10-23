@@ -3,6 +3,8 @@ package com.hyperfine.slideshare.fragments;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
@@ -29,7 +31,10 @@ import static com.hyperfine.slideshare.Config.E;
 public class CreateSlidesFragment extends Fragment {
     public final static String TAG = "CreateSlidesFragment";
 
-    public final static int REQUEST_IMAGE = 1;
+    private final static int REQUEST_IMAGE = 1;
+    private final static String INSTANCE_STATE_IMAGEFILE = "instance_state_imagefile";
+    private final static String INSTANCE_STATE_AUDIOFILE = "instance_state_audiofile";
+    private final static String INSTANCE_STATE_SLIDEUUID = "instance_state_slideuuid";
 
     private boolean m_isRecording = false;
     private boolean m_isPlaying = false;
@@ -37,8 +42,9 @@ public class CreateSlidesFragment extends Fragment {
     private MediaPlayer m_player;
     private Activity m_activityParent;
     private String m_slideShareName;
-    private String m_imageFileName = getNewImageFileName();
-    private String m_audioFileName = getNewAudioFileName();
+    private String m_slideUuid = null;
+    private String m_imageFileName = null;
+    private String m_audioFileName = null;
     private Button m_buttonSelectImage;
     private ImageSwitcher m_imageSwitcherSelected;
     private Button m_buttonRecord;
@@ -46,8 +52,6 @@ public class CreateSlidesFragment extends Fragment {
     private Button m_buttonPrev;
     private Button m_buttonSave;
     private Button m_buttonNext;
-    private boolean m_hasAudio = false;
-    private boolean m_hasImage = false;
 
     private static CreateSlidesFragment newInstance(String slideShareName) {
         if(D)Log.d(TAG, "CreateSlidesFragment.newInstance");
@@ -65,16 +69,54 @@ public class CreateSlidesFragment extends Fragment {
         m_slideShareName = name;
     }
 
+    public void setImageFileName(String fileName) {
+        if(D)Log.d(TAG, String.format("CreateSlidesFragment.setImageFileName: %s", fileName));
+
+        m_imageFileName = fileName;
+    }
+
+    public void setAudioFileName(String fileName) {
+        if(D)Log.d(TAG, String.format("CreateSlidesFragment.setAudioFileName: %s", fileName));
+
+        m_audioFileName = fileName;
+    }
+
+    public void setSlideUuid(String s) {
+        if(D)Log.d(TAG, String.format("CreateSlidesFragment.setSlideUuid: %s", s));
+
+        m_slideUuid = s;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         if(D)Log.d(TAG, "CreateSlidesFragment.onCreate");
 
         super.onCreate(savedInstanceState);
 
-        Bundle argsBundle = getArguments();
-        if (argsBundle != null) {
-            // Set instance state
+        if (savedInstanceState != null) {
+            if(D)Log.d(TAG, "CreateSlidesFragment.onCreate - populating from savedInstanceState");
+
+            setImageFileName(savedInstanceState.getString(INSTANCE_STATE_IMAGEFILE));
+            setAudioFileName(savedInstanceState.getString(INSTANCE_STATE_AUDIOFILE));
+            setSlideUuid(savedInstanceState.getString(INSTANCE_STATE_SLIDEUUID));
         }
+
+        if (m_slideUuid == null) {
+            m_slideUuid = UUID.randomUUID().toString();
+        }
+
+        if(D)Log.d(TAG, String.format("CreateSlidesFragment.onCreate - m_slideUuid=%s", m_slideUuid));
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        if(D)Log.d(TAG, "CreateSlidesFragment.onSaveInstanceState");
+
+        super.onSaveInstanceState(savedInstanceState);
+
+        savedInstanceState.putString(INSTANCE_STATE_IMAGEFILE, m_imageFileName);
+        savedInstanceState.putString(INSTANCE_STATE_AUDIOFILE, m_audioFileName);
+        savedInstanceState.putString(INSTANCE_STATE_SLIDEUUID, m_slideUuid);
     }
 
     @Override
@@ -82,11 +124,6 @@ public class CreateSlidesFragment extends Fragment {
         if(D)Log.d(TAG, "CreateSlidesFragment.onDestroy");
 
         super.onDestroy();
-
-        if (isDirty()) {
-            Utilities.deleteFile(m_activityParent, m_slideShareName, m_imageFileName);
-            Utilities.deleteFile(m_activityParent, m_slideShareName, m_audioFileName);
-        }
     }
 
     @Override
@@ -162,7 +199,7 @@ public class CreateSlidesFragment extends Fragment {
         });
 
         m_buttonPlayStop = (Button)view.findViewById(R.id.control_playback);
-        m_buttonPlayStop.setEnabled(m_hasAudio);
+        m_buttonPlayStop.setEnabled(hasAudio());
         m_buttonPlayStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -193,6 +230,8 @@ public class CreateSlidesFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         m_imageSwitcherSelected.setFactory((ViewSwitcher.ViewFactory)m_activityParent);
+
+        fillImage();
     }
 
     @Override
@@ -200,37 +239,42 @@ public class CreateSlidesFragment extends Fragment {
         if(D)Log.d(TAG, String.format("CreateSlidesFragment.onActivityResult: requestCode=%d, resultCode=%d", requestCode, resultCode));
 
         if (requestCode == REQUEST_IMAGE && resultCode == Activity.RESULT_OK) {
-            try {
-                if(D)Log.d(TAG, String.format("CreateSlidesFragment.onActivityResult: intent data = %s", intent.getData().toString()));
+            if(D)Log.d(TAG, String.format("CreateSlidesFragment.onActivityResult: intent data = %s", intent.getData().toString()));
 
-                boolean success = Utilities.copyGalleryImageToJPG(m_activityParent, m_slideShareName, m_imageFileName, intent);
-
-                if (success) {
-                    // Display the image only upon successful save
-
-                    m_hasImage = true;
-
-                    InputStream stream = m_activityParent.getContentResolver().openInputStream(intent.getData());
-                    Drawable drawableImage = new BitmapDrawable(m_activityParent.getResources(), stream);
-                    m_imageSwitcherSelected.setImageDrawable(drawableImage);
-                }
+            String imageFileName = m_imageFileName;
+            if (imageFileName == null) {
+                imageFileName = getNewImageFileName();
             }
-            catch (IOException e) {
-                if(E)Log.e(TAG, "CreateSlidesFragment.onActivityResult", e);
-                e.printStackTrace();
+
+            boolean success = Utilities.copyGalleryImageToJPG(m_activityParent, m_slideShareName, imageFileName, intent);
+
+            if (success) {
+                // Display the image only upon successful save
+                m_imageFileName = imageFileName;
+                fillImage();
             }
-            catch (Exception e) {
-                if(E)Log.e(TAG, "CreateSlidesFragment.onActivityResult", e);
-                e.printStackTrace();
-            }
-            catch (OutOfMemoryError e) {
-                if(E)Log.e(TAG, "CreateSlidesFragment.onActivityResult", e);
-                e.printStackTrace();
+            else {
+                // Clean up - remove the image file
+                Utilities.deleteFile(m_activityParent, m_slideShareName, imageFileName);
+                m_imageFileName = null;
             }
         }
         else {
             super.onActivityResult(requestCode, resultCode, intent);
         }
+    }
+
+    private void fillImage() {
+        if(D)Log.d(TAG, "CreateSlidesFragment.fillImage");
+
+        if (m_imageFileName == null) {
+            if(D)Log.d(TAG, "CreateSlidesFragment.fillImage - m_imageFileName is null. Bailing.");
+            return;
+        }
+
+        Bitmap bitmap = BitmapFactory.decodeFile(Utilities.getAbsoluteFilePath(m_activityParent, m_slideShareName, m_imageFileName));
+        Drawable drawableImage = new BitmapDrawable(m_activityParent.getResources(), bitmap);
+        m_imageSwitcherSelected.setImageDrawable(drawableImage);
     }
 
     private void startRecording() {
@@ -239,6 +283,10 @@ public class CreateSlidesFragment extends Fragment {
         if (m_isRecording) {
             if(D)Log.d(TAG, "CreateSlidesFragment.startRecording - m_isRecording is true, so bailing");
             return;
+        }
+
+        if (m_audioFileName == null) {
+            m_audioFileName = getNewAudioFileName();
         }
 
         m_recorder = new MediaRecorder();
@@ -282,7 +330,6 @@ public class CreateSlidesFragment extends Fragment {
         m_isRecording = false;
         m_buttonRecord.setText("Record");
 
-        m_hasAudio = true;
         m_buttonPlayStop.setEnabled(true);
     }
 
@@ -341,7 +388,15 @@ public class CreateSlidesFragment extends Fragment {
     }
 
     private boolean isDirty() {
-        return m_hasAudio || m_hasImage;
+        return hasAudio() || hasImage();
+    }
+
+    private boolean hasAudio() {
+        return m_audioFileName != null;
+    }
+
+    private boolean hasImage() {
+        return m_imageFileName != null;
     }
 
     private static String getNewImageFileName() {
