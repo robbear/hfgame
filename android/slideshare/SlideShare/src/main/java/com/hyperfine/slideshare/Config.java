@@ -28,6 +28,9 @@ public class Config
     // Default base url
     public static final String baseSlideShareUrl = "http://hyperfine.com/slideshare/";
 
+    // Standard SlideShareJSON file name
+    public static final String slideShareJSONFilename = "slideshare.json";
+
 	// Error logs - ship with this set to false
 	public static final boolean E = true;
 	

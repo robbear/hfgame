@@ -128,7 +128,7 @@ public class TestImagePickerActivity extends Activity implements ViewSwitcher.Vi
             if(D)Log.d(TAG, String.format("SlideShareJSON after upsert (add) %d slides: %s", ssj.getSlides().length(), ssj.toString()));
             ssj.upsertSlide(lastSlideUuid, String.format("%slastslide.jpg", urlBase), String.format("%slastslide.3gp", urlBase));
             if(D)Log.d(TAG, String.format("SlideShareJSON after upsert (update) %d slides: %s", ssj.getSlides().length(), ssj.toString()));
-            JSONObject slide = ssj.getSlide(lastSlideUuid);
+            SlideJSON slide = ssj.getSlide(lastSlideUuid);
             if(D)Log.d(TAG, String.format("SlideShareJSON getSlide(%s) returns %s", lastSlideUuid, slide.toString()));
             ssj.removeSlide(lastSlideUuid);
             if(D)Log.d(TAG, String.format("SlideShareJSON after remove. %d slides: %s", ssj.getSlides().length(), ssj.toString()));

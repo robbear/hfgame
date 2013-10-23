@@ -18,11 +18,13 @@ import android.widget.Button;
 import android.widget.ImageSwitcher;
 import android.widget.ViewSwitcher;
 
+import com.hyperfine.slideshare.Config;
 import com.hyperfine.slideshare.R;
+import com.hyperfine.slideshare.SlideJSON;
+import com.hyperfine.slideshare.SlideShareJSON;
 import com.hyperfine.slideshare.Utilities;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.UUID;
 
 import static com.hyperfine.slideshare.Config.D;
@@ -36,6 +38,7 @@ public class CreateSlidesFragment extends Fragment {
     private final static String INSTANCE_STATE_AUDIOFILE = "instance_state_audiofile";
     private final static String INSTANCE_STATE_SLIDEUUID = "instance_state_slideuuid";
 
+    private SlideShareJSON m_ssj = null;
     private boolean m_isRecording = false;
     private boolean m_isPlaying = false;
     private MediaRecorder m_recorder;
@@ -67,6 +70,12 @@ public class CreateSlidesFragment extends Fragment {
         if(D)Log.d(TAG, String.format("CreateSlidesFragment.setSlideShareName: %s", name));
 
         m_slideShareName = name;
+
+        //
+        // Note: setSlideShareName is called only by the parent activity and is done
+        // at the time of onAttachFragment. It's only at this point we can have the
+        // parent activity context and load or create the SlideShareJSON file.
+        initializeSlideShareJSON();
     }
 
     public void setImageFileName(String fileName) {
@@ -85,6 +94,29 @@ public class CreateSlidesFragment extends Fragment {
         if(D)Log.d(TAG, String.format("CreateSlidesFragment.setSlideUuid: %s", s));
 
         m_slideUuid = s;
+    }
+
+    private void initializeSlideShareJSON() {
+        if(D)Log.d(TAG, "CreateSlidesFragment.initializeSlideShareJSON");
+
+        m_ssj = SlideShareJSON.load(m_activityParent, m_slideShareName, Config.slideShareJSONFilename);
+        if (m_ssj == null) {
+            try {
+                m_ssj = new SlideShareJSON();
+                m_ssj.save(m_activityParent, m_slideShareName, Config.slideShareJSONFilename);
+            }
+            catch (Exception e) {
+                if(E)Log.e(TAG, "CreateSlidesFragment.initializeSlideShareJSON (FATAL)", e);
+                e.printStackTrace();
+            }
+            catch (OutOfMemoryError e) {
+                if(E)Log.e(TAG, "CreateSlidesFragment.initializeSlideShareJSON (FATAL)", e);
+                e.printStackTrace();
+            }
+        }
+
+        if(D)Log.d(TAG, "CreateSlidesFragment.initializeSlideShareJSON: here is the current JSON:");
+        Utilities.printSlideShareJSON(m_ssj);
     }
 
     @Override
@@ -171,7 +203,7 @@ public class CreateSlidesFragment extends Fragment {
         m_buttonSelectImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(D)Log.d(TAG, "CreateSlidesFragment.onSelectImageButtonClicked");
+                if (D) Log.d(TAG, "CreateSlidesFragment.onSelectImageButtonClicked");
 
                 Intent intent = new Intent();
                 intent.setType("image/*");
@@ -258,10 +290,34 @@ public class CreateSlidesFragment extends Fragment {
                 Utilities.deleteFile(m_activityParent, m_slideShareName, imageFileName);
                 m_imageFileName = null;
             }
+
+            updateSlideShareJSON();
         }
         else {
             super.onActivityResult(requestCode, resultCode, intent);
         }
+    }
+
+    private void updateSlideShareJSON() {
+        if(D)Log.d(TAG, "CreateSlidesFragment.updateSlideShareJSON");
+        if(D)Log.d(TAG, "Current JSON:");
+        Utilities.printSlideShareJSON(m_ssj);
+
+        try {
+            m_ssj.upsertSlide(m_slideUuid, m_imageFileName, m_audioFileName);
+            m_ssj.save(m_activityParent, m_slideShareName, Config.slideShareJSONFilename);
+        }
+        catch (Exception e) {
+            if(E)Log.e(TAG, "CreateSlidesFragment.updateSlideShareJSON", e);
+            e.printStackTrace();
+        }
+        catch (OutOfMemoryError e) {
+            if(E)Log.e(TAG, "CreateSlidesFragment.updateSlideShareJSON", e);
+            e.printStackTrace();
+        }
+
+        if(D)Log.d(TAG, "After update:");
+        Utilities.printSlideShareJSON(m_ssj);
     }
 
     private void fillImage() {
@@ -287,6 +343,7 @@ public class CreateSlidesFragment extends Fragment {
 
         if (m_audioFileName == null) {
             m_audioFileName = getNewAudioFileName();
+            updateSlideShareJSON();
         }
 
         m_recorder = new MediaRecorder();

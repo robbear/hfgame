@@ -35,8 +35,6 @@ public class CreateSlidesActivity extends Activity implements ViewSwitcher.ViewF
         super.onCreate(savedInstanceState);
         m_prefs = getSharedPreferences(SSPreferences.PREFS, Context.MODE_PRIVATE);
 
-        setContentView(R.layout.activity_createslides);
-
         String slideShareName = m_prefs.getString(SSPreferences.PREFS_SSNAME, SSPreferences.DEFAULT_SSNAME);
 
         // BUGBUG TODO: Replace with dialog to create/fetch SlideShare name
@@ -44,6 +42,8 @@ public class CreateSlidesActivity extends Activity implements ViewSwitcher.ViewF
         if (m_slideShareDirectory == null) {
             if(D)Log.d(TAG, "TestImagePickerActivity.onCreate - m_slideShareDirectory is null. Bad!!!");
         }
+
+        setContentView(R.layout.activity_createslides);
 
         FragmentManager fm = getFragmentManager();
         m_createSlidesFragment = (CreateSlidesFragment)fm.findFragmentByTag(CreateSlidesFragment.class.toString());

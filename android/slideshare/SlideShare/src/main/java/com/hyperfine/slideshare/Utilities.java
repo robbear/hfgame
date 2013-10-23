@@ -22,6 +22,19 @@ import static com.hyperfine.slideshare.Config.E;
 public class Utilities {
     public final static String TAG = "Utilities";
 
+    public final static int JSON_INDENT_SPACES = 2;
+
+    public static String getUserUuidString(Context context) {
+        if(D)Log.d(TAG, "Utilities.getUserUuidString");
+
+        SharedPreferences prefs = context.getSharedPreferences(SSPreferences.PREFS, Context.MODE_PRIVATE);
+        String uuid = prefs.getString(SSPreferences.PREFS_USERUUID, null);
+
+        if(D)Log.d(TAG, String.format("Utilities.getUserUuidString returning %s", uuid));
+
+        return uuid;
+    }
+
     //
     // Creates or gets the SlideShare directory for SlideShare name, slideShareName.
     // This method also sets the SSPreferences.SSNAME to slideShareName.
@@ -279,5 +292,19 @@ public class Utilities {
         }
 
         return success;
+    }
+
+    public static void printSlideShareJSON(SlideShareJSON ssj) {
+        try {
+            if(D)Log.d(TAG, ssj.toString(JSON_INDENT_SPACES));
+        }
+        catch (Exception e) {
+            if(E)Log.e(TAG, "Utilities.pringSlideShareJSON", e);
+            e.printStackTrace();
+        }
+        catch (OutOfMemoryError e) {
+            if(E)Log.e(TAG, "Utilities.pringSlideShareJSON", e);
+            e.printStackTrace();
+        }
     }
 }

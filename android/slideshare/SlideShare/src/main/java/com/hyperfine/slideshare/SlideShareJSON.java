@@ -107,6 +107,15 @@ public class SlideShareJSON extends JSONObject {
         put(KEY_ORDER, order);
     }
 
+    public void upsertSlide(String uuidString, SlideJSON slide) throws JSONException {
+        if(D)Log.d(TAG, String.format("SlideShareJSON.upsertSlide: uuid=%s, slide=%s", uuidString, slide.toString()));
+
+        String imageUrl = slide.getImageUrlString();
+        String audioUrl = slide.getAudioUrlString();
+
+        upsertSlide(uuidString, imageUrl, audioUrl);
+    }
+
     public void upsertSlide(String uuidString, String imageUrl, String audioUrl) throws JSONException {
         if(D)Log.d(TAG, String.format("SlideShareJSON.upsertSlide: uuid=%s, imageUrl=%s, audioUrl=%s", uuidString, imageUrl, audioUrl));
 
@@ -171,14 +180,13 @@ public class SlideShareJSON extends JSONObject {
         }
     }
 
-    public JSONObject getSlide(String uuidSlide) throws JSONException {
+    public SlideJSON getSlide(String uuidSlide) throws JSONException {
         if(D)Log.d(TAG, String.format("SlideShareJSON.getSlide: uuid=%s", uuidSlide));
 
         JSONObject slides = getSlides();
-        JSONObject slide = null;
 
         if (slides.has(uuidSlide)) {
-            return slides.getJSONObject(uuidSlide);
+            return (SlideJSON)slides.getJSONObject(uuidSlide);
         }
         else {
             return null;
