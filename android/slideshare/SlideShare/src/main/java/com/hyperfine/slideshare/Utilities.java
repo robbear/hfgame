@@ -259,7 +259,8 @@ public class Utilities {
             ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
 
             Bitmap bitmapImage = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(intent.getData()));
-            if (bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, outputBuffer)) {
+            // BUGBUG TODO - what compression level?
+            if (bitmapImage.compress(Bitmap.CompressFormat.JPEG, 25, outputBuffer)) {
                 File file = createFile(context, slideShareName, fileName);
                 outStream = new FileOutputStream(file);
 

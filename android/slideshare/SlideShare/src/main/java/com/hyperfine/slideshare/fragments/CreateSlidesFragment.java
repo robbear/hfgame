@@ -20,7 +20,6 @@ import android.widget.ViewSwitcher;
 
 import com.hyperfine.slideshare.Config;
 import com.hyperfine.slideshare.R;
-import com.hyperfine.slideshare.SlideJSON;
 import com.hyperfine.slideshare.SlideShareJSON;
 import com.hyperfine.slideshare.Utilities;
 
@@ -53,7 +52,7 @@ public class CreateSlidesFragment extends Fragment {
     private Button m_buttonRecord;
     private Button m_buttonPlayStop;
     private Button m_buttonPrev;
-    private Button m_buttonSave;
+    private Button m_buttonDelete;
     private Button m_buttonNext;
 
     private static CreateSlidesFragment newInstance(String slideShareName) {
@@ -94,6 +93,52 @@ public class CreateSlidesFragment extends Fragment {
         if(D)Log.d(TAG, String.format("CreateSlidesFragment.setSlideUuid: %s", s));
 
         m_slideUuid = s;
+    }
+
+    private void initializeSlide() {
+        if(D)Log.d(TAG, "CreateSlidesFragment.initializeSlide");
+
+        m_imageFileName = null;
+        m_audioFileName = null;
+
+        m_buttonPlayStop.setEnabled(false);
+        m_imageSwitcherSelected.setImageDrawable(null);
+
+        m_slideUuid = UUID.randomUUID().toString();
+    }
+
+    private void deleteSlide() {
+        if(D)Log.d(TAG, "CreateSlidesFragment.deleteSlide");
+        if(D)Log.d(TAG, "Before slide deletion:");
+        Utilities.printSlideShareJSON(m_ssj);
+
+        if (m_imageFileName != null) {
+            Utilities.deleteFile(m_activityParent, m_slideShareName, m_imageFileName);
+            m_imageFileName = null;
+        }
+
+        if (m_audioFileName != null) {
+            Utilities.deleteFile(m_activityParent, m_slideShareName, m_audioFileName);
+            m_audioFileName = null;
+        }
+
+        try {
+            m_ssj.removeSlide(m_slideUuid);
+            m_ssj.save(m_activityParent, m_slideShareName, Config.slideShareJSONFilename);
+        }
+        catch (Exception e) {
+            if(E)Log.e(TAG, "CreateSlidesFragment.deleteSlide", e);
+            e.printStackTrace();
+        }
+        catch (OutOfMemoryError e) {
+            if(E)Log.e(TAG, "CreateSlidesFragment.deleteSlide", e);
+            e.printStackTrace();
+        }
+
+        m_slideUuid = null;
+
+        if(D)Log.d(TAG, "After slide deletion:");
+        Utilities.printSlideShareJSON(m_ssj);
     }
 
     private void initializeSlideShareJSON() {
@@ -248,9 +293,26 @@ public class CreateSlidesFragment extends Fragment {
 
         m_buttonPrev = (Button)view.findViewById(R.id.control_prev);
 
-        m_buttonSave = (Button)view.findViewById(R.id.control_saveslide);
+        m_buttonDelete = (Button)view.findViewById(R.id.control_deleteslide);
+        m_buttonDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(D)Log.d(TAG, "CreateSlidesFragment.onDeleteButtonClicked");
+
+                deleteSlide();
+                initializeSlide();
+            }
+        });
 
         m_buttonNext = (Button)view.findViewById(R.id.control_next);
+        m_buttonNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(D)Log.d(TAG, "CreateSlidesFragment.onNextButtonClicked");
+
+                initializeSlide();
+            }
+        });
 
         return view;
     }

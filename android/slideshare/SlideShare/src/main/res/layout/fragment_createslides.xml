@@ -66,12 +66,12 @@
             android:text="Prev"
             style="@style/button_transport"/>
         <Button
-            android:id="@+id/control_saveslide"
+            android:id="@+id/control_deleteslide"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1.0"
             android:layout_gravity="center_horizontal"
-            android:text="Save"
+            android:text="Delete"
             style="@style/button_transport"/>
         <Button
             android:id="@+id/control_next"
