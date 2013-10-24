@@ -1,15 +1,12 @@
 package com.hyperfine.slideshare;
 
-import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 
 import static com.hyperfine.slideshare.Config.D;
 import static com.hyperfine.slideshare.Config.E;
@@ -35,16 +32,13 @@ public class SlideJSON extends JSONObject {
         if(D)Log.d(TAG, String.format("SlideJSON.SlideJSON constructed from string: %s", json));
     }
 
-    public void setImage(String userUuid, String slideShareName, String imageFile) throws JSONException {
-        String urlString = Config.baseSlideShareUrl + userUuid + "/" + slideShareName + "/" + imageFile;
-        if(D)Log.d(TAG, String.format("SlideJSON.setImage: %s", urlString));
-        put(SlideShareJSON.KEY_IMAGE, urlString);
-    }
+    public SlideJSON(JSONObject slide) throws JSONException {
+        super();
 
-    public void setAudio(String userUuid, String slideShareName, String audioFile) throws JSONException {
-        String urlString = Config.baseSlideShareUrl + userUuid + "/" + slideShareName + "/" + audioFile;
-        if(D)Log.d(TAG, String.format("SlideJSON.setAudio: %s", urlString));
-        put(SlideShareJSON.KEY_AUDIO, urlString);
+        if(D)Log.d(TAG, "SlideJSON.SlidJSON constructed from JSONObject");
+
+        put(SlideShareJSON.KEY_IMAGE, slide.getString(SlideShareJSON.KEY_IMAGE));
+        put(SlideShareJSON.KEY_AUDIO, slide.getString(SlideShareJSON.KEY_AUDIO));
     }
 
     public String getImageUrlString() throws JSONException {
@@ -55,8 +49,8 @@ public class SlideJSON extends JSONObject {
 
     public String getImageFilename() throws JSONException, MalformedURLException {
         String s = getImageUrlString();
-        URL url = new URL(s);
-        String fileName = url.getFile();
+        Uri uri = Uri.parse(s);
+        String fileName = uri.getLastPathSegment();
         if(D)Log.d(TAG, String.format("SlideJSON.getImageFilename returns %s", fileName));
         return fileName;
     }
@@ -69,8 +63,8 @@ public class SlideJSON extends JSONObject {
 
     public String getAudioFilename() throws JSONException, MalformedURLException {
         String s = getAudioUrlString();
-        URL url = new URL(s);
-        String fileName = url.getFile();
+        Uri uri = Uri.parse(s);
+        String fileName = uri.getLastPathSegment();
         if(D)Log.d(TAG, String.format("SlideJSON.getAudioFilename returns %s", fileName));
         return fileName;
     }

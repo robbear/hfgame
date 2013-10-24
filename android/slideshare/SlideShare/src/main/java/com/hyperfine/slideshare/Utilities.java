@@ -259,8 +259,7 @@ public class Utilities {
             ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
 
             Bitmap bitmapImage = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(intent.getData()));
-            // BUGBUG TODO - what compression level?
-            if (bitmapImage.compress(Bitmap.CompressFormat.JPEG, 25, outputBuffer)) {
+            if (bitmapImage.compress(Bitmap.CompressFormat.JPEG, Config.jpgCompressionLevel, outputBuffer)) {
                 File file = createFile(context, slideShareName, fileName);
                 outStream = new FileOutputStream(file);
 
@@ -307,5 +306,13 @@ public class Utilities {
             if(E)Log.e(TAG, "Utilities.pringSlideShareJSON", e);
             e.printStackTrace();
         }
+    }
+
+    public static String buildResourceUrlString(String userUuid, String slideShareName, String fileName) {
+        if (fileName == null) {
+            return null;
+        }
+
+        return Config.baseSlideShareUrl + userUuid.toString() + "/" + slideShareName + "/" + fileName;
     }
 }

@@ -107,17 +107,17 @@ public class SlideShareJSON extends JSONObject {
         put(KEY_ORDER, order);
     }
 
-    public void upsertSlide(String uuidString, SlideJSON slide) throws JSONException {
+    public void upsertSlide(String uuidString, int index, SlideJSON slide) throws JSONException {
         if(D)Log.d(TAG, String.format("SlideShareJSON.upsertSlide: uuid=%s, slide=%s", uuidString, slide.toString()));
 
         String imageUrl = slide.getImageUrlString();
         String audioUrl = slide.getAudioUrlString();
 
-        upsertSlide(uuidString, imageUrl, audioUrl);
+        upsertSlide(uuidString, index, imageUrl, audioUrl);
     }
 
-    public void upsertSlide(String uuidString, String imageUrl, String audioUrl) throws JSONException {
-        if(D)Log.d(TAG, String.format("SlideShareJSON.upsertSlide: uuid=%s, imageUrl=%s, audioUrl=%s", uuidString, imageUrl, audioUrl));
+    public void upsertSlide(String uuidString, int index, String imageUrl, String audioUrl) throws JSONException {
+        if(D)Log.d(TAG, String.format("SlideShareJSON.upsertSlide: uuid=%s, index=%d, imageUrl=%s, audioUrl=%s", uuidString, index, imageUrl, audioUrl));
 
         JSONObject slides = getSlides();
         JSONObject slide = null;
@@ -146,8 +146,25 @@ public class SlideShareJSON extends JSONObject {
             paths.put(KEY_IMAGE, imageUrl);
             paths.put(KEY_AUDIO, audioUrl);
 
+            int oldCount = orderArray.length();
             slides.put(uuidString, paths);
-            orderArray.put(uuidString);
+            if (index < 0 || index >= oldCount) {
+                // Put the new item at the end
+                orderArray.put(uuidString);
+            }
+            else {
+                // Rebuild orderArray by inserting the new item
+                JSONArray newOrderArray = new JSONArray();
+
+                for (int i = 0; i < oldCount; i++) {
+                    if (i == index) {
+                        newOrderArray.put(uuidString);
+                    }
+                    newOrderArray.put(orderArray.getString(i));
+                }
+
+                setOrder(newOrderArray);
+            }
         }
     }
 
@@ -186,11 +203,76 @@ public class SlideShareJSON extends JSONObject {
         JSONObject slides = getSlides();
 
         if (slides.has(uuidSlide)) {
-            return (SlideJSON)slides.getJSONObject(uuidSlide);
+            return new SlideJSON(slides.getJSONObject(uuidSlide));
         }
         else {
             return null;
         }
+    }
+
+    public int getOrderIndex(String uuidSlide) throws JSONException {
+        if(D)Log.d(TAG, String.format("SlideShareJSON.getOrderIndex for %s", uuidSlide));
+
+        JSONArray order = getOrder();
+
+        for (int i = 0; i < order.length(); i++) {
+            if (uuidSlide == (String)order.get(i)) {
+                if(D)Log.d(TAG, String.format("SlideShareJSON.getOrderIndex returning %d", i));
+                return i;
+            }
+        }
+
+        if(D)Log.d(TAG, "SlideShareJSON.getOrderIndex - no slide found");
+        return -1;
+    }
+
+    public int getSlideCount() throws JSONException {
+        int count = getOrder().length();
+
+        if(D)Log.d(TAG, String.format("SlideShareJSON.getSlideCount returns %d", count));
+
+        return count;
+    }
+
+    public String getSlideUuidByOrderIndex(int index) throws JSONException {
+        if(D)Log.d(TAG, String.format("SlideShareJSON.getSlideUuidByOrderIndex: index=%d", index));
+
+        int count = getSlideCount();
+
+        if (index < 0 || index > count - 1) {
+            return null;
+        }
+
+        return getOrder().getString(index);
+    }
+
+    public String getNextSlideUuid(String uuidSlide) throws JSONException {
+        if(D)Log.d(TAG, String.format("SlideShareJSON.getNextSlideUuid: uuid=%s", uuidSlide));
+
+        int index = getOrderIndex(uuidSlide);
+        if (index < 0) {
+            return null;
+        }
+
+        int count = getSlideCount();
+
+        if (index == count - 1) {
+            return null;
+        }
+        else {
+            return getOrder().getString(index + 1);
+        }
+    }
+
+    public String getPreviousSlideUuid(String uuidSlide) throws JSONException {
+        if(D)Log.d(TAG, String.format("SlideShareJSON.getPreviousSlideUuid: uuid=%s", uuidSlide));
+
+        int index = getOrderIndex(uuidSlide);
+        if (index <= 0) {
+            return null;
+        }
+
+        return getOrder().getString(index - 1);
     }
 
     public boolean save(Context context, String folder, String fileName) {

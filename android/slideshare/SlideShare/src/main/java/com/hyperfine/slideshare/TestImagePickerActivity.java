@@ -15,8 +15,6 @@ import android.widget.ViewSwitcher;
 
 import com.hyperfine.slideshare.fragments.ImagePickerFragment;
 
-import org.json.JSONObject;
-
 import java.io.File;
 import java.util.UUID;
 
@@ -123,10 +121,10 @@ public class TestImagePickerActivity extends Activity implements ViewSwitcher.Vi
             String lastSlideUuid = "";
             for (int i = 0; i < 5; i++) {
                 lastSlideUuid = UUID.randomUUID().toString();
-                ssj.upsertSlide(lastSlideUuid, String.format("%s%d.jpg", urlBase, i), String.format("%s%d.3gp", urlBase, i));
+                ssj.upsertSlide(lastSlideUuid, -1, String.format("%s%d.jpg", urlBase, i), String.format("%s%d.3gp", urlBase, i));
             }
             if(D)Log.d(TAG, String.format("SlideShareJSON after upsert (add) %d slides: %s", ssj.getSlides().length(), ssj.toString()));
-            ssj.upsertSlide(lastSlideUuid, String.format("%slastslide.jpg", urlBase), String.format("%slastslide.3gp", urlBase));
+            ssj.upsertSlide(lastSlideUuid, -1, String.format("%slastslide.jpg", urlBase), String.format("%slastslide.3gp", urlBase));
             if(D)Log.d(TAG, String.format("SlideShareJSON after upsert (update) %d slides: %s", ssj.getSlides().length(), ssj.toString()));
             SlideJSON slide = ssj.getSlide(lastSlideUuid);
             if(D)Log.d(TAG, String.format("SlideShareJSON getSlide(%s) returns %s", lastSlideUuid, slide.toString()));

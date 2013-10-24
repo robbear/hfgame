@@ -2,7 +2,9 @@ package com.hyperfine.slideshare.fragments;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -16,10 +18,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageSwitcher;
+import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
 import com.hyperfine.slideshare.Config;
 import com.hyperfine.slideshare.R;
+import com.hyperfine.slideshare.SSPreferences;
+import com.hyperfine.slideshare.SlideJSON;
 import com.hyperfine.slideshare.SlideShareJSON;
 import com.hyperfine.slideshare.Utilities;
 
@@ -36,8 +41,12 @@ public class CreateSlidesFragment extends Fragment {
     private final static String INSTANCE_STATE_IMAGEFILE = "instance_state_imagefile";
     private final static String INSTANCE_STATE_AUDIOFILE = "instance_state_audiofile";
     private final static String INSTANCE_STATE_SLIDEUUID = "instance_state_slideuuid";
+    private final static String INSTANCE_STATE_CURRENTSLIDEINDEX = "instance_state_currentslideindex";
 
+    private SharedPreferences m_prefs = null;
     private SlideShareJSON m_ssj = null;
+    private String m_userUuid = null;
+    private int m_currentSlideIndex = -1;
     private boolean m_isRecording = false;
     private boolean m_isPlaying = false;
     private MediaRecorder m_recorder;
@@ -54,6 +63,8 @@ public class CreateSlidesFragment extends Fragment {
     private Button m_buttonPrev;
     private Button m_buttonDelete;
     private Button m_buttonNext;
+    private TextView m_textViewCount;
+    private TextView m_textViewIndex;
 
     private static CreateSlidesFragment newInstance(String slideShareName) {
         if(D)Log.d(TAG, "CreateSlidesFragment.newInstance");
@@ -95,16 +106,62 @@ public class CreateSlidesFragment extends Fragment {
         m_slideUuid = s;
     }
 
-    private void initializeSlide() {
-        if(D)Log.d(TAG, "CreateSlidesFragment.initializeSlide");
+    private void initializeNewSlide() {
+        if(D)Log.d(TAG, "CreateSlidesFragment.initializeNewSlide");
+
+        m_currentSlideIndex = -1;
 
         m_imageFileName = null;
         m_audioFileName = null;
 
         m_buttonPlayStop.setEnabled(false);
-        m_imageSwitcherSelected.setImageDrawable(null);
+        fillImage();
 
         m_slideUuid = UUID.randomUUID().toString();
+    }
+
+    private void initializeSlide(String uuidSlide) {
+        if(D)Log.d(TAG, String.format("CreateSlidesFragment.initializeSlide(%s)", uuidSlide));
+
+        m_imageFileName = null;
+        m_audioFileName = null;
+        m_slideUuid = UUID.randomUUID().toString();
+
+        try {
+            SlideJSON sj = m_ssj.getSlide(uuidSlide);
+            m_imageFileName = sj.getImageFilename();
+            m_audioFileName = sj.getAudioFilename();
+            m_slideUuid = uuidSlide;
+
+            int count = m_ssj.getSlideCount();
+            int index = m_ssj.getOrderIndex(uuidSlide);
+
+            if (index == 0) {
+                m_buttonPrev.setEnabled(false);
+            }
+            else if (index < 0 || index == count - 1) {
+                m_buttonPrev.setEnabled(true);
+            }
+            else {
+                m_buttonPrev.setEnabled(true);
+            }
+
+            m_currentSlideIndex = index;
+            if(D)Log.d(TAG, String.format("CreateSlidesFragment.initializeSlide: m_currentSlideIndex=%d", m_currentSlideIndex));
+            m_textViewCount.setText(String.format("Count: %d", count));
+            m_textViewIndex.setText(String.format("Index: %d", m_currentSlideIndex));
+
+            m_buttonPlayStop.setEnabled(hasAudio());
+            fillImage();
+        }
+        catch (Exception e) {
+            if(E)Log.e(TAG, "CreateSlidesFragment.initializeSlide", e);
+            e.printStackTrace();
+        }
+        catch (OutOfMemoryError e) {
+            if(E)Log.e(TAG, "CreateSlidesFragment.initializeSlide", e);
+            e.printStackTrace();
+        }
     }
 
     private void deleteSlide() {
@@ -176,6 +233,7 @@ public class CreateSlidesFragment extends Fragment {
             setImageFileName(savedInstanceState.getString(INSTANCE_STATE_IMAGEFILE));
             setAudioFileName(savedInstanceState.getString(INSTANCE_STATE_AUDIOFILE));
             setSlideUuid(savedInstanceState.getString(INSTANCE_STATE_SLIDEUUID));
+            m_currentSlideIndex = savedInstanceState.getInt(INSTANCE_STATE_CURRENTSLIDEINDEX);
         }
 
         if (m_slideUuid == null) {
@@ -194,6 +252,7 @@ public class CreateSlidesFragment extends Fragment {
         savedInstanceState.putString(INSTANCE_STATE_IMAGEFILE, m_imageFileName);
         savedInstanceState.putString(INSTANCE_STATE_AUDIOFILE, m_audioFileName);
         savedInstanceState.putString(INSTANCE_STATE_SLIDEUUID, m_slideUuid);
+        savedInstanceState.putInt(INSTANCE_STATE_CURRENTSLIDEINDEX, m_currentSlideIndex);
     }
 
     @Override
@@ -225,6 +284,9 @@ public class CreateSlidesFragment extends Fragment {
 
         m_activityParent = activity;
 
+        m_prefs = m_activityParent.getSharedPreferences(SSPreferences.PREFS, Context.MODE_PRIVATE);
+        m_userUuid = m_prefs.getString(SSPreferences.PREFS_USERUUID, null);
+
         // if (activity instanceof SomeActivityInterface) {
         // }
         // else {
@@ -243,6 +305,9 @@ public class CreateSlidesFragment extends Fragment {
         if(D)Log.d(TAG, "CreateSlidesFragment.onCreateView");
 
         View view = inflater.inflate(R.layout.fragment_createslides, container, false);
+
+        m_textViewCount = (TextView)view.findViewById(R.id.text_slide_count);
+        m_textViewIndex = (TextView)view.findViewById(R.id.text_slide_index);
 
         m_buttonSelectImage = (Button)view.findViewById(R.id.control_selectimage);
         m_buttonSelectImage.setOnClickListener(new View.OnClickListener() {
@@ -292,6 +357,38 @@ public class CreateSlidesFragment extends Fragment {
         });
 
         m_buttonPrev = (Button)view.findViewById(R.id.control_prev);
+        m_buttonPrev.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(D)Log.d(TAG, "CreateSlidesFragment.onPrevButtonClicked");
+
+                String uuidSlidePrev = null;
+                try {
+                    if (m_currentSlideIndex < 0) {
+                        uuidSlidePrev = m_ssj.getSlideUuidByOrderIndex(m_ssj.getSlideCount() - 1);
+                    }
+                    else {
+                        uuidSlidePrev = m_ssj.getPreviousSlideUuid(m_slideUuid);
+                    }
+                }
+                catch (Exception e) {
+                    if(D)Log.d(TAG, "CreateSlidesFragment.onPrevButtonClicked, e");
+                    e.printStackTrace();
+                }
+                catch (OutOfMemoryError e) {
+                    if(D)Log.d(TAG, "CreateSlidesFragment.onPrevButtonClicked, e");
+                    e.printStackTrace();
+                }
+
+                if (uuidSlidePrev == null) {
+                    if(D)Log.d(TAG, "CreateSlidesFragment.onPrevButtonClicked - already at first slide. The button should have been disabled. Doing nothing.");
+                    return;
+                }
+                else {
+                    initializeSlide(uuidSlidePrev);
+                }
+            }
+        });
 
         m_buttonDelete = (Button)view.findViewById(R.id.control_deleteslide);
         m_buttonDelete.setOnClickListener(new View.OnClickListener() {
@@ -299,8 +396,30 @@ public class CreateSlidesFragment extends Fragment {
             public void onClick(View v) {
                 if(D)Log.d(TAG, "CreateSlidesFragment.onDeleteButtonClicked");
 
-                deleteSlide();
-                initializeSlide();
+                // Deletes the slide and sets the current slide to the same index or
+                // creates a new slide if at the end of the order array.
+
+                try {
+                    int oldIndex = m_ssj.getOrderIndex(m_slideUuid);
+                    deleteSlide();
+
+                    String slideUuid = m_ssj.getSlideUuidByOrderIndex(oldIndex);
+
+                    if (slideUuid == null) {
+                        initializeNewSlide();
+                    }
+                    else {
+                        initializeSlide(slideUuid);
+                    }
+                }
+                catch (Exception e) {
+                    if(E)Log.e(TAG, "CreateSlidesFragment.onDeleteButtonClicked", e);
+                    e.printStackTrace();
+                }
+                catch (OutOfMemoryError e) {
+                    if(E)Log.e(TAG, "CreateSlidesFragment.onDeleteButtonClicked", e);
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -310,7 +429,25 @@ public class CreateSlidesFragment extends Fragment {
             public void onClick(View v) {
                 if(D)Log.d(TAG, "CreateSlidesFragment.onNextButtonClicked");
 
-                initializeSlide();
+                String uuidSlideNext = null;
+                try {
+                    uuidSlideNext = m_ssj.getNextSlideUuid(m_slideUuid);
+                }
+                catch (Exception e) {
+                    if(E)Log.e(TAG, "CreateSlidesFragment.onNextButtonClicked.e");
+                    e.printStackTrace();
+                }
+                catch (OutOfMemoryError e) {
+                    if(E)Log.e(TAG, "CreateSlidesFragment.onNextButtonClicked.e");
+                    e.printStackTrace();
+                }
+
+                if (uuidSlideNext == null) {
+                    initializeNewSlide();
+                }
+                else {
+                    initializeSlide(uuidSlideNext);
+                }
             }
         });
 
@@ -365,9 +502,16 @@ public class CreateSlidesFragment extends Fragment {
         if(D)Log.d(TAG, "Current JSON:");
         Utilities.printSlideShareJSON(m_ssj);
 
+        int count = 0;
         try {
-            m_ssj.upsertSlide(m_slideUuid, m_imageFileName, m_audioFileName);
+            String imageUrl = Utilities.buildResourceUrlString(m_userUuid, m_slideShareName, m_imageFileName);
+            String audioUrl = Utilities.buildResourceUrlString(m_userUuid, m_slideShareName, m_audioFileName);
+
+            m_ssj.upsertSlide(m_slideUuid, m_currentSlideIndex, imageUrl, audioUrl);
             m_ssj.save(m_activityParent, m_slideShareName, Config.slideShareJSONFilename);
+
+            m_currentSlideIndex = m_ssj.getOrderIndex(m_slideUuid);
+            count = m_ssj.getSlideCount();
         }
         catch (Exception e) {
             if(E)Log.e(TAG, "CreateSlidesFragment.updateSlideShareJSON", e);
@@ -380,13 +524,41 @@ public class CreateSlidesFragment extends Fragment {
 
         if(D)Log.d(TAG, "After update:");
         Utilities.printSlideShareJSON(m_ssj);
+
+        setDiagnosticOutput(count, m_currentSlideIndex);
+    }
+
+    private void setDiagnosticOutput(int count, int index) {
+        if(D)Log.d(TAG, "CreateSlidesFragment.setDiagnosticOutput");
+
+        m_textViewCount.setText(String.format("Count: %d", count));
+        m_textViewIndex.setText(String.format("Index: %d", index));
     }
 
     private void fillImage() {
         if(D)Log.d(TAG, "CreateSlidesFragment.fillImage");
 
+        // BUGBUG - TEST
+        if (m_ssj == null) {
+            setDiagnosticOutput(0, -1);
+        }
+        else {
+            try {
+                int count = m_ssj.getSlideCount();
+                setDiagnosticOutput(count, m_currentSlideIndex);
+            }
+            catch (Exception e) {
+                if(E)Log.e(TAG, "CreateSlidesFragment.fillImage", e);
+                e.printStackTrace();
+            }
+            catch (OutOfMemoryError e) {
+                if(E)Log.e(TAG, "CreateSlidesFragment.fillImage", e);
+                e.printStackTrace();
+            }
+        }
+
         if (m_imageFileName == null) {
-            if(D)Log.d(TAG, "CreateSlidesFragment.fillImage - m_imageFileName is null. Bailing.");
+            m_imageSwitcherSelected.setImageDrawable(null);
             return;
         }
 

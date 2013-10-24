@@ -31,6 +31,9 @@ public class Config
     // Standard SlideShareJSON file name
     public static final String slideShareJSONFilename = "slideshare.json";
 
+    // JPG file compression level (0 - 100)
+    public static final int jpgCompressionLevel = 25;
+
 	// Error logs - ship with this set to false
 	public static final boolean E = true;
 	
