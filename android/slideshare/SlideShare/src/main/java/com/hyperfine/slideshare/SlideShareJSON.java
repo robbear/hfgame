@@ -197,6 +197,13 @@ public class SlideShareJSON extends JSONObject {
         }
     }
 
+    public SlideJSON getSlide(int index) throws JSONException {
+        if(D)Log.d(TAG, String.format("SlideShareJSON.getSlide(%d)", index));
+
+        String uuid = getSlideUuidByOrderIndex(index);
+        return getSlide(uuid);
+    }
+
     public SlideJSON getSlide(String uuidSlide) throws JSONException {
         if(D)Log.d(TAG, String.format("SlideShareJSON.getSlide: uuid=%s", uuidSlide));
 

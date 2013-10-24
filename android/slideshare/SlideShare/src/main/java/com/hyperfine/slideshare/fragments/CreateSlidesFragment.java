@@ -85,6 +85,7 @@ public class CreateSlidesFragment extends Fragment {
         // Note: setSlideShareName is called only by the parent activity and is done
         // at the time of onAttachFragment. It's only at this point we can have the
         // parent activity context and load or create the SlideShareJSON file.
+        //
         initializeSlideShareJSON();
     }
 

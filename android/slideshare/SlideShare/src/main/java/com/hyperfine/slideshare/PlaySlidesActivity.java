@@ -41,7 +41,7 @@ public class PlaySlidesActivity extends Activity implements ViewSwitcher.ViewFac
         // BUGBUG TODO: Replace with dialog to create/fetch SlideShare name
         m_slideShareDirectory = Utilities.createOrGetSlideShareDirectory(this, slideShareName);
         if (m_slideShareDirectory == null) {
-            if(D)Log.d(TAG, "TestImagePickerActivity.onCreate - m_slideShareDirectory is null. Bad!!!");
+            if(D)Log.d(TAG, "PlaySlidesActivity.onCreate - m_slideShareDirectory is null. Bad!!!");
         }
 
         FragmentManager fm = getFragmentManager();
