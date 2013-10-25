@@ -1,11 +1,11 @@
 package com.hyperfine.slideshare;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.app.Activity;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +20,7 @@ import java.io.File;
 import static com.hyperfine.slideshare.Config.D;
 import static com.hyperfine.slideshare.Config.E;
 
-public class PlaySlidesActivity extends Activity implements ViewSwitcher.ViewFactory {
+public class PlaySlidesActivity extends FragmentActivity implements ViewSwitcher.ViewFactory {
     public final static String TAG = "PlaySlidesActivity";
 
     private SharedPreferences m_prefs;
@@ -44,7 +44,7 @@ public class PlaySlidesActivity extends Activity implements ViewSwitcher.ViewFac
             if(D)Log.d(TAG, "PlaySlidesActivity.onCreate - m_slideShareDirectory is null. Bad!!!");
         }
 
-        FragmentManager fm = getFragmentManager();
+        FragmentManager fm = getSupportFragmentManager();
         m_playSlidesFragment = (PlaySlidesFragment)fm.findFragmentByTag(PlaySlidesFragment.class.toString());
         if (m_playSlidesFragment != null) {
             m_playSlidesFragment.setSlideShareName(slideShareName);

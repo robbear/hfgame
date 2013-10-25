@@ -1,11 +1,11 @@
 package com.hyperfine.slideshare;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.app.Activity;
 import android.util.Log;
 
 import com.hyperfine.slideshare.fragments.RecordFragment;
@@ -15,7 +15,7 @@ import java.io.File;
 import static com.hyperfine.slideshare.Config.D;
 import static com.hyperfine.slideshare.Config.E;
 
-public class TestRecordPlayActivity extends Activity {
+public class TestRecordPlayActivity extends FragmentActivity {
 
     public final static String TAG = "TestRecordPlayActivity";
 
@@ -40,7 +40,7 @@ public class TestRecordPlayActivity extends Activity {
             if(D)Log.d(TAG, "TestRecordPlayActivity.onCreate - m_slideShareDirectory is null. Bad!!!");
         }
 
-        FragmentManager fm = getFragmentManager();
+        FragmentManager fm = getSupportFragmentManager();
         m_recordFragment = (RecordFragment)fm.findFragmentByTag(RecordFragment.class.toString());
         if (m_recordFragment != null) {
             m_recordFragment.setSlideShareName(slideShareName);

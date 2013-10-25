@@ -1,11 +1,11 @@
 package com.hyperfine.slideshare;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.app.Activity;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +21,7 @@ import java.util.UUID;
 import static com.hyperfine.slideshare.Config.D;
 import static com.hyperfine.slideshare.Config.E;
 
-public class TestImagePickerActivity extends Activity implements ViewSwitcher.ViewFactory {
+public class TestImagePickerActivity extends FragmentActivity implements ViewSwitcher.ViewFactory {
 
     public final static String TAG = "TestImagePickerActivity";
 
@@ -46,7 +46,7 @@ public class TestImagePickerActivity extends Activity implements ViewSwitcher.Vi
             if(D)Log.d(TAG, "TestImagePickerActivity.onCreate - m_slideShareDirectory is null. Bad!!!");
         }
 
-        FragmentManager fm = getFragmentManager();
+        FragmentManager fm = getSupportFragmentManager();
         m_imagePickerFragment = (ImagePickerFragment)fm.findFragmentByTag(ImagePickerFragment.class.toString());
         if (m_imagePickerFragment != null) {
             m_imagePickerFragment.setSlideShareName(slideShareName);

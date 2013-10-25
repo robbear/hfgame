@@ -1,11 +1,11 @@
 package com.hyperfine.slideshare;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.app.Activity;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +20,7 @@ import java.io.File;
 import static com.hyperfine.slideshare.Config.D;
 import static com.hyperfine.slideshare.Config.E;
 
-public class CreateSlidesActivity extends Activity implements ViewSwitcher.ViewFactory {
+public class CreateSlidesActivity extends FragmentActivity implements ViewSwitcher.ViewFactory {
 
     public final static String TAG = "CreateSlidesActivity";
 
@@ -45,7 +45,7 @@ public class CreateSlidesActivity extends Activity implements ViewSwitcher.ViewF
 
         setContentView(R.layout.activity_createslides);
 
-        FragmentManager fm = getFragmentManager();
+        FragmentManager fm = getSupportFragmentManager();
         m_createSlidesFragment = (CreateSlidesFragment)fm.findFragmentByTag(CreateSlidesFragment.class.toString());
         if (m_createSlidesFragment != null) {
             m_createSlidesFragment.setSlideShareName(slideShareName);

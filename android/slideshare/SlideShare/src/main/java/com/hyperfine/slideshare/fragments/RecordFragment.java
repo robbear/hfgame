@@ -1,7 +1,7 @@
 package com.hyperfine.slideshare.fragments;
 
 import android.app.Activity;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
