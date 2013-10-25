@@ -236,7 +236,7 @@ public class SlideShareJSON extends JSONObject {
     public int getSlideCount() throws JSONException {
         int count = getOrder().length();
 
-        if(D)Log.d(TAG, String.format("SlideShareJSON.getSlideCount returns %d", count));
+        //if(D)Log.d(TAG, String.format("SlideShareJSON.getSlideCount returns %d", count));
 
         return count;
     }

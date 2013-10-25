@@ -2,7 +2,6 @@ package com.hyperfine.slideshare.fragments;
 
 import android.app.Activity;
 import android.support.v4.app.Fragment;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -13,14 +12,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageSwitcher;
 import android.widget.ViewSwitcher;
 
-import com.hyperfine.slideshare.Config;
 import com.hyperfine.slideshare.R;
 import com.hyperfine.slideshare.SlideJSON;
-import com.hyperfine.slideshare.SlideShareJSON;
 import com.hyperfine.slideshare.Utilities;
 
 import java.io.IOException;
@@ -31,75 +27,67 @@ import static com.hyperfine.slideshare.Config.E;
 public class PlaySlidesFragment extends Fragment {
     public final static String TAG = "PlaySlidesFragment";
 
-    private final static String INSTANCE_STATE_CURRENTINDEX = "index_state_currentindex";
-    private final static String INSTANCE_STATE_IMAGEFILENAME = "index_state_imagefilename";
-    private final static String INSTANCE_STATE_AUDIOFILENAME = "index_state_audiofilename";
+    private final static String INSTANCE_STATE_IMAGEFILENAME = "instance_state_imagefilename";
+    private final static String INSTANCE_STATE_AUDIOFILENAME = "instance_state_audiofilename";
+    private final static String INSTANCE_STATE_SLIDESHARENAME = "instance_state_slidesharename";
+    private final static String INSTANCE_STATE_TABPOSITION = "instance_state_tabposition";
 
-    private SharedPreferences m_prefs = null;
-    private SlideShareJSON m_ssj = null;
+    private int m_tabPosition = -1;
     private Activity m_activityParent;
     private String m_slideShareName;
     private ImageSwitcher m_imageSwitcher;
-    private Button m_buttonPrev;
-    private Button m_buttonNext;
-    private int m_slideCount = 0;
-    private int m_currentSlideIndex = -1;
     private String m_imageFileName;
     private String m_audioFileName;
     private MediaPlayer m_player;
     private boolean m_isPlaying = false;
     private boolean m_ignoreAudio = false;
 
-    private static PlaySlidesFragment newInstance(String slideShareName) {
+    public static PlaySlidesFragment newInstance(Activity activityParent, int position, String slideShareName, SlideJSON sj) {
         if(D)Log.d(TAG, "PlaySlidesFragment.newInstance");
 
         PlaySlidesFragment f = new PlaySlidesFragment();
 
+        f.setTabPosition(position);
         f.setSlideShareName(slideShareName);
+        f.setSlideJSON(sj);
+        f.setActivityParent(activityParent);
 
         return f;
+    }
+
+    public void setTabPosition(int position) {
+        if(D)Log.d(TAG, String.format("PlaySlidesFragment.setTabPosition(%d)", position));
+
+        m_tabPosition = position;
     }
 
     public void setSlideShareName(String name) {
         if(D)Log.d(TAG, String.format("PlaySlidesFragment.setSlideShareName: %s", name));
 
         m_slideShareName = name;
-
-        //
-        // Note: setSlideShareName is called only by the parent activity and is done
-        // at the time of onAttachFragment. It's only at this point we can have the
-        // parent activity context and load or create the SlideShareJSON file.
-        //
-        initializeSlideShareJSON();
     }
 
-    private void initializeSlideShareJSON() {
-        if(D)Log.d(TAG, "PlaySlidesFragment.initializeSlideShareJSON");
-
-        m_ssj = SlideShareJSON.load(m_activityParent, m_slideShareName, Config.slideShareJSONFilename);
-        if (m_ssj == null) {
-            if(D)Log.d(TAG, "PlaySlidesFragment.initializeSlideShareJSON - failed to load json file");
-            // BUGBUG TODO - feedback?
-            return;
-        }
+    public void setSlideJSON(SlideJSON sj) {
+        if(D)Log.d(TAG, "PlaySlidesFragment.setSlideJSON");
 
         try {
-            m_slideCount = m_ssj.getSlideCount();
+            m_imageFileName = sj.getImageFilename();
+            m_audioFileName = sj.getAudioFilename();
         }
         catch (Exception e) {
-            if(E)Log.e(TAG, "PlaySlidesFragment.initializeSlideShareJSON", e);
+            if(E)Log.e(TAG, "PlaySlidesFragment.setSlideJSON", e);
             e.printStackTrace();
         }
         catch (OutOfMemoryError e) {
-            if(E)Log.e(TAG, "PlaySlidesFragment.initializeSlideShareJSON", e);
+            if(E)Log.e(TAG, "PlaySlidesFragment.setSlideJSON", e);
             e.printStackTrace();
         }
+    }
 
-        m_currentSlideIndex = 0;
-        setCurrentImageAndAudioFileNames(m_currentSlideIndex);
+    public void setActivityParent(Activity activityParent) {
+        if(D)Log.d(TAG, "PlaySlidesFragment.setActivityParent");
 
-        if(D)Log.d(TAG, "PlaySlidesFragment.initializeSlideShareJSON: here is the JSON:");
-        Utilities.printSlideShareJSON(m_ssj);
+        m_activityParent = activityParent;
     }
 
     @Override
@@ -111,11 +99,10 @@ public class PlaySlidesFragment extends Fragment {
         if (savedInstanceState != null) {
             if(D)Log.d(TAG, "PlaySlidesFragment.onCreate - populating from savedInstanceState");
 
-            m_ignoreAudio = true;
-
-            m_currentSlideIndex = savedInstanceState.getInt(INSTANCE_STATE_CURRENTINDEX);
-            m_imageFileName = savedInstanceState.getString(INSTANCE_STATE_IMAGEFILENAME);
+            m_tabPosition = savedInstanceState.getInt(INSTANCE_STATE_TABPOSITION, -1);
             m_audioFileName = savedInstanceState.getString(INSTANCE_STATE_AUDIOFILENAME);
+            m_imageFileName = savedInstanceState.getString(INSTANCE_STATE_IMAGEFILENAME);
+            m_slideShareName = savedInstanceState.getString(INSTANCE_STATE_SLIDESHARENAME);
         }
     }
 
@@ -125,9 +112,10 @@ public class PlaySlidesFragment extends Fragment {
 
         super.onSaveInstanceState(savedInstanceState);
 
-        savedInstanceState.putInt(INSTANCE_STATE_CURRENTINDEX, m_currentSlideIndex);
-        savedInstanceState.putString(INSTANCE_STATE_IMAGEFILENAME, m_imageFileName);
+        savedInstanceState.putInt(INSTANCE_STATE_TABPOSITION, m_tabPosition);
         savedInstanceState.putString(INSTANCE_STATE_AUDIOFILENAME, m_audioFileName);
+        savedInstanceState.putString(INSTANCE_STATE_IMAGEFILENAME, m_imageFileName);
+        savedInstanceState.putString(INSTANCE_STATE_SLIDESHARENAME, m_slideShareName);
     }
 
     @Override
@@ -142,6 +130,8 @@ public class PlaySlidesFragment extends Fragment {
         if(D)Log.d(TAG, "PlaySlidesFragment.onPause");
 
         super.onPause();
+
+        stopPlaying();
     }
 
     @Override
@@ -185,46 +175,13 @@ public class PlaySlidesFragment extends Fragment {
                 if(D)Log.d(TAG, "PlaySlidesFragment.onImageClicked");
 
                 if (m_audioFileName != null) {
-                    startPlaying();
+                    if (m_isPlaying) {
+                        stopPlaying();
+                    }
+                    else {
+                        startPlaying();
+                    }
                 }
-            }
-        });
-
-        m_buttonPrev = (Button)view.findViewById(R.id.control_prev);
-        m_buttonPrev.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(D)Log.d(TAG, "PlaySlidesFragment.onPrevButtonClicked");
-
-                if (m_currentSlideIndex <= 0) {
-                    // Wrap around
-                    m_currentSlideIndex = m_slideCount - 1;
-                }
-                else {
-                    m_currentSlideIndex--;
-                }
-
-                setCurrentImageAndAudioFileNames(m_currentSlideIndex);
-                renderImageAndPlayAudio();
-            }
-        });
-
-        m_buttonNext = (Button)view.findViewById(R.id.control_next);
-        m_buttonNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(D)Log.d(TAG, "PlaySlidesFragment.onNextButtonClicked");
-
-                if (m_currentSlideIndex >= m_slideCount - 1) {
-                    // Wrap around
-                    m_currentSlideIndex = 0;
-                }
-                else {
-                    m_currentSlideIndex++;
-                }
-
-                setCurrentImageAndAudioFileNames(m_currentSlideIndex);
-                renderImageAndPlayAudio();
             }
         });
 
@@ -239,20 +196,45 @@ public class PlaySlidesFragment extends Fragment {
 
         m_imageSwitcher.setFactory((ViewSwitcher.ViewFactory)m_activityParent);
 
-        renderImageAndPlayAudio();
+        renderImage();
     }
 
-    private void renderImageAndPlayAudio() {
-        if(D)Log.d(TAG, String.format("PlaySlidesFragment.renderImageAndPlayAudio: slide index = %d", m_currentSlideIndex));
+    public void onTabPageSelected(int position) {
+        if(D)Log.d(TAG, String.format("PlaySlidesFragment.onTabPageSelected: this=%d, position=%d", m_tabPosition, position));
+
+        if (m_tabPosition == position) {
+            renderAudio();
+        }
+        else {
+            stopPlaying();
+        }
+    }
+
+    private void renderImage() {
+        if(D)Log.d(TAG, "PlaySlidesFragment.renderImage");
 
         if (m_imageFileName == null) {
             m_imageSwitcher.setImageDrawable(null);
         }
         else {
-            Bitmap bitmap = BitmapFactory.decodeFile(Utilities.getAbsoluteFilePath(m_activityParent, m_slideShareName, m_imageFileName));
-            Drawable drawableImage = new BitmapDrawable(m_activityParent.getResources(), bitmap);
-            m_imageSwitcher.setImageDrawable(drawableImage);
+            try {
+                Bitmap bitmap = BitmapFactory.decodeFile(Utilities.getAbsoluteFilePath(m_activityParent, m_slideShareName, m_imageFileName));
+                Drawable drawableImage = new BitmapDrawable(m_activityParent.getResources(), bitmap);
+                m_imageSwitcher.setImageDrawable(drawableImage);
+            }
+            catch (Exception e) {
+                if(E)Log.e(TAG, "PlaySlidesFragment.renderImage", e);
+                e.printStackTrace();
+            }
+            catch (OutOfMemoryError e) {
+                if(E)Log.e(TAG, "PlaySlidesFragment.renderImage", e);
+                e.printStackTrace();
+            }
         }
+    }
+
+    private void renderAudio() {
+        if(D)Log.d(TAG, "PlaySlidesFragment.renderAudio");
 
         if (m_audioFileName != null) {
             startPlaying();
@@ -311,29 +293,11 @@ public class PlaySlidesFragment extends Fragment {
             return;
         }
 
-        m_player.release();
-        m_player = null;
+        if (m_player != null) {
+            m_player.release();
+            m_player = null;
+        }
 
         m_isPlaying = false;
-    }
-
-    private void setCurrentImageAndAudioFileNames(int index) {
-        if(D)Log.d(TAG, String.format("PlaySlidesFragment.setCurrentImageAndAudioFileNames(%d)", index));
-
-        try {
-            SlideJSON sj = m_ssj.getSlide(index);
-            m_imageFileName = sj.getImageFilename();
-            m_audioFileName = sj.getAudioFilename();
-        }
-        catch (Exception e) {
-            if(E)Log.e(TAG, "PlaySlidesFragment.getCurrentImageFileName");
-            e.printStackTrace();
-        }
-        catch (OutOfMemoryError e) {
-            if(E)Log.e(TAG, "PlaySlidesFragment.getCurrentImageFileName");
-            e.printStackTrace();
-        }
-
-        return;
     }
 }

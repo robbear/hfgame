@@ -11,30 +11,9 @@
     <ImageSwitcher
         android:id="@+id/current_image"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight=".90"
-        android:background="#ffffff"
+        android:layout_height="match_parent"
+        android:background="#000000"
         android:inAnimation="@anim/fade_in"
         android:outAnimation="@anim/fade_out" />
-    <LinearLayout
-        android:id="@+id/playback_transport_panel"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight=".10"
-        android:orientation="horizontal"
-        >
-        <Button
-            android:id="@+id/control_prev"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1.0"
-            android:text="Previous" />
-        <Button
-            android:id="@+id/control_next"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1.0"
-            android:text="Next" />
-    </LinearLayout>
 
 </LinearLayout>
