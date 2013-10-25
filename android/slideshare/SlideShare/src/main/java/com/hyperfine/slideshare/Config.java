@@ -34,6 +34,9 @@ public class Config
     // JPG file compression level (0 - 100)
     public static final int jpgCompressionLevel = 25;
 
+    // Delay in milliseconds before slide audio starts playing
+    public static final int audioDelayMillis = 1000;
+
 	// Error logs - ship with this set to false
 	public static final boolean E = true;
 	

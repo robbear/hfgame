@@ -15,6 +15,8 @@ import android.view.ViewGroup;
 import android.widget.ImageSwitcher;
 import android.widget.ViewSwitcher;
 
+import com.hyperfine.slideshare.AsyncTaskTimer;
+import com.hyperfine.slideshare.Config;
 import com.hyperfine.slideshare.R;
 import com.hyperfine.slideshare.SlideJSON;
 import com.hyperfine.slideshare.Utilities;
@@ -24,15 +26,18 @@ import java.io.IOException;
 import static com.hyperfine.slideshare.Config.D;
 import static com.hyperfine.slideshare.Config.E;
 
-public class PlaySlidesFragment extends Fragment {
+public class PlaySlidesFragment extends Fragment implements AsyncTaskTimer.IAsyncTaskTimerCallback {
+
     public final static String TAG = "PlaySlidesFragment";
 
     private final static String INSTANCE_STATE_IMAGEFILENAME = "instance_state_imagefilename";
     private final static String INSTANCE_STATE_AUDIOFILENAME = "instance_state_audiofilename";
     private final static String INSTANCE_STATE_SLIDESHARENAME = "instance_state_slidesharename";
     private final static String INSTANCE_STATE_TABPOSITION = "instance_state_tabposition";
+    private final static String INSTANCE_STATE_SELECTEDTABPOSITION = "instance_state_selectedtabposition";
 
     private int m_tabPosition = -1;
+    private int m_selectedTabPosition = -1;
     private Activity m_activityParent;
     private String m_slideShareName;
     private ImageSwitcher m_imageSwitcher;
@@ -100,6 +105,7 @@ public class PlaySlidesFragment extends Fragment {
             if(D)Log.d(TAG, "PlaySlidesFragment.onCreate - populating from savedInstanceState");
 
             m_tabPosition = savedInstanceState.getInt(INSTANCE_STATE_TABPOSITION, -1);
+            m_selectedTabPosition = savedInstanceState.getInt(INSTANCE_STATE_SELECTEDTABPOSITION, -1);
             m_audioFileName = savedInstanceState.getString(INSTANCE_STATE_AUDIOFILENAME);
             m_imageFileName = savedInstanceState.getString(INSTANCE_STATE_IMAGEFILENAME);
             m_slideShareName = savedInstanceState.getString(INSTANCE_STATE_SLIDESHARENAME);
@@ -113,6 +119,7 @@ public class PlaySlidesFragment extends Fragment {
         super.onSaveInstanceState(savedInstanceState);
 
         savedInstanceState.putInt(INSTANCE_STATE_TABPOSITION, m_tabPosition);
+        savedInstanceState.putInt(INSTANCE_STATE_SELECTEDTABPOSITION, m_selectedTabPosition);
         savedInstanceState.putString(INSTANCE_STATE_AUDIOFILENAME, m_audioFileName);
         savedInstanceState.putString(INSTANCE_STATE_IMAGEFILENAME, m_imageFileName);
         savedInstanceState.putString(INSTANCE_STATE_SLIDESHARENAME, m_slideShareName);
@@ -202,7 +209,20 @@ public class PlaySlidesFragment extends Fragment {
     public void onTabPageSelected(int position) {
         if(D)Log.d(TAG, String.format("PlaySlidesFragment.onTabPageSelected: this=%d, position=%d", m_tabPosition, position));
 
+        m_selectedTabPosition = position;
+
         if (m_tabPosition == position) {
+            AsyncTaskTimer.startAsyncTaskTimer(1, Config.audioDelayMillis, this);
+        }
+        else {
+            stopPlaying();
+        }
+    }
+
+    public void onAsyncTaskTimerComplete(long cookie) {
+        if(D)Log.d(TAG, "PlaySlidesFragment.onAsyncTaskTimerComplete");
+
+        if (m_selectedTabPosition == m_tabPosition) {
             renderAudio();
         }
         else {
