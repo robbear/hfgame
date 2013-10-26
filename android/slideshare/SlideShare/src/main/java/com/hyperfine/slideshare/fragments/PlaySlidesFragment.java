@@ -37,7 +37,7 @@ public class PlaySlidesFragment extends Fragment implements AsyncTaskTimer.IAsyn
     private final static String INSTANCE_STATE_SELECTEDTABPOSITION = "instance_state_selectedtabposition";
 
     private int m_tabPosition = -1;
-    private int m_selectedTabPosition = -1;
+    private int m_selectedTabPosition = 0;
     private Activity m_activityParent;
     private String m_slideShareName;
     private ImageSwitcher m_imageSwitcher;
@@ -204,6 +204,10 @@ public class PlaySlidesFragment extends Fragment implements AsyncTaskTimer.IAsyn
         m_imageSwitcher.setFactory((ViewSwitcher.ViewFactory)m_activityParent);
 
         renderImage();
+
+        if (savedInstanceState == null) {
+            AsyncTaskTimer.startAsyncTaskTimer(1, Config.audioDelayMillis, this);
+        }
     }
 
     public void onTabPageSelected(int position) {
@@ -220,7 +224,9 @@ public class PlaySlidesFragment extends Fragment implements AsyncTaskTimer.IAsyn
     }
 
     public void onAsyncTaskTimerComplete(long cookie) {
-        if(D)Log.d(TAG, "PlaySlidesFragment.onAsyncTaskTimerComplete");
+        if(D)Log.d(TAG, String.format(
+                "PlaySlidesFragment.onAsyncTaskTimerComplete m_selectedTabPosition=%d, m_tabPosition=%d",
+                m_selectedTabPosition, m_tabPosition));
 
         if (m_selectedTabPosition == m_tabPosition) {
             renderAudio();
